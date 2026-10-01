@@ -1,0 +1,43 @@
+{
+  "name": "pi-guard",
+  "version": "1.0.0",
+  "description": "Pi permission extension with request-bound approvals and native OS isolation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./startup": "./dist/startup.js"
+  },
+  "bin": { "pi-guard": "dist/cli.js" },
+  "pi": { "extensions": ["./dist/index.js"] },
+  "scripts": {
+    "build": "tsc",
+    "test:contracts": "node scripts/run-tests.mjs contracts",
+    "test:policy": "node scripts/run-tests.mjs policy",
+    "test:reviewer": "node scripts/run-tests.mjs reviewer",
+    "test:approvals": "node scripts/run-tests.mjs approvals",
+    "test:native": "node scripts/run-tests.mjs native",
+    "test:integration": "node scripts/run-tests.mjs integration",
+    "test:e2e": "node scripts/run-tests.mjs e2e",
+    "verify:guard": "node scripts/verify-guard.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "0.99.1"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@types/node": "24.0.0",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "@earendil-works/pi-ai": "0.99.1",
+    "@earendil-works/pi-agent-core": "0.99.1"
+  },
+  "engines": { "node": ">=22.19.0" },
+  "files": ["dist", "README.md"],
+  "private": true
+}

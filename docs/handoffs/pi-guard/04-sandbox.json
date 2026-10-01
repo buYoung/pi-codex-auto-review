@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "state": "ready",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "modulePaths": [
+    "src/sandbox/config.ts",
+    "src/sandbox/executor.ts",
+    "src/sandbox/broker.ts",
+    "src/sandbox/worker.ts"
+  ],
+  "moduleHashes": {
+    "src/sandbox/config.ts": "fe9e8da7bddca291f889dfbe247c204d9264720c8dcb8c39cb2af320632162d8",
+    "src/sandbox/executor.ts": "c97e4b6c95582da5c70a858bb6e6b1d530d67a1216c8d94359398431446cfcc0",
+    "src/sandbox/broker.ts": "e7581cfa80cc46d683ae05017d5dbf06e6681ae7c1ec6ae3437939b7808d968c",
+    "src/sandbox/worker.ts": "94d36be732965d704832ea3df9c33d827a32e19debc29fa336ffc96ee1662c05"
+  },
+  "testFiles": [
+    "test/native/sandbox.test.mjs"
+  ],
+  "coveredBehavior": [
+    "native-launch",
+    "native-files",
+    "native-network",
+    "native-lifecycle",
+    "native-isolation"
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "suite": "native",
+      "status": "pass",
+      "command": "npm run test:native",
+      "testFiles": [
+        "test/native/sandbox.test.mjs"
+      ],
+      "coveredBehavior": [
+        "native-launch",
+        "native-files",
+        "native-network",
+        "native-lifecycle",
+        "native-isolation"
+      ],
+      "tests": [
+        {
+          "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] real shell/file/descendant/symlink writes cannot change an outside sentinel",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not",
+          "status": "pass"
+        },
+        {
+          "name": "[native-lifecycle] cancellation and seconds deadline terminate the final process group before return",
+          "status": "pass"
+        },
+        {
+          "name": "[native-isolation] a per-invocation elevation cannot widen concurrent or subsequent profiles",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "native-os",
+      "nativeControls": [
+        {
+          "kind": "allow",
+          "effect": "shell output/cwd/caller environment and nonzero status",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "workspace write/read and read-only read",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "one authorized proxy request reached owned Unix socket service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "domain-denied and direct requests did not reach owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "one exact elevated target changed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        }
+      ],
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:41:01.141Z"
+    }
+  ],
+  "buildProof": {
+    "command": "npm run build",
+    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "status": "pass",
+    "exitCode": 0,
+    "recordedAt": "2026-10-01T06:40:53.903Z"
+  },
+  "runtimeVersion": "0.0.78",
+  "workerProtocol": {
+    "schemaVersion": 1
+  },
+  "capabilities": [
+    "invocation-owned broker/proxies",
+    "kernel filesystem/network confinement",
+    "whole Pi file/search worker",
+    "descendant process group termination",
+    "filtered caller environment",
+    "no host fallback"
+  ],
+  "networkFixture": "Explicit trusted MITM Unix-socket transport to owned service, domain-filtered by the genuine runtime; default loopback/SSRF restrictions preserved",
+  "platformResults": [
+    {
+      "platform": "darwin-arm64",
+      "status": "pass"
+    },
+    {
+      "platform": "linux",
+      "status": "environment-blocked",
+      "reason": "No qualified alternate-OS runner in this workspace"
+    }
+  ],
+  "recordedAt": "2026-10-01T06:41:15.657Z"
+}

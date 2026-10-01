@@ -1,0 +1,925 @@
+{
+  "schemaVersion": 1,
+  "state": "environment-blocked",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "platformResults": [
+    {
+      "platform": "darwin-arm64",
+      "status": "pass",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "results": {
+        "contracts": {
+          "schemaVersion": 1,
+          "suite": "contracts",
+          "status": "pass",
+          "command": "npm run test:contracts",
+          "testFiles": [
+            "test/unit/contracts.test.mjs"
+          ],
+          "coveredBehavior": [
+            "identity",
+            "profiles",
+            "ipc",
+            "evidence",
+            "public-api"
+          ],
+          "tests": [
+            {
+              "name": "[identity] canonical snapshots bind final input/cwd/source/session/policy/profile independently",
+              "status": "pass"
+            },
+            {
+              "name": "[profiles] profiles are immutable and read-only cannot silently gain writes",
+              "status": "pass"
+            },
+            {
+              "name": "[ipc] invalid protocol frames cannot be treated as worker success",
+              "status": "pass"
+            },
+            {
+              "name": "[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass",
+              "status": "pass"
+            },
+            {
+              "name": "[public-api] supported installed Pi exposes complete tool contracts and protected startup seams",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "unit-doubles",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:40:54.563Z"
+        },
+        "policy": {
+          "schemaVersion": 1,
+          "suite": "policy",
+          "status": "pass",
+          "command": "npm run test:policy",
+          "testFiles": [
+            "test/unit/policy.test.mjs"
+          ],
+          "coveredBehavior": [
+            "paths",
+            "rules",
+            "shell",
+            "settings"
+          ],
+          "tests": [
+            {
+              "name": "[paths] path-prefix escapes, symlink ancestors and nonexistent targets are resolved",
+              "status": "pass"
+            },
+            {
+              "name": "[rules] deny outranks allow for every compound segment and stale identities",
+              "status": "pass"
+            },
+            {
+              "name": "[shell] literal quotes are parsed but substitutions, interpreters, comments and expansions require review",
+              "status": "pass"
+            },
+            {
+              "name": "[settings] corrupt or weakening settings fail closed and read-only file writes require permission",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "unit-doubles",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:40:54.627Z"
+        },
+        "reviewer": {
+          "schemaVersion": 1,
+          "suite": "reviewer",
+          "status": "pass",
+          "command": "npm run test:reviewer",
+          "testFiles": [
+            "test/unit/reviewer.test.mjs"
+          ],
+          "coveredBehavior": [
+            "review",
+            "deadlines",
+            "cancellation"
+          ],
+          "tests": [
+            {
+              "name": "[review] only ambiguous actions call a separate tool-free current-model request",
+              "status": "pass"
+            },
+            {
+              "name": "[review] malformed, failed, tool-bearing or permission-widening model replies never authorize",
+              "status": "pass"
+            },
+            {
+              "name": "[deadlines] configured milliseconds reach the final provider signal and expire at the boundary",
+              "status": "pass"
+            },
+            {
+              "name": "[cancellation] caller cancellation reaches the final provider even when it ignores the signal",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "simulated-provider-ui",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:40:54.684Z"
+        },
+        "approvals": {
+          "schemaVersion": 1,
+          "suite": "approvals",
+          "status": "pass",
+          "command": "npm run test:approvals",
+          "testFiles": [
+            "test/unit/approvals.test.mjs"
+          ],
+          "coveredBehavior": [
+            "grants",
+            "queue",
+            "persistence",
+            "audit"
+          ],
+          "tests": [
+            {
+              "name": "[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source",
+              "status": "pass"
+            },
+            {
+              "name": "[queue] concurrent UI requests serialize and queued cancellation/session replacement cannot cross-authorize",
+              "status": "pass"
+            },
+            {
+              "name": "[queue] approval deadline preserves milliseconds at the actual dialog and denies on expiry",
+              "status": "pass"
+            },
+            {
+              "name": "[persistence] persistent rules require explicit UI selection, atomic save and successful compensation",
+              "status": "pass"
+            },
+            {
+              "name": "[audit] nonempty success/denial/failure population omits content and redacts synthetic markers",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "simulated-provider-ui",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:40:54.752Z"
+        },
+        "native": {
+          "schemaVersion": 1,
+          "suite": "native",
+          "status": "pass",
+          "command": "npm run test:native",
+          "testFiles": [
+            "test/native/sandbox.test.mjs"
+          ],
+          "coveredBehavior": [
+            "native-launch",
+            "native-files",
+            "native-network",
+            "native-lifecycle",
+            "native-isolation"
+          ],
+          "tests": [
+            {
+              "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
+              "status": "pass"
+            },
+            {
+              "name": "[native-files] real shell/file/descendant/symlink writes cannot change an outside sentinel",
+              "status": "pass"
+            },
+            {
+              "name": "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not",
+              "status": "pass"
+            },
+            {
+              "name": "[native-lifecycle] cancellation and seconds deadline terminate the final process group before return",
+              "status": "pass"
+            },
+            {
+              "name": "[native-isolation] a per-invocation elevation cannot widen concurrent or subsequent profiles",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "native-os",
+          "nativeControls": [
+            {
+              "kind": "allow",
+              "effect": "shell output/cwd/caller environment and nonzero status",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "allow",
+              "effect": "workspace write/read and read-only read",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "deny",
+              "effect": "outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "allow",
+              "effect": "one authorized proxy request reached owned Unix socket service",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "deny",
+              "effect": "domain-denied and direct requests did not reach owned service",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "deny",
+              "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "allow",
+              "effect": "one exact elevated target changed",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            },
+            {
+              "kind": "deny",
+              "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
+              "isObserved": true,
+              "platform": "darwin-arm64"
+            }
+          ],
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:41:01.141Z"
+        },
+        "integration": {
+          "schemaVersion": 1,
+          "suite": "integration",
+          "status": "pass",
+          "command": "npm run test:integration",
+          "testFiles": [
+            "test/integration/pi-tools.test.mjs"
+          ],
+          "coveredBehavior": [
+            "tools",
+            "final-input",
+            "user-bash",
+            "startup",
+            "nested",
+            "options"
+          ],
+          "tests": [
+            {
+              "name": "[tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects",
+              "status": "pass"
+            },
+            {
+              "name": "[final-input] a later mutable hook is checked at the final consumer and cannot reuse harmless inputs",
+              "status": "pass"
+            },
+            {
+              "name": "[user-bash] ! and !! return handled operations with native output and denial, never host fallback",
+              "status": "pass"
+            },
+            {
+              "name": "[user-bash] installed Pi session consumer records ! and !! with the guarded operations",
+              "status": "pass"
+            },
+            {
+              "name": "[tools] TUI/RPC approvals cover one complete edit action and print/JSON deny absent UI",
+              "status": "pass"
+            },
+            {
+              "name": "[tools] approved outside write covers its mkdir helper without widening sibling permissions",
+              "status": "pass"
+            },
+            {
+              "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+              "status": "pass"
+            },
+            {
+              "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
+              "status": "pass"
+            },
+            {
+              "name": "[options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer",
+              "status": "pass"
+            },
+            {
+              "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "simulated-provider-ui",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:41:10.343Z"
+        },
+        "e2e": {
+          "schemaVersion": 1,
+          "suite": "e2e",
+          "status": "pass",
+          "command": "npm run test:e2e",
+          "testFiles": [
+            "test/e2e/guard.test.mjs"
+          ],
+          "coveredBehavior": [
+            "workflow",
+            "package",
+            "cleanup"
+          ],
+          "tests": [
+            {
+              "name": "[workflow] model work succeeds while adversarial interpreter and protected file effects remain denied",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] one-use UI approval covers edit helpers and cannot authorize another logical call",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] protected SDK direct shell and failed reload cannot activate a host fallback",
+              "status": "pass"
+            },
+            {
+              "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
+              "status": "pass"
+            },
+            {
+              "name": "[cleanup] nonempty owned audit population is scanned and native resources settle before disposal",
+              "status": "pass"
+            }
+          ],
+          "platform": "darwin-arm64",
+          "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+          "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+          "runtimeVersions": {
+            "node": "v24.14.0",
+            "@earendil-works/pi-coding-agent": "0.99.1",
+            "@earendil-works/pi-ai": "0.99.1",
+            "@anthropic-ai/sandbox-runtime": "0.0.78"
+          },
+          "evidenceKind": "workflow",
+          "blockedReasons": [],
+          "recordedAt": "2026-10-01T06:41:15.643Z"
+        }
+      },
+      "recordedAt": "2026-10-01T06:41:15.648Z"
+    },
+    {
+      "platform": "linux-x64",
+      "status": "environment-blocked",
+      "reason": "A qualified linux-x64 host with native dependencies must run the matching source and all suites; no such runner is available here."
+    }
+  ],
+  "testFiles": [
+    "test/unit/contracts.test.mjs",
+    "test/unit/policy.test.mjs",
+    "test/unit/reviewer.test.mjs",
+    "test/unit/approvals.test.mjs",
+    "test/native/sandbox.test.mjs",
+    "test/integration/pi-tools.test.mjs",
+    "test/e2e/guard.test.mjs"
+  ],
+  "coveredBehavior": [
+    "identity",
+    "profiles",
+    "ipc",
+    "evidence",
+    "public-api",
+    "paths",
+    "rules",
+    "shell",
+    "settings",
+    "review",
+    "deadlines",
+    "cancellation",
+    "grants",
+    "queue",
+    "persistence",
+    "audit",
+    "native-launch",
+    "native-files",
+    "native-network",
+    "native-lifecycle",
+    "native-isolation",
+    "tools",
+    "final-input",
+    "user-bash",
+    "startup",
+    "nested",
+    "options",
+    "workflow",
+    "package",
+    "cleanup"
+  ],
+  "suiteCommands": [
+    "npm run test:contracts",
+    "npm run test:policy",
+    "npm run test:reviewer",
+    "npm run test:approvals",
+    "npm run test:native",
+    "npm run test:integration",
+    "npm run test:e2e"
+  ],
+  "results": {
+    "contracts": {
+      "schemaVersion": 1,
+      "suite": "contracts",
+      "status": "pass",
+      "command": "npm run test:contracts",
+      "testFiles": [
+        "test/unit/contracts.test.mjs"
+      ],
+      "coveredBehavior": [
+        "identity",
+        "profiles",
+        "ipc",
+        "evidence",
+        "public-api"
+      ],
+      "tests": [
+        {
+          "name": "[identity] canonical snapshots bind final input/cwd/source/session/policy/profile independently",
+          "status": "pass"
+        },
+        {
+          "name": "[profiles] profiles are immutable and read-only cannot silently gain writes",
+          "status": "pass"
+        },
+        {
+          "name": "[ipc] invalid protocol frames cannot be treated as worker success",
+          "status": "pass"
+        },
+        {
+          "name": "[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass",
+          "status": "pass"
+        },
+        {
+          "name": "[public-api] supported installed Pi exposes complete tool contracts and protected startup seams",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "unit-doubles",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.563Z"
+    },
+    "policy": {
+      "schemaVersion": 1,
+      "suite": "policy",
+      "status": "pass",
+      "command": "npm run test:policy",
+      "testFiles": [
+        "test/unit/policy.test.mjs"
+      ],
+      "coveredBehavior": [
+        "paths",
+        "rules",
+        "shell",
+        "settings"
+      ],
+      "tests": [
+        {
+          "name": "[paths] path-prefix escapes, symlink ancestors and nonexistent targets are resolved",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] deny outranks allow for every compound segment and stale identities",
+          "status": "pass"
+        },
+        {
+          "name": "[shell] literal quotes are parsed but substitutions, interpreters, comments and expansions require review",
+          "status": "pass"
+        },
+        {
+          "name": "[settings] corrupt or weakening settings fail closed and read-only file writes require permission",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "unit-doubles",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.627Z"
+    },
+    "reviewer": {
+      "schemaVersion": 1,
+      "suite": "reviewer",
+      "status": "pass",
+      "command": "npm run test:reviewer",
+      "testFiles": [
+        "test/unit/reviewer.test.mjs"
+      ],
+      "coveredBehavior": [
+        "review",
+        "deadlines",
+        "cancellation"
+      ],
+      "tests": [
+        {
+          "name": "[review] only ambiguous actions call a separate tool-free current-model request",
+          "status": "pass"
+        },
+        {
+          "name": "[review] malformed, failed, tool-bearing or permission-widening model replies never authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[deadlines] configured milliseconds reach the final provider signal and expire at the boundary",
+          "status": "pass"
+        },
+        {
+          "name": "[cancellation] caller cancellation reaches the final provider even when it ignores the signal",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.684Z"
+    },
+    "approvals": {
+      "schemaVersion": 1,
+      "suite": "approvals",
+      "status": "pass",
+      "command": "npm run test:approvals",
+      "testFiles": [
+        "test/unit/approvals.test.mjs"
+      ],
+      "coveredBehavior": [
+        "grants",
+        "queue",
+        "persistence",
+        "audit"
+      ],
+      "tests": [
+        {
+          "name": "[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source",
+          "status": "pass"
+        },
+        {
+          "name": "[queue] concurrent UI requests serialize and queued cancellation/session replacement cannot cross-authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[queue] approval deadline preserves milliseconds at the actual dialog and denies on expiry",
+          "status": "pass"
+        },
+        {
+          "name": "[persistence] persistent rules require explicit UI selection, atomic save and successful compensation",
+          "status": "pass"
+        },
+        {
+          "name": "[audit] nonempty success/denial/failure population omits content and redacts synthetic markers",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.752Z"
+    },
+    "native": {
+      "schemaVersion": 1,
+      "suite": "native",
+      "status": "pass",
+      "command": "npm run test:native",
+      "testFiles": [
+        "test/native/sandbox.test.mjs"
+      ],
+      "coveredBehavior": [
+        "native-launch",
+        "native-files",
+        "native-network",
+        "native-lifecycle",
+        "native-isolation"
+      ],
+      "tests": [
+        {
+          "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] real shell/file/descendant/symlink writes cannot change an outside sentinel",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not",
+          "status": "pass"
+        },
+        {
+          "name": "[native-lifecycle] cancellation and seconds deadline terminate the final process group before return",
+          "status": "pass"
+        },
+        {
+          "name": "[native-isolation] a per-invocation elevation cannot widen concurrent or subsequent profiles",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "native-os",
+      "nativeControls": [
+        {
+          "kind": "allow",
+          "effect": "shell output/cwd/caller environment and nonzero status",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "workspace write/read and read-only read",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "one authorized proxy request reached owned Unix socket service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "domain-denied and direct requests did not reach owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "one exact elevated target changed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        }
+      ],
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:41:01.141Z"
+    },
+    "integration": {
+      "schemaVersion": 1,
+      "suite": "integration",
+      "status": "pass",
+      "command": "npm run test:integration",
+      "testFiles": [
+        "test/integration/pi-tools.test.mjs"
+      ],
+      "coveredBehavior": [
+        "tools",
+        "final-input",
+        "user-bash",
+        "startup",
+        "nested",
+        "options"
+      ],
+      "tests": [
+        {
+          "name": "[tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects",
+          "status": "pass"
+        },
+        {
+          "name": "[final-input] a later mutable hook is checked at the final consumer and cannot reuse harmless inputs",
+          "status": "pass"
+        },
+        {
+          "name": "[user-bash] ! and !! return handled operations with native output and denial, never host fallback",
+          "status": "pass"
+        },
+        {
+          "name": "[user-bash] installed Pi session consumer records ! and !! with the guarded operations",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] TUI/RPC approvals cover one complete edit action and print/JSON deny absent UI",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] approved outside write covers its mkdir helper without widening sibling permissions",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+          "status": "pass"
+        },
+        {
+          "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
+          "status": "pass"
+        },
+        {
+          "name": "[options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:41:10.343Z"
+    },
+    "e2e": {
+      "schemaVersion": 1,
+      "suite": "e2e",
+      "status": "pass",
+      "command": "npm run test:e2e",
+      "testFiles": [
+        "test/e2e/guard.test.mjs"
+      ],
+      "coveredBehavior": [
+        "workflow",
+        "package",
+        "cleanup"
+      ],
+      "tests": [
+        {
+          "name": "[workflow] model work succeeds while adversarial interpreter and protected file effects remain denied",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] one-use UI approval covers edit helpers and cannot authorize another logical call",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] protected SDK direct shell and failed reload cannot activate a host fallback",
+          "status": "pass"
+        },
+        {
+          "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
+          "status": "pass"
+        },
+        {
+          "name": "[cleanup] nonempty owned audit population is scanned and native resources settle before disposal",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "workflow",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:41:15.643Z"
+    }
+  },
+  "blockedReasons": [
+    "A qualified linux-x64 host with native dependencies must run the matching source and all suites; no such runner is available here."
+  ],
+  "packageProof": [
+    {
+      "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
+      "status": "pass"
+    }
+  ],
+  "cleanup": {
+    "platform": "darwin-arm64",
+    "status": "pass",
+    "auditProof": {
+      "status": "pass",
+      "artifact": ".reports/pi-guard/owned-audits.jsonl",
+      "recordCount": 63
+    },
+    "ownedFixtureCleanup": "Each fixture finalizer scans and removes its owned root; executors await broker/group/proxy settlement"
+  },
+  "trustBoundaries": [
+    "trusted Pi/controller extensions",
+    "delegated native local effects",
+    "remote MCP internals excluded"
+  ],
+  "recordedAt": "2026-10-01T06:41:15.658Z"
+}

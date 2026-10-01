@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "state": "ready",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "modulePaths": [
+    "src/reviewer.ts",
+    "src/approvals.ts",
+    "src/audit.ts",
+    "src/signals.ts"
+  ],
+  "moduleHashes": {
+    "src/reviewer.ts": "1ea39a24a25cb438e6acaeb5d5f17774f09e9a8ca31e7c6d5ad59a2cfcf54391",
+    "src/approvals.ts": "784266c4d92f8cac55a94389d03a6b6d12003f9a3bf30805b721b2bd3de4a41a",
+    "src/audit.ts": "c674b02ced15bac19b5ac9d2a717bb928f8c86d35a3722073330ecfda8e93c22",
+    "src/signals.ts": "6821b3eb44e894357c71b9ea9d5bef4d8256d45d529e37f7440edd28aac02ad5"
+  },
+  "testFiles": [
+    "test/unit/reviewer.test.mjs",
+    "test/unit/approvals.test.mjs"
+  ],
+  "coveredBehavior": [
+    "review",
+    "deadlines",
+    "cancellation",
+    "grants",
+    "queue",
+    "persistence",
+    "audit"
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "suite": "reviewer",
+      "status": "pass",
+      "command": "npm run test:reviewer",
+      "testFiles": [
+        "test/unit/reviewer.test.mjs"
+      ],
+      "coveredBehavior": [
+        "review",
+        "deadlines",
+        "cancellation"
+      ],
+      "tests": [
+        {
+          "name": "[review] only ambiguous actions call a separate tool-free current-model request",
+          "status": "pass"
+        },
+        {
+          "name": "[review] malformed, failed, tool-bearing or permission-widening model replies never authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[deadlines] configured milliseconds reach the final provider signal and expire at the boundary",
+          "status": "pass"
+        },
+        {
+          "name": "[cancellation] caller cancellation reaches the final provider even when it ignores the signal",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.684Z"
+    },
+    {
+      "schemaVersion": 1,
+      "suite": "approvals",
+      "status": "pass",
+      "command": "npm run test:approvals",
+      "testFiles": [
+        "test/unit/approvals.test.mjs"
+      ],
+      "coveredBehavior": [
+        "grants",
+        "queue",
+        "persistence",
+        "audit"
+      ],
+      "tests": [
+        {
+          "name": "[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source",
+          "status": "pass"
+        },
+        {
+          "name": "[queue] concurrent UI requests serialize and queued cancellation/session replacement cannot cross-authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[queue] approval deadline preserves milliseconds at the actual dialog and denies on expiry",
+          "status": "pass"
+        },
+        {
+          "name": "[persistence] persistent rules require explicit UI selection, atomic save and successful compensation",
+          "status": "pass"
+        },
+        {
+          "name": "[audit] nonempty success/denial/failure population omits content and redacts synthetic markers",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.752Z"
+    }
+  ],
+  "buildProof": {
+    "command": "npm run build",
+    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "status": "pass",
+    "exitCode": 0,
+    "recordedAt": "2026-10-01T06:40:53.903Z"
+  },
+  "decisionFallbacks": "malformed/provider-error/timeout: ask with eligible UI, deny without UI; caller/session cancellation denies; models never grant permission increases",
+  "grantScopes": [
+    "once",
+    "session",
+    "persistent"
+  ],
+  "redactionRules": "No command/argument/content/provider/worker payload in audit. Sensitive patterns and supplied synthetic markers redacted.",
+  "exports": [
+    "reviewAction",
+    "PiReviewProvider",
+    "ApprovalManager",
+    "FileGrantPersistence",
+    "AuditLog"
+  ],
+  "recordedAt": "2026-10-01T06:41:15.656Z"
+}

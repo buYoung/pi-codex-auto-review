@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "state": "ready",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "modulePaths": [
+    "src/policy/index.ts",
+    "src/policy/paths.ts",
+    "src/policy/shell.ts"
+  ],
+  "moduleHashes": {
+    "src/policy/index.ts": "0ac6ed08d16bcdc6ff8571bd98be37b92bcfc32b9b51effca74f2e07a48d37e3",
+    "src/policy/paths.ts": "6dd55f0f848857b287ab6e7a15c8776c544744df74bdb2d1edf5d845860bc868",
+    "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7"
+  },
+  "testFiles": [
+    "test/unit/policy.test.mjs"
+  ],
+  "coveredBehavior": [
+    "paths",
+    "rules",
+    "shell",
+    "settings"
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "suite": "policy",
+      "status": "pass",
+      "command": "npm run test:policy",
+      "testFiles": [
+        "test/unit/policy.test.mjs"
+      ],
+      "coveredBehavior": [
+        "paths",
+        "rules",
+        "shell",
+        "settings"
+      ],
+      "tests": [
+        {
+          "name": "[paths] path-prefix escapes, symlink ancestors and nonexistent targets are resolved",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] deny outranks allow for every compound segment and stale identities",
+          "status": "pass"
+        },
+        {
+          "name": "[shell] literal quotes are parsed but substitutions, interpreters, comments and expansions require review",
+          "status": "pass"
+        },
+        {
+          "name": "[settings] corrupt or weakening settings fail closed and read-only file writes require permission",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "unit-doubles",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.627Z"
+    }
+  ],
+  "buildProof": {
+    "command": "npm run build",
+    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "status": "pass",
+    "exitCode": 0,
+    "recordedAt": "2026-10-01T06:40:53.903Z"
+  },
+  "supportedGrammar": "bounded literal words/quotes/redirections; all compound segments checked; substitutions, globbing, here-docs, assignments and interpreters require review",
+  "policyRevision": "sha256 of validated trusted settings and immutable permission profile",
+  "exports": [
+    "PolicyEngine",
+    "validateSettings",
+    "loadSettings",
+    "defaultProfile",
+    "canonicalPath",
+    "analyzeShell"
+  ],
+  "recordedAt": "2026-10-01T06:41:15.655Z"
+}

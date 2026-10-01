@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "state": "ready",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "modulePaths": [
+    "src/index.ts",
+    "src/startup.ts",
+    "src/cli.ts",
+    "src/tools/controller.ts"
+  ],
+  "moduleHashes": {
+    "src/index.ts": "3a9ab75f45e20627e6a939dfe8194cec464f109e37d915b8a0babe978a0d99cd",
+    "src/startup.ts": "75c5f42927bea5760333da20edcc2cbdd1307a9582ece45241634dc2cb3cacab",
+    "src/cli.ts": "dd2909a16b308a09c2c9839d367805d6a452635d3eac68ad2b50892532fdde02",
+    "src/tools/controller.ts": "e616cd26a8bd817e00af055e0d29bcd8999ceb02cd641985cf4d23c020087768"
+  },
+  "testFiles": [
+    "test/integration/pi-tools.test.mjs"
+  ],
+  "coveredBehavior": [
+    "tools",
+    "final-input",
+    "user-bash",
+    "startup",
+    "nested",
+    "options"
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "suite": "integration",
+      "status": "pass",
+      "command": "npm run test:integration",
+      "testFiles": [
+        "test/integration/pi-tools.test.mjs"
+      ],
+      "coveredBehavior": [
+        "tools",
+        "final-input",
+        "user-bash",
+        "startup",
+        "nested",
+        "options"
+      ],
+      "tests": [
+        {
+          "name": "[tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects",
+          "status": "pass"
+        },
+        {
+          "name": "[final-input] a later mutable hook is checked at the final consumer and cannot reuse harmless inputs",
+          "status": "pass"
+        },
+        {
+          "name": "[user-bash] ! and !! return handled operations with native output and denial, never host fallback",
+          "status": "pass"
+        },
+        {
+          "name": "[user-bash] installed Pi session consumer records ! and !! with the guarded operations",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] TUI/RPC approvals cover one complete edit action and print/JSON deny absent UI",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] approved outside write covers its mkdir helper without widening sibling permissions",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+          "status": "pass"
+        },
+        {
+          "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
+          "status": "pass"
+        },
+        {
+          "name": "[options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "simulated-provider-ui",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:41:10.343Z"
+    }
+  ],
+  "buildProof": {
+    "command": "npm run build",
+    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "status": "pass",
+    "exitCode": 0,
+    "recordedAt": "2026-10-01T06:40:53.903Z"
+  },
+  "guardedStartup": [
+    "dist/cli.js",
+    "createGuardedRuntime"
+  ],
+  "modes": [
+    "tui",
+    "rpc",
+    "print",
+    "json"
+  ],
+  "toolRoutes": {
+    "bash": "host Pi formatting and operations -> bound admission -> native shell worker",
+    "files": "host Pi schemas/renderers -> bound admission -> public Pi definitions inside native worker",
+    "codemode": "public built-in QuickJS -> ctx.executeTool -> same final wrappers",
+    "userBash": "always handled operations; final prefix/cwd/env/options rechecked",
+    "reload": "readiness barrier prevents discarded extension fallback"
+  },
+  "trustBoundaries": [
+    "Pi and explicitly trusted extensions are controllers",
+    "remote MCP internals and arbitrary trusted in-process effects are outside native workload confinement",
+    "unknown tools require explicit trusted adapters"
+  ],
+  "qualifiedPlatforms": [
+    "darwin-arm64"
+  ],
+  "recordedAt": "2026-10-01T06:41:15.658Z"
+}

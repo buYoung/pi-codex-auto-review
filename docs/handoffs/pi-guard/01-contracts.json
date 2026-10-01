@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "state": "ready",
+  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "runtimeVersions": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78"
+  },
+  "modulePaths": [
+    "src/contracts.ts",
+    "src/reports.ts"
+  ],
+  "moduleHashes": {
+    "src/contracts.ts": "f5fe5392b271d81c354bc46b3aecce09a1deb111a2e23d4fb9c6769edf56ef75",
+    "src/reports.ts": "19072e96fdcf78ffa5945a0c8dd204c3cef107e718e84037601cd06df3cbf67b"
+  },
+  "testFiles": [
+    "test/unit/contracts.test.mjs"
+  ],
+  "coveredBehavior": [
+    "identity",
+    "profiles",
+    "ipc",
+    "evidence",
+    "public-api"
+  ],
+  "results": [
+    {
+      "schemaVersion": 1,
+      "suite": "contracts",
+      "status": "pass",
+      "command": "npm run test:contracts",
+      "testFiles": [
+        "test/unit/contracts.test.mjs"
+      ],
+      "coveredBehavior": [
+        "identity",
+        "profiles",
+        "ipc",
+        "evidence",
+        "public-api"
+      ],
+      "tests": [
+        {
+          "name": "[identity] canonical snapshots bind final input/cwd/source/session/policy/profile independently",
+          "status": "pass"
+        },
+        {
+          "name": "[profiles] profiles are immutable and read-only cannot silently gain writes",
+          "status": "pass"
+        },
+        {
+          "name": "[ipc] invalid protocol frames cannot be treated as worker success",
+          "status": "pass"
+        },
+        {
+          "name": "[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass",
+          "status": "pass"
+        },
+        {
+          "name": "[public-api] supported installed Pi exposes complete tool contracts and protected startup seams",
+          "status": "pass"
+        }
+      ],
+      "platform": "darwin-arm64",
+      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
+      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "runtimeVersions": {
+        "node": "v24.14.0",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-ai": "0.99.1",
+        "@anthropic-ai/sandbox-runtime": "0.0.78"
+      },
+      "evidenceKind": "unit-doubles",
+      "blockedReasons": [],
+      "recordedAt": "2026-10-01T06:40:54.563Z"
+    }
+  ],
+  "buildProof": {
+    "command": "npm run build",
+    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "status": "pass",
+    "exitCode": 0,
+    "recordedAt": "2026-10-01T06:40:53.903Z"
+  },
+  "publicPiApis": [
+    "createGuardExtension (package)",
+    "createAgentSessionServices",
+    "createAgentSessionFromServices",
+    "createAgentSessionRuntime",
+    "DefaultResourceLoader",
+    "createCodemodeExtension",
+    "createBashToolDefinition",
+    "createReadToolDefinition",
+    "createEditToolDefinition",
+    "createWriteToolDefinition",
+    "createGrepToolDefinition",
+    "createFindToolDefinition",
+    "createLsToolDefinition",
+    "ModelRegistry.streamSimple",
+    "AgentSession.bindExtensions",
+    "AgentSession.reload",
+    "AgentSession.executeBash",
+    "AgentSessionRuntime.dispose"
+  ],
+  "referenceComparison": {
+    "installedPi": "0.99.1",
+    "copiedPi": "0.99.2",
+    "qualifiedPi": [
+      "0.99.1"
+    ],
+    "referenceFiles": [
+      "tmp/pi-main/packages/coding-agent/src/index.ts",
+      "tmp/pi-main/packages/coding-agent/src/core/extensions/types.ts",
+      "tmp/pi-main/packages/coding-agent/src/core/tools/bash.ts"
+    ],
+    "result": "Selected hooks, tool factories, nested execution, timeout units and public SDK modes are present in installed declarations and verified by executable tests. The newer snapshot is a read-only reference; 0.99.2 is not qualified."
+  },
+  "requestContract": {
+    "schemaVersion": 1,
+    "fields": [
+      "toolCallId",
+      "tool",
+      "source",
+      "args",
+      "cwd",
+      "sessionId",
+      "policyRevision",
+      "permissionDigest",
+      "digest"
+    ],
+    "serialization": "sorted finite JSON snapshot; recursive freeze; cwd resolved to canonical path"
+  },
+  "decisionContract": {
+    "outcomes": [
+      "allow",
+      "ask",
+      "deny"
+    ],
+    "hardDeny": "dominates review and every cached grant"
+  },
+  "permissionContract": {
+    "modes": [
+      "read-only",
+      "workspace-write"
+    ],
+    "delta": [
+      "readPaths",
+      "writePaths",
+      "domains"
+    ],
+    "isolation": "base profile immutable, delta specific to one execution"
+  },
+  "grantContract": {
+    "scopes": [
+      "once",
+      "session",
+      "persistent"
+    ],
+    "consumption": "once at logical admission; helper I/O remains inside that action"
+  },
+  "reportContract": {
+    "statuses": [
+      "pass",
+      "fail",
+      "environment-blocked",
+      "not-run"
+    ],
+    "acceptance": "nonempty suites, executed tagged requirements, no skipped/blocked results or stale source hashes"
+  },
+  "fixtureContract": {
+    "root": "owned mkdtemp canonical path",
+    "credentials": "memory/synthetic only",
+    "models": "injected provider or stream; no live requests",
+    "cleanup": "owned roots and processes; nonempty audit scan"
+  },
+  "workerProtocol": {
+    "schemaVersion": 1,
+    "frames": [
+      "data",
+      "update",
+      "result",
+      "error"
+    ],
+    "privateBrokerFrame": "workload-started",
+    "controlTransport": "private Node IPC never inherited by workloads",
+    "payload": "validated JSON over stdin/stdout; shell data quoted independently"
+  },
+  "startupProtection": {
+    "entry": "dist/cli.js or createGuardedRuntime",
+    "barrier": "version/extension/native checks plus prompt/reload/direct user shell guards",
+    "ordinaryPi": "Extension loader may discard failures; ordinary startup is not protected"
+  },
+  "timeoutUnits": {
+    "modelTimeoutMs": "milliseconds",
+    "uiTimeoutMs": "milliseconds",
+    "BashOperations": "seconds"
+  },
+  "commands": {
+    "contracts": "npm run test:contracts",
+    "policy": "npm run test:policy",
+    "reviewer": "npm run test:reviewer",
+    "approvals": "npm run test:approvals",
+    "native": "npm run test:native",
+    "integration": "npm run test:integration",
+    "e2e": "npm run test:e2e"
+  },
+  "recordedAt": "2026-10-01T06:41:15.654Z"
+}
