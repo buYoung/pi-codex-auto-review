@@ -1,10 +1,11 @@
 import { run } from 'node:test';
-import { access, readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { suites } from './suites.mjs';
 import { validateEvidence } from '../dist/reports.js';
+import { createRun, writeImmutable } from './evidence-store.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export async function sourceDigest() {
@@ -44,12 +45,16 @@ export async function runtimeVersions() {
   }
   return versions;
 }
-export async function runSuite(name) {
+export async function runSuite(name, selectedRun) {
   const suite = suites[name];
   if (!suite) throw new Error(`Unknown suite: ${name}`);
+  const source = await sourceDigest(), contract = await contractDigest();
+  const currentRun = selectedRun ?? await createRun({ sourceDigest: source, contractDigest: contract });
+  const startedAt = new Date().toISOString();
   for (const file of suite.files) await access(join(root, file));
   const tests = [], blockedReasons = [], nativeControls=[];
-  const runner = run({ files: suite.files.map(file => join(root, file)), execArgv:['--import',new URL('../test/harness/environment.mjs',import.meta.url).href], concurrency: 1, timeout: 120_000 });
+  const runEnvironment = `data:text/javascript,${encodeURIComponent(`process.env.PI_GUARD_RUN_DIR=${JSON.stringify(currentRun.directory)};`)}`;
+  const runner = run({ files: suite.files.map(file => join(root, file)), execArgv:['--import',runEnvironment,'--import',new URL('../test/harness/environment.mjs',import.meta.url).href], concurrency: 1, timeout: 120_000 });
   for await (const event of runner) {
     const { data, type } = event;
     if(type==='test:diagnostic' && data.message.startsWith('NATIVE_OBSERVATION:'))nativeControls.push(JSON.parse(data.message.slice('NATIVE_OBSERVATION:'.length)));
@@ -64,16 +69,19 @@ export async function runSuite(name) {
       if (isBlocked) blockedReasons.push(String(error.cause?.message ?? error.message));
     }
   }
-  const status = tests.length && tests.every(t => t.status === 'pass') ? 'pass' : tests.some(t=>t.status==='fail') ? 'fail' : blockedReasons.length ? 'environment-blocked' : 'fail';
+  const isSourceStable = source === await sourceDigest() && contract === await contractDigest();
+  const status = !isSourceStable ? 'fail' : tests.length && tests.every(t => t.status === 'pass') ? 'pass' : tests.some(t=>t.status==='fail') ? 'fail' : blockedReasons.length ? 'environment-blocked' : 'fail';
   const evidence = {
-    schemaVersion: 1, suite: name, status, command: `npm run test:${name}`, testFiles: suite.files,
+    schemaVersion: 2, runId: currentRun.runId, artifactPath: `${currentRun.artifactPath}/${name}.json`, startedAt,
+    provenance: 'executed', suite: name, status, command: `npm run test:${name}`, testFiles: suite.files,
     coveredBehavior: suite.behavior.filter(b => tests.some(t => t.status === 'pass' && t.name.includes(`[${b}]`))),
-    tests, platform: `${process.platform}-${process.arch}`, sourceDigest: await sourceDigest(), contractDigest: await contractDigest(),
+    tests, platform: `${process.platform}-${process.arch}`, sourceDigest: source, contractDigest: contract,
     runtimeVersions: await runtimeVersions(), evidenceKind: suite.kind, ...(name==='native'?{nativeControls}:{}), blockedReasons, recordedAt: new Date().toISOString(),
   };
-  validateEvidence(evidence, suite.behavior);
-  await mkdir(join(root, '.reports/pi-guard'), { recursive: true });
-  await writeFile(join(root, `.reports/pi-guard/${name}.json`), JSON.stringify(evidence, null, 2) + '\n');
+  if (!isSourceStable) evidence.blockedReasons.push('Source changed during execution; rerun this suite against a stable checkout');
+  await writeImmutable(join(currentRun.directory, `${name}.json`), evidence);
+  console.log(`Evidence: ${evidence.artifactPath}`);
+  validateEvidence(evidence, suite.behavior, { sourceDigest: source, contractDigest: contract, platform: currentRun.platform, requireRun: true });
   if (status !== 'pass') process.exitCode = 1;
   return evidence;
 }

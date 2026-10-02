@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { NativeExecutor } from '../../dist/sandbox/executor.js';
 import { EMPTY_DELTA } from '../../dist/contracts.js';
 import { workloadEnvironment, shellQuote } from '../../dist/sandbox/config.js';
-import { fixture } from '../harness/fixtures.mjs';
+import { fixture, auditPopulationPath } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream } from '../harness/pi.mjs';
 
 const exec=promisify(execFile), repository=fileURLToPath(new URL('../../',import.meta.url));
@@ -67,7 +67,7 @@ console.log(JSON.stringify({factoryLoaded:true,workerEffect:true,hostVersion:'0.
   const help=await exec(process.execPath,[join(consumer,'package/dist/cli.js'),'--help'],{cwd:f.workspace,env,timeout:10000});assert.match(help.stdout,/사용법/);
 });
 test('[cleanup] nonempty owned audit population is scanned and native resources settle before disposal', async t => {
-  const population=await readFile(new URL('../../.reports/pi-guard/owned-audits.jsonl',import.meta.url),'utf8');
+  const population=await readFile(auditPopulationPath,'utf8');
   assert.ok(population.trim().split('\n').length>0);assert.ok(!/SYNTHETIC_GUARD_SECRET_[a-z0-9-]+/i.test(population));
   const f=await fixture(t), executor=new NativeExecutor();await executor.qualify(f.profile,f.workspace);
   await executor.execute({kind:'file',operation:'write',path:join(f.workspace,'cleanup.txt'),content:'done',cwd:f.workspace},f.profile,EMPTY_DELTA);

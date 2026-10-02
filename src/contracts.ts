@@ -80,6 +80,15 @@ export type WorkerFrame =
 /** Only the unsandboxed broker's private IPC channel can send this control frame. */
 export interface BrokerControlFrame { readonly schemaVersion: 1; readonly type: 'workload-started'; readonly processGroupId: number }
 export interface TestEvidence {
+  readonly schemaVersion?: 1 | 2;
+  readonly runId?: string;
+  readonly artifactPath?: string;
+  readonly provenance?: 'executed' | 'preserved-legacy' | 'synthetic';
+  readonly startedAt?: string;
+  readonly recordedAt?: string;
+  readonly provider?: { readonly package: string; readonly version: string; readonly id: string; readonly model: string };
+  readonly imageDigest?: string;
+  readonly pluginArtifactDigest?: string;
   readonly suite: string;
   readonly status: EvidenceStatus;
   readonly command: string;

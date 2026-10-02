@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { suites } from './suites.mjs';
 import { sourceDigest, contractDigest, runtimeVersions } from './run-tests.mjs';
 import { validateEvidence } from '../dist/reports.js';
+import { writeImmutable } from './evidence-store.mjs';
+import { join } from 'node:path';
 const root=new URL('../',import.meta.url);
 const modules={
  '01-contracts':['src/contracts.ts','src/reports.ts'],
@@ -12,7 +14,7 @@ const modules={
  '04-sandbox':['src/sandbox/config.ts','src/sandbox/executor.ts','src/sandbox/broker.ts','src/sandbox/worker.ts'],
  '05-integration':['src/index.ts','src/startup.ts','src/cli.ts','src/tools/controller.ts'],
 };
-export async function writeHandoffs(results,buildProof={status:'not-run'}) {
+export async function writeHandoffs(results,buildProof={status:'not-run'},run) {
  const source=await sourceDigest(),contract=await contractDigest(),versions=await runtimeVersions();
  await mkdir(new URL('docs/handoffs/pi-guard/',root),{recursive:true});
  const associations={'01-contracts':['contracts'],'02-policy':['policy'],'03-review':['reviewer','approvals'],'04-sandbox':['native'],'05-integration':['integration']};
@@ -44,6 +46,8 @@ export async function writeHandoffs(results,buildProof={status:'not-run'}) {
   for(const report of selected) {validateEvidence(report,suites[report.suite].behavior,{sourceDigest:source,contractDigest:contract});if(report.status!=='pass')isReady=false;}
   const moduleHashes={};for(const path of paths)moduleHashes[path]=createHash('sha256').update(await readFile(new URL(path,root))).digest('hex');
   const handoff={schemaVersion:1,state:isReady?'ready':selected.some(report=>report.status==='environment-blocked')?'environment-blocked':'not-ready',sourceDigest:source,contractDigest:contract,runtimeVersions:versions,modulePaths:paths,moduleHashes,testFiles:selected.flatMap(report=>report.testFiles),coveredBehavior:selected.flatMap(report=>report.coveredBehavior),results:selected,buildProof,...details[name],...(name==='05-integration'?{qualifiedPlatforms:results.native?.status==='pass'?[results.native.platform]:[]}:{}),recordedAt:new Date().toISOString()};
-  await writeFile(new URL(`docs/handoffs/pi-guard/${name}.json`,root),JSON.stringify(handoff,null,2)+'\n');
+  if (!run) throw new Error('Handoff publication requires an immutable run');
+  await writeImmutable(join(run.directory, `${name}.json`), handoff);
+  await writeFile(new URL(`docs/handoffs/pi-guard/${name}.json`,root),JSON.stringify({...handoff,runId:run.runId,artifactPath:`${run.artifactPath}/${name}.json`},null,2)+'\n');
  }
 }

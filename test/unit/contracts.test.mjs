@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAction, createProfile, decision, canonicalJson, digest, validateWorkerFrame } from '../../dist/contracts.js';
-import { validateEvidence } from '../../dist/reports.js';
+import { validateEvidence, validatePlatformEvidence } from '../../dist/reports.js';
+import { createRun, writeImmutable } from '../../scripts/evidence-store.mjs';
+import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fixture } from '../harness/fixtures.mjs';
 import * as pi from '@earendil-works/pi-coding-agent';
 
@@ -37,7 +40,25 @@ test('[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-nat
   for (const changed of [{ tests: [] }, { testFiles: [] }, { coveredBehavior: [] }, { tests: [{ name: '[effect]', status: 'environment-blocked' }] }, { tests: [{ name: '[effect]', status: 'pass', isSkipped: true }] }, { tests: [valid.tests[0], valid.tests[0]] }, { blockedReasons: ['blocked'] }, { evidenceKind: 'unit-doubles' }]) assert.throws(() => validateEvidence({ ...valid, ...changed }, ['effect']));
   assert.throws(() => validateEvidence(valid, ['effect'], { contractDigest: 'changed', sourceDigest: 'source' }));
   assert.throws(() => validateEvidence({...valid,nativeControls:[]},['effect']),/observed permitted and denied/);
+  assert.throws(() => validateEvidence(valid, ['effect'], { contractDigest: 'contract', sourceDigest: 'source', platform: 'linux-x64' }), /architecture/);
+  assert.throws(() => validateEvidence(valid, ['effect'], { contractDigest: 'contract', sourceDigest: 'source', requireRun: true }), /executed/);
+  assert.throws(() => validateEvidence({...valid, provenance: 'synthetic'}, ['effect']), /Synthetic/);
+  const current = {...valid, schemaVersion: 2, runId: 'run', artifactPath: 'runs/run/native.json', provenance: 'executed', startedAt: '2026-10-03T00:00:00Z', recordedAt: '2026-10-03T00:00:01Z'};
+  const platform = {...current, results: {native: current}};
+  const expected = {platform: valid.platform, sourceDigest: valid.sourceDigest, contractDigest: valid.contractDigest};
+  validatePlatformEvidence(platform, {native: {behavior: ['effect']}}, expected);
+  assert.throws(() => validatePlatformEvidence({...platform, results: {native: {...current, platform: 'linux-x64'}}}, {native: {behavior: ['effect']}}, expected));
+  assert.throws(() => validatePlatformEvidence({...platform, results: {native: {...current, runId: 'other'}}}, {native: {behavior: ['effect']}}, expected));
   validateEvidence({ ...valid, status: 'environment-blocked', tests: [{ name: '[effect]', status: 'environment-blocked' }], blockedReasons: ['Unavailable OS'] }, []);
+});
+test('[evidence] concurrent synthetic platform and same-platform storage preserves immutable bytes', async t => {
+  const f = await fixture(t);
+  const runs = await Promise.all(['darwin-arm64', 'linux-x64', 'linux-x64', 'linux-x64'].map(platform => createRun({base: join(f.root, 'reports'), platform, provenance: 'synthetic'})));
+  assert.equal(new Set(runs.map(run => run.directory)).size, 4);
+  const bytes = runs.map((run, index) => JSON.stringify({runId: run.runId, platform: run.platform, sourceDigest: `synthetic-${index}`, provenance: 'synthetic'}));
+  await Promise.all(runs.map((run, index) => writeImmutable(join(run.directory, 'proof.json'), bytes[index])));
+  await assert.rejects(writeImmutable(join(runs[0].directory, 'proof.json'), 'replacement'), {code: 'EEXIST'});
+  assert.deepEqual(await Promise.all(runs.map(run => readFile(join(run.directory, 'proof.json'), 'utf8'))), bytes);
 });
 test('[public-api] supported installed Pi exposes complete tool contracts and protected startup seams', () => {
   for (const name of ['createAgentSession', 'createAgentSessionRuntime', 'DefaultResourceLoader', 'SessionManager', 'SettingsManager', 'ModelRuntime', 'InteractiveMode', 'runPrintMode', 'runRpcMode', 'createBashToolDefinition', 'createReadToolDefinition', 'createEditToolDefinition', 'createWriteToolDefinition', 'createGrepToolDefinition', 'createFindToolDefinition', 'createLsToolDefinition']) assert.equal(typeof pi[name], 'function', name);
