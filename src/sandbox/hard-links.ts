@@ -91,7 +91,7 @@ export async function assertHardLinkBoundaries(profile: PermissionProfile, delta
     // A protected inode with another name outside these denies must never be read.
     await inspect(profile.denyRead);
     const reads = [...profile.readRoots,...delta.readPaths,...delta.writePaths];
-    const hasFullRead=(config.filesystem.allowRead??[]).some(root=>root===parse(root).root);
+    const hasFullRead=!config.filesystem.denyRead.includes('/') || (config.filesystem.allowRead??[]).some(root=>root===parse(root).root);
     const writes = config.filesystem.allowWrite ?? [], writeDenies = config.filesystem.denyWrite ?? [];
     const opaque=[...new Set([...(hasFullRead?[]:await opaqueDirectories(reads,profile.denyRead)),...await opaqueDirectories(writes,writeDenies)])];
     // Keep opaque subtrees inaccessible in the workload, including chmod and ancestor moves.

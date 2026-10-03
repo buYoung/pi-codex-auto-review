@@ -224,22 +224,22 @@ test('[workflow] trusted Pi skills prompts and themes reach the session while pr
   assert.ok(!untrustedLoader.getThemes().themes.some(theme=>theme.name==='owned-theme'));
 });
 test('[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets', async t => {
-  const f=await fixture(t), artifacts=join(f.root,'artifacts'), consumer=join(f.root,'consumer # fixture'), home=join(f.control,'fake-home');
+  const f=await fixture(t), artifacts=join(f.root,'artifacts'), consumer=join(f.agentDir,'npm/consumer # fixture'), home=join(f.control,'fake-home');
   await Promise.all([artifacts,consumer,home].map(path=>mkdir(path,{recursive:true})));
   const env={...workloadEnvironment(),...(process.env.PI_GUARD_KERNEL_ARCH?{PI_GUARD_KERNEL_ARCH:process.env.PI_GUARD_KERNEL_ARCH}:{}),PI_CODING_AGENT_DIR:f.agentDir,NPM_CONFIG_CACHE:join(f.control,'npm-cache'),NPM_CONFIG_USERCONFIG:join(f.control,'empty.npmrc'),NPM_CONFIG_GLOBALCONFIG:join(f.control,'global.npmrc')};
   const packed=JSON.parse((await exec('npm',['pack','--ignore-scripts','--json','--pack-destination',artifacts],{cwd:repository,env,timeout:20000,maxBuffer:2_000_000})).stdout)[0];
   assert.ok(packed.files.some(file=>file.path==='dist/sandbox/worker.js'));assert.ok(packed.files.some(file=>file.path==='dist/sandbox/broker.js'));
-  assert.ok(packed.files.some(file=>file.path===`dist/native/pi-guard-execpolicy${process.platform==='win32'?'.exe':''}`));
+  assert.ok(packed.files.some(file=>file.path===`dist/native/${process.platform}-${process.arch}/pi-guard-execpolicy${process.platform==='win32'?'.exe':''}`));
   assert.ok(packed.files.some(file=>file.path==='native/execpolicy/LICENSE'));
-  assert.ok(!packed.files.some(file=>/^(src|test|tmp|node_modules)\//.test(file.path)));
+  assert.ok(!packed.files.some(file=>/^(src|test|tmp|vendor)\//.test(file.path)||/^node_modules\/@earendil-works\//.test(file.path)));
   await exec('tar',['-xzf',join(artifacts,packed.filename),'-C',consumer],{timeout:10000});
-  await symlink(join(repository,'node_modules'),join(consumer,'package/node_modules'));
+  await mkdir(join(consumer,'package/node_modules'),{recursive:true});
   await writeFile(join(f.agentDir,'mcp.json'),JSON.stringify({mcpServers:{stdio:{command:process.execPath,args:[resolve('test/harness/mcp-server.mjs'),join(f.outside,'sentinel.txt'),'no-startup-effect','read_owned'],exposure:'direct'}}}));
   const script=join(consumer,'package/probe.mjs');
   await writeFile(script,`
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createAgentSessionRuntime,createAgentSessionServices,createAgentSessionFromServices,createMcpExtension,SettingsManager,SessionManager} from '@earendil-works/pi-coding-agent';
+import {createAgentSessionRuntime,createAgentSessionServices,createAgentSessionFromServices,createMcpExtension,SettingsManager,SessionManager,VERSION} from ${JSON.stringify(process.env.PI_GUARD_TEST_HOST_SDK_ENTRY ?? import.meta.resolve('@earendil-works/pi-coding-agent'))};
 import {offlineModelRuntime,planStream,FAKE_MODEL} from ${JSON.stringify(new URL('../harness/pi.mjs',import.meta.url).href)};
 import {parseRules} from './dist/policy/rules.js';
 assert.equal(parseRules('prefix_rule(pattern=["packed"], decision="forbidden")')[0].decision,'forbidden');
@@ -261,12 +261,13 @@ try {
  assert.equal(results.length,2);assert.ok(results.every(event=>!event.isError),JSON.stringify(results));
  assert.ok(JSON.stringify(results[1].result).includes('unchanged'));
  assert.equal(runtime.services.resourceLoader.getExtensions().extensions.filter(extension=>extension.commands.has('mcp')).length,1);
- console.log(JSON.stringify({factoryLoaded:true,workerEffect:true,officialMcp:true,hostVersion:'0.99.1'}));
+ console.log(JSON.stringify({factoryLoaded:true,workerEffect:true,officialMcp:true,hostVersion:VERSION}));
 } finally {await runtime.dispose();}
 `);
   const started=Date.now();
   const executed=await exec(process.execPath,[script],{cwd:f.workspace,env:{...env,GUARD_AGENT_DIR:f.agentDir},timeout:60000,maxBuffer:2000000}).catch(error=>{throw new Error(`Packed probe failed after ${Date.now()-started}ms; code=${error.code}; killed=${error.killed}; signal=${error.signal}; stderr=${error.stderr??''}`,{cause:error});});
   assert.match(executed.stdout,/"factoryLoaded":true/);assert.match(executed.stdout,/"officialMcp":true/);assert.equal(await readFile(join(f.workspace,'packed.txt'),'utf8'),'packed-effect');
+  await symlink(join(repository,'node_modules/@earendil-works'),join(consumer,'package/node_modules/@earendil-works'));
   const help=await exec(process.execPath,[join(consumer,'package/dist/cli.js'),'--help'],{cwd:f.workspace,env,timeout:10000});assert.match(help.stdout,/사용법/);
 });
 test('[cleanup] nonempty owned audit population is scanned and native resources settle before disposal', async t => {

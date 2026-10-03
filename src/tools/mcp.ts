@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createMcpExtension, type ExtensionFactory, type InlineExtension, type McpExtensionOptions, type McpTransportFactory, type ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { canonicalJson, digest, GuardError, type Json } from '../contracts.js';
 import type { GuardController } from './controller.js';
+import { getPiSDKEntryPath } from '../pi-host.js';
 import { externalInvocations, type ExternalInvocation, type ExternalToolIdentity } from './external.js';
 
 type Transport = ReturnType<McpTransportFactory>;
@@ -127,7 +129,7 @@ function guardedTransport(base: Transport, server: string, registration: string,
  * This small, version-qualified seam preserves the SDK's transport, config and OAuth implementation.
  */
 export async function createGuardedMcpExtension(agentDir: string, controller: () => GuardController, options: McpExtensionOptions = {}, policies: McpToolPolicies = {}): Promise<InlineExtension> {
-  const sdk = new URL('./', import.meta.resolve('@earendil-works/pi-coding-agent'));
+  const sdk = new URL('./', pathToFileURL(getPiSDKEntryPath()));
   const [runtime, config, auth] = await Promise.all([
     import(new URL('extensions/mcp/runtime.js',sdk).href),
     import(new URL('extensions/mcp/config.js',sdk).href),

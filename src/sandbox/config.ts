@@ -21,7 +21,7 @@ export function workloadEnvironment(caller: NodeJS.ProcessEnv = {}, ambient: Nod
   }
   return env;
 }
-export async function nativeConfig(profile: PermissionProfile, delta: PermissionDelta, cwd: string, authority?: ExecutionAuthority): Promise<SandboxRuntimeConfig> {
+export async function nativeConfig(profile: PermissionProfile, delta: PermissionDelta, cwd: string, authority?: ExecutionAuthority, piSDKEntryPath?: string): Promise<SandboxRuntimeConfig> {
   createProfile(profile);
   const resolved = {...profile};
   for (const key of ['readRoots','writeRoots','denyRead','denyWrite'] as const) resolved[key] = await Promise.all(profile[key].map(path => canonicalPath(path, cwd)));
@@ -34,6 +34,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   if (reads.some(path => profile.denyRead.some(root => isWithin(path, root))) || writes.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root)))) throw new GuardError('HARD_DENY', 'Permission delta targets a protected path');
   if (delta.domains.some(domain => !isNetworkHost(domain) || profile.deniedDomains.some(pattern => matchesDomain(domain, pattern)))) throw new GuardError('HARD_DENY', 'Invalid or denied network domain');
   const isCommandAuthority = authority?.kind === 'command-rule' || authority?.kind === 'reviewed-command';
+  const hasFullRead = isCommandAuthority || profile.readRoots.includes('/');
   const baseProtected = await Promise.all((profile.readOnlyPaths ?? []).map(path => canonicalPath(path, cwd)));
   const lifted = baseProtected.filter(root => writes.some(path => isWithin(path, root)));
   // Removing a base metadata deny must not expose its siblings through the original workspace root.
@@ -43,8 +44,11 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   const packageRoot = fileURLToPath(new URL('../../', import.meta.url));
   const nodeRoot = resolve(dirname(await realpath(process.execPath)), '..');
   const dependencyRoots: string[] = [];
-  for (const name of ['@earendil-works/pi-coding-agent', '@anthropic-ai/sandbox-runtime']) {
-    let current = dirname(await realpath(fileURLToPath(import.meta.resolve(name))));
+  for (const entry of [
+    piSDKEntryPath ?? fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')),
+    fileURLToPath(import.meta.resolve('@anthropic-ai/sandbox-runtime')),
+  ]) {
+    let current = dirname(await realpath(entry));
     let root = current;
     while (dirname(current) !== current) {
       if (basename(current) === 'node_modules' || basename(current) === '.pnpm') root = current;
@@ -52,14 +56,16 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
     }
     dependencyRoots.push(root);
   }
-  const systemRead = ['/usr', '/bin', '/sbin', '/System', '/Library', '/opt/homebrew', '/private/etc', '/etc', '/dev', '/proc', '/sys', nodeRoot, packageRoot, ...dependencyRoots];
+  const systemRead = ['/usr', '/bin', '/sbin', '/System', '/Library', '/opt/homebrew', '/private/etc', '/etc', '/dev', '/proc', '/sys', nodeRoot];
+  const runtimeRead = [resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), ...dependencyRoots];
   const seccomp = seccompRuntime();
   const config: SandboxRuntimeConfig = {
     ...(seccomp ? {seccomp: {applyPath: seccomp.applyPath}} : {}),
     filesystem: {
-      // All user data starts unreadable; runtime/assets and the admitted roots are carve-outs.
-      denyRead: ['/', ...profile.denyRead],
-      allowRead: await linuxReadPaths([...systemRead, ...(isCommandAuthority ? ['/'] : profile.readRoots), ...reads, ...writes], writeRoots),
+      // A full-read profile needs only its explicit denies. Re-allowing "/" would
+      // make SRT's nested denies override runtime code installed inside the agent directory.
+      denyRead: [...(hasFullRead ? [] : ['/']), ...profile.denyRead],
+      allowRead: [...await linuxReadPaths([...systemRead, ...(hasFullRead ? [] : [...profile.readRoots, ...reads, ...writes])], writeRoots), ...runtimeRead],
       allowWrite: writeRoots,
       denyWrite: [...profile.denyWrite, ...profile.denyRead, ...unapprovedDefaults, ...(isCommandAuthority ? [] : baseProtected.filter(root => !lifted.includes(root))), ...dependencyRoots, resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), resolve(packageRoot, 'package-lock.json')],
       allowGitConfig: isCommandAuthority || writes.some(path => /[/\\]\.git(?:[/\\]config)?$/.test(path)),

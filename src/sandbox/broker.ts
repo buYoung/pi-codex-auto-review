@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { StringDecoder } from 'node:string_decoder';
 import { randomUUID } from 'node:crypto';
+import { isAbsolute } from 'node:path';
 import { SandboxManager, type SandboxRuntimeConfig } from '@anthropic-ai/sandbox-runtime';
 import { GuardError, validateWorkerFrame, type WorkerJob, type WorkerFrame } from '../contracts.js';
 import { shellQuote, workloadEnvironment } from './config.js';
@@ -37,6 +38,8 @@ process.on('message', raw => {
 });
 async function run({ commandId, config, job }: { commandId: string; config: SandboxRuntimeConfig; job: WorkerJob }): Promise<void> {
   if (!job || !['shell', 'tool', 'file'].includes(job.kind) || typeof job.cwd !== 'string') throw new GuardError('INVALID_IPC', 'Invalid workload');
+  const piSDKEntryPath = process.argv[2];
+  if (!piSDKEntryPath || !isAbsolute(piSDKEntryPath) || piSDKEntryPath.includes('\0')) throw new GuardError('INVALID_IPC', 'Expected a trusted absolute Pi SDK entry');
   await SandboxManager.initialize(config, config.network.strictAllowlist === false ? async destination => {
     if (cancellation.signal.aborted || !process.connected || networkRequests.size >= 32) return false;
     const requestId = randomUUID();
@@ -53,7 +56,7 @@ async function run({ commandId, config, job }: { commandId: string; config: Sand
     const sockets = [SandboxManager.getLinuxHttpSocketPath(), SandboxManager.getLinuxSocksSocketPath()].filter((path): path is string => !!path);
     SandboxManager.updateConfig({...config, filesystem: {...config.filesystem, allowRead: [...(config.filesystem.allowRead ?? []), ...sockets]}});
   }
-  const command = `${shellQuote(process.execPath)} ${shellQuote(fileURLToPath(new URL('./worker.js', import.meta.url)))}`;
+  const command = `${shellQuote(process.execPath)} ${shellQuote(fileURLToPath(new URL('./worker.js', import.meta.url)))} ${shellQuote(piSDKEntryPath)}`;
   const wrapped = await SandboxManager.wrapWithSandboxArgv(command, '/bin/bash', undefined, cancellation.signal, job.cwd, { commandId });
   cancellation.signal.throwIfAborted();
   if (!wrapped.argv.length || !wrapped.argv.some(arg => arg.includes('sandbox-exec') || arg.includes('bwrap'))) throw new GuardError('BACKEND_UNAVAILABLE', 'Runtime did not return a native isolation command');

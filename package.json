@@ -1,7 +1,26 @@
 {
   "name": "pi-codex-auto-review",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Codex의 ‘Approve for me’에서 영감을 받은 Pi용 자동 실행 승인 검토 확장. 규칙과 Pi의 현재 모델로 도구 실행을 검토하고, 필요한 경우 사용자 승인을 요청합니다.",
+  "license": "Apache-2.0",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "sandbox",
+    "auto-review"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buYoung/pi-codex-auto-review.git"
+  },
+  "homepage": "https://github.com/buYoung/pi-codex-auto-review#readme",
+  "bugs": {
+    "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +37,9 @@
     ]
   },
   "scripts": {
+    "release": "node scripts/release.mjs",
     "build": "tsc && node scripts/build-execpolicy.mjs",
+    "prepack": "tsc && node scripts/check-package.mjs",
     "test:contracts": "node scripts/run-tests.mjs contracts",
     "test:policy": "node scripts/run-tests.mjs policy",
     "test:reviewer": "node scripts/run-tests.mjs reviewer",
@@ -35,14 +56,20 @@
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.78"
   },
+  "bundleDependencies": [
+    "@anthropic-ai/sandbox-runtime"
+  ],
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "0.99.1"
+    "@earendil-works/pi-coding-agent": "0.99.1 || 1.0.0"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "file:vendor/pi-coding-agent-0.99.1-security.1.tgz",
+    "@inquirer/prompts": "8.5.2",
     "@sinclair/typebox": "0.34.52",
     "@types/node": "24.0.0",
     "pi-ollama-cloud": "0.12.2",
+    "release-it": "21.0.1",
+    "semver": "7.8.5",
     "typescript": "6.0.3"
   },
   "overrides": {
@@ -56,10 +83,19 @@
     "node": ">=22.19.0"
   },
   "files": [
-    "dist",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "dist/native/*/pi-guard-execpolicy*",
+    "dist/native/*/artifact.json",
     "README.md",
+    "LICENSE",
+    "NOTICE",
+    "docs/usage.md",
+    "docs/publishing.md",
+    "docs/security/dependencies.md",
+    "docs/testing/auto-review-protection.md",
     "native/execpolicy/LICENSE",
     "native/execpolicy/NOTICE"
-  ],
-  "private": true
+  ]
 }

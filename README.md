@@ -1,6 +1,17 @@
 # pi-codex-auto-review
 
-Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검토 확장입니다. Pi 도구 실행을 규칙과 현재 모델로 검토하고, 필요하면 사용자 승인을 요청합니다. Codex 공개 소스 [`rust-v0.160.0`](https://github.com/openai/codex/tree/a956835d020762cb2b570053af06f643a11c0ecc)의 실행 승인 동작을 참고한 독립 구현을 Pi 0.99.1의 공개 API와 운영체제 샌드박스에 연결했습니다. 설치·설정 방법은 [사용법](docs/usage.md) 문서에 있습니다.
+Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검토 확장입니다. Pi 도구 실행을 규칙과 현재 모델로 검토하고, 필요하면 사용자 승인을 요청합니다. Codex 공개 소스 [`rust-v0.160.0`](https://github.com/openai/codex/tree/a956835d020762cb2b570053af06f643a11c0ecc)의 실행 승인 동작을 참고한 독립 구현을 Pi 0.99.1·1.0.0의 공개 API와 운영체제 샌드박스에 연결했습니다. 설치·설정 방법은 [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/usage.md) 문서에 있습니다.
+
+## 설치
+
+npm에 게시된 버전은 Pi에서 설치합니다. 배포 패키지는 macOS ARM64와 Linux x64용 규칙 엔진을 포함하며, 설치할 때 Rust 빌드가 필요하지 않습니다.
+
+```sh
+pi install npm:pi-codex-auto-review@0.1.1
+pi list
+```
+
+확장 로딩 실패를 Pi가 무시할 수 있으므로 보호 시작이 필수인 실행은 [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/usage.md)의 CLI·SDK 진입점을 사용합니다. `pnpm release`의 버전 선택·Git 작업과 GitHub Actions의 자동 npm 게시 설정은 [배포 안내](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/publishing.md)에 있습니다.
 
 ## 동작 흐름
 
@@ -14,9 +25,9 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 | 항목 | 요구 |
 | --- | --- |
 | Node.js | 22.19 이상 |
-| Pi | 0.99.1 (고정 버전) |
-| Rust | 1.95 이상 — 소스 빌드가 고정된 Codex 규칙 엔진을 컴파일합니다 |
-| 운영체제 | 네이티브 격리는 macOS와 Linux. Windows는 네이티브 격리를 지원하지 않습니다 |
+| Pi | 0.99.1 또는 1.0.0 |
+| Rust | 소스 빌드에만 1.95 이상 필요 |
+| 운영체제 | npm 배포 대상은 macOS ARM64와 Linux x64. Windows는 네이티브 격리를 지원하지 않습니다 |
 
 ## 보호 경계
 
@@ -27,7 +38,7 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 - 자동 검토는 현재 모델로 수행하고, 반복 거부되면 실제 작업을 중단합니다. 검토 오류는 승인으로 바뀌지 않습니다.
 - MCP 도구 승인과 프로젝트 지침 탐색도 같은 신뢰·검토 경계 안에 둡니다.
 
-각 결합 조건과 설정은 [사용법](docs/usage.md) 문서에 있습니다.
+각 결합 조건과 설정은 [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/usage.md) 문서에 있습니다.
 
 ## 한계와 비보장
 
@@ -36,7 +47,7 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 - Linux의 상위 디렉터리 쓰기 승인이 단일 파일 생성 권한과 완전히 같다고 보장하지 않습니다.
 - 이미 MCP 서버에 전달한 요청의 취소 효과는 외부 공급자의 구현에 달려 있습니다.
 - 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
-- 별도로 설치한 Pi 호스트의 의존성을 자동으로 교체하지 않습니다. 이 저장소의 조치 근거는 [의존성 보안](docs/security/dependencies.md) 문서에 있습니다.
+- 별도로 설치한 Pi 호스트의 의존성을 자동으로 교체하지 않습니다. 이 저장소의 조치 근거는 [의존성 보안](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/security/dependencies.md) 문서에 있습니다.
 
 ## 검증
 
@@ -50,12 +61,17 @@ npm run verify:guard
 - `npm run verify:platform`은 현재 운영체제의 전체 검증을 실행합니다.
 - GitHub Actions의 `자동 검토 운영체제 검증`은 실제 Linux x64 검사와 Docker 이미지·결과 반출을 수행합니다. workflow에는 Ollama 키를 전달하지 않습니다.
 - Windows의 `verify:windows`는 원본 규칙 엔진·승인 정책과 미지원 시작의 거부를 검증합니다.
-- Docker 컨테이너 검증 활용은 [사용법](docs/usage.md) 문서의 Docker 절에 있습니다.
-- 각 실행은 `.reports/pi-guard/runs/<실행 ID>/<플랫폼>/`에 저장되고, 보호·허용·차단 사례는 [보호 경계 검증표](docs/testing/auto-review-protection.md)에 있습니다.
+- Docker 컨테이너 검증 활용은 [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/usage.md) 문서의 Docker 절에 있습니다.
+- 각 실행은 `.reports/pi-guard/runs/<실행 ID>/<플랫폼>/`에 저장되고, 보호·허용·차단 사례는 [보호 경계 검증표](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/testing/auto-review-protection.md)에 있습니다.
 
 ## 문서
 
-- [사용법](docs/usage.md) — 설치와 빌드, Pi 확장 등록, CLI·SDK, 정책 파일, 검증 활용
-- [의존성 보안](docs/security/dependencies.md) — 높은 심각도 감사 항목의 적용 근거와 재생성 방법
-- [보호 경계 검증표](docs/testing/auto-review-protection.md) — 보호·허용·검토 실패·취소 사례와 검증하지 않은 범위
-- [인계 자료](docs/handoffs/auto-review/) — 플랫폼·실모델 검증의 실행 근거와 소스 해시. 새 변경의 완료 여부는 이 기준으로 확인합니다.
+- [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/usage.md) — 설치와 빌드, Pi 확장 등록, CLI·SDK, 정책 파일, 검증 활용
+- [배포 안내](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/publishing.md) — pnpm release, Trusted Publishing 설정과 GitHub Actions의 자동 npm 게시
+- [의존성 보안](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/security/dependencies.md) — 높은 심각도 감사 항목의 적용 근거와 재생성 방법
+- [보호 경계 검증표](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/testing/auto-review-protection.md) — 보호·허용·검토 실패·취소 사례와 검증하지 않은 범위
+- [인계 자료](https://github.com/buYoung/pi-codex-auto-review/tree/HEAD/docs/handoffs/auto-review) — 플랫폼·실모델 검증의 실행 근거와 소스 해시. 새 변경의 완료 여부는 이 기준으로 확인합니다.
+
+## 라이선스
+
+[Apache-2.0](LICENSE). 포함된 Codex 코드와 정책의 출처 표시는 [NOTICE](NOTICE)와 `native/execpolicy/`의 LICENSE·NOTICE에 유지합니다.
