@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
   "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -45,9 +45,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/reviewer.json",
-      "startedAt": "2026-10-03T02:14:38.041Z",
+      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/reviewer.json",
+      "startedAt": "2026-10-03T02:52:05.239Z",
       "provenance": "executed",
       "suite": "reviewer",
       "status": "pass",
@@ -91,7 +91,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
       "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -101,13 +101,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:14:38.141Z"
+      "recordedAt": "2026-10-03T02:52:05.409Z"
     },
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/approvals.json",
-      "startedAt": "2026-10-03T02:14:38.146Z",
+      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/approvals.json",
+      "startedAt": "2026-10-03T02:52:05.421Z",
       "provenance": "executed",
       "suite": "approvals",
       "status": "pass",
@@ -164,7 +164,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
       "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -174,7 +174,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:14:38.266Z"
+      "recordedAt": "2026-10-03T02:52:05.642Z"
     }
   ],
   "buildProof": {
@@ -182,7 +182,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:14:37.243Z"
+    "recordedAt": "2026-10-03T02:52:03.827Z"
   },
   "decisionFallbacks": "Structured allow grants the reviewed invocation delta or command authority. Denied/timed-out/aborted/failed remain distinct; technical failures never become approvals or UI fallbacks. Legacy decision/reason providers cannot widen authority automatically.",
   "context": "Trusted retained user/developer/AGENTS/confirmation sources remain distinct from visible assistant/tool evidence; no hidden reasoning",
@@ -200,7 +200,7 @@
     "FileGrantPersistence",
     "AuditLog"
   ],
-  "recordedAt": "2026-10-03T02:15:15.495Z",
-  "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/03-review.json"
+  "recordedAt": "2026-10-03T02:53:42.498Z",
+  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/03-review.json"
 }

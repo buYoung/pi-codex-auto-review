@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
   "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -40,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T02:14:38.271Z",
+      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T02:52:05.666Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -93,10 +93,62 @@
         {
           "name": "[native-isolation] a per-invocation elevation cannot widen concurrent or subsequent profiles",
           "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: append succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: truncate succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: unlink succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: rename succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: copy succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: chmod succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] mutation matrix: hard-link succeeds inside the workspace and cannot change an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] destination matrix: wildcard-child checks actual service reachability",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] destination matrix: wildcard-apex checks actual service reachability",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] destination matrix: suffix-spoof checks actual service reachability",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] destination matrix: explicit-deny-wins checks actual service reachability",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] an allowed HTTP redirect cannot reach a denied destination",
+          "status": "pass"
+        },
+        {
+          "name": "[native-launch] credential and loader environment variables do not reach a child interpreter",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
       "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -201,10 +253,166 @@
           "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
           "isObserved": true,
           "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "append applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "append left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "truncate applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "truncate left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "unlink applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "unlink left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "rename applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "rename left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "copy applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "copy left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "chmod applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "chmod left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "hard-link applied to the owned workspace control",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "hard-link left outside content, existence and mode unchanged",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "wildcard child control reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "wildcard-child: expected destination effect observed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "wildcard child control reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "wildcard-apex: expected destination effect observed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "wildcard child control reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "suffix-spoof: expected destination effect observed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "wildcard child control reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "explicit-deny-wins: expected destination effect observed",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "initial allowed HTTP request and redirect source reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "redirect target on a denied host never reached the owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "ordinary explicit environment value reached the descendant interpreter",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "synthetic credential and loader values were absent from descendant output",
+          "isObserved": true,
+          "platform": "darwin-arm64"
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:14:52.445Z"
+      "recordedAt": "2026-10-03T02:52:38.298Z"
     }
   ],
   "buildProof": {
@@ -212,7 +420,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:14:37.243Z"
+    "recordedAt": "2026-10-03T02:52:03.827Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -235,11 +443,11 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/native.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/native.json"
     }
   ],
   "qualification": "Only this run is described here; final aggregate validates every required architecture",
-  "recordedAt": "2026-10-03T02:15:15.496Z",
-  "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/04-sandbox.json"
+  "recordedAt": "2026-10-03T02:53:42.500Z",
+  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/04-sandbox.json"
 }

@@ -100,6 +100,8 @@ npm run verify:guard
 
 `test:*`는 실제 자격 증명이나 유료 모델을 사용하지 않습니다. 네이티브 테스트는 임시 파일·로컬 서비스에서 허용 동작과 차단 효과를 함께 관찰합니다. 모델 대역을 쓰는 결정적 검증과 실제 OS 효과를 구분해서 기록합니다.
 
+[보호 경계 검증표](docs/testing/auto-review-protection.md)는 보호·허용·검토 실패·취소 사례와 검증하지 않은 범위를 설명합니다. Codex의 유한 응답 재생 하네스 방식을 반영해 호출 누락·초과, 다음 모델 요청에 전달되는 도구 결과 본문, 실제 파일·네트워크 효과를 함께 검사합니다.
+
 `verify:guard`는 빌드와 전체 로컬 검증을 실행한 다음, **같은 소스의 `darwin-arm64`·`linux-x64` 전체 결과와 같은 Linux x64 이미지의 GLM5.3 실모델 결과**를 합칩니다. 하나라도 없거나 차단·실패·오래된 결과이면 종료 코드는 1입니다. ARM64 Linux 결과는 별도 관찰이며 x64를 대체하지 않습니다.
 
 ## Docker에서 Ollama Cloud 검증
@@ -113,6 +115,8 @@ npm run verify:docker -- --mode offline --platform linux/amd64
 ```
 
 ARM Docker 호스트에서 별도 ARM64 결과를 얻으려면 `--platform linux/arm64`로 실행합니다. 중첩 네임스페이스와 새 `/proc`, 네이티브 seccomp를 지원해야 합니다. 하네스는 외부 컨테이너의 seccomp·systempaths 제한만 해제하고 모든 capability를 제거하며 `no-new-privileges`를 적용합니다. 내부 파일·네트워크·Unix 소켓 격리와 PID 네임스페이스를 약화하는 옵션은 켜지 않습니다. 호스트 디렉터리·Docker 소켓 마운트와 포트 공개는 없습니다.
+
+`--init`으로 종료된 고아 프로세스를 회수하고, 사전 검사에서 실제 회수를 확인합니다. 회수에 실패하면 본 검증을 시작하지 않습니다. PID 한도는 256개입니다.
 
 하네스는 Docker 엔진이 보고한 커널 아키텍처를 `PI_GUARD_KERNEL_ARCH`로 제어 계층에 전달합니다. ARM 커널에서 x64 프로그램을 에뮬레이션할 때도 커널과 일치하는 ARM64용 `seccomp` 보조 프로그램으로 동일한 필터를 적용합니다. 이 값은 도구의 환경변수로 덮어쓸 수 없습니다. 보고서에는 프로그램·커널·보조 프로그램 아키텍처와 에뮬레이션 여부를 따로 기록합니다.
 
@@ -134,6 +138,6 @@ npm run verify:docker -- --mode conformance --platform linux/amd64
 
 이미지는 재사용을 위해 남겨 둡니다. 정리가 필요하면 해당 보고서에서 확인한 `imageDigest` 하나만 `docker image rm <imageDigest>`로 삭제합니다. 컨테이너 정리가 실패했다면 보고서의 `containerId`가 그 실행의 소유 컨테이너인지 확인한 뒤 `docker rm -f <containerId>`로 제거합니다.
 
-현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), GLM5.3 호출·허용·거부 효과는 [실모델 검증 인계](docs/handoffs/auto-review/09-live-cloud.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
+현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), 보호 사례 확장·Docker 수정·GLM5.3 재검증은 [보호 경계 인계](docs/handoffs/auto-review/10-protection-matrix.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
 
-이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. GLM5.3 실모델 검증은 환경변수 수정 후 일반 실행 허용·범위 밖 쓰기 자동 승인·보호 경로 거부·검토자 정책 거부의 4개 시나리오가 통과했습니다. 같은 소스의 macOS·Docker x64 각각 72개 검증과 실모델 결과를 합친 `verify:guard`의 최종 상태는 `complete`입니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
+이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. GLM5.3 실모델 검증은 환경변수 수정 후 일반 실행 허용·범위 밖 쓰기 자동 승인·보호 경로 거부·검토자 정책 거부의 4개 시나리오가 통과했습니다. 보호 사례 40개를 추가한 같은 소스의 macOS·Docker x64 각각 112개 검증과 실모델 결과를 합친 `verify:guard`의 최종 상태는 `complete`입니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.

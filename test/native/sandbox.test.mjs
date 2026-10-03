@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile, symlink, link, access, mkdir, rename, mkdtemp, realpath, rm } from 'node:fs/promises';
+import { readFile, writeFile, symlink, link, access, mkdir, rename, mkdtemp, realpath, rm, stat, chmod } from 'node:fs/promises';
 import { constants as osConstants } from 'node:os';
 import { createServer } from 'node:http';
 import { createServer as createSocketServer } from 'node:net';
@@ -151,4 +151,117 @@ test('[native-isolation] a per-invocation elevation cannot widen concurrent or s
   await assert.rejects(f.execute({kind:'file',operation:'write',path:join(f.control,'protected.txt'),content:'bad'},f.profile,{...delta,writePaths:[join(f.control,'protected.txt')]}),/protected path/);
   await assert.rejects(f.execute({kind:'file',operation:'unsupported',path:target})); assert.equal(await readFile(target,'utf8'),'approved');
   recordObservation(t,'allow','one exact elevated target changed');recordObservation(t,'deny','concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged');
+});
+
+for (const operation of ['append', 'truncate', 'unlink', 'rename', 'copy', 'chmod', 'hard-link']) {
+  test(`[native-files] mutation matrix: ${operation} succeeds inside the workspace and cannot change an outside inode`, async t => {
+    const f = await setup(t), outside = join(f.outside, 'sentinel.txt');
+    const allowed = join(f.workspace, 'allowed.txt');
+    await writeFile(allowed, 'unchanged');
+    await chmod(allowed, 0o600);
+    await chmod(outside, 0o600);
+    const profile = createProfile({ ...f.profile, readRoots: ['/'] });
+    for (const [target, canMutate] of [[allowed, true], [outside, false]]) {
+      const source = join(f.workspace, `source-${canMutate}.txt`), alias = join(f.workspace, `alias-${canMutate}.txt`);
+      await writeFile(source, 'replacement');
+      await chmod(source, 0o600);
+      const operations = {
+        append: 'fs.appendFileSync(target,"-appended")',
+        truncate: 'fs.truncateSync(target,0)',
+        unlink: 'fs.unlinkSync(target)',
+        rename: 'fs.renameSync(source,target)',
+        copy: 'fs.copyFileSync(source,target)',
+        chmod: 'fs.chmodSync(target,0o400)',
+        'hard-link': 'fs.linkSync(target,alias);fs.writeFileSync(alias,"linked change")',
+      };
+      const program = `const fs=require('fs'),target=${JSON.stringify(target)},source=${JSON.stringify(source)},alias=${JSON.stringify(alias)};try{${operations[operation]};console.log("mutation-applied");}catch(error){console.log("mutation-denied:"+error.code);process.exitCode=17;}`;
+      const result = await f.shell(`${shellQuote(process.execPath)} -e ${shellQuote(program)}`, profile, EMPTY_DELTA, { timeoutSeconds: 10 });
+      if (canMutate) {
+        assert.equal(result.exitCode, 0, result.output);
+        assert.match(result.output, /mutation-applied/);
+        if (operation === 'unlink') await assert.rejects(access(target), { code: 'ENOENT' });
+        else {
+          const expected = { append: 'unchanged-appended', truncate: '', rename: 'replacement', copy: 'replacement', chmod: 'unchanged', 'hard-link': 'linked change' };
+          assert.equal(await readFile(target, 'utf8'), expected[operation]);
+          assert.equal((await stat(target)).mode & 0o777, operation === 'chmod' ? 0o400 : 0o600);
+        }
+      } else {
+        assert.equal(result.exitCode, 17, result.output);
+        assert.match(result.output, /mutation-denied:(EACCES|EPERM|EROFS|EXDEV)/);
+        assert.equal(await readFile(target, 'utf8'), 'unchanged');
+        assert.equal((await stat(target)).mode & 0o777, 0o600);
+        assert.equal(await readFile(source, 'utf8'), 'replacement');
+        await assert.rejects(access(alias), { code: 'ENOENT' });
+      }
+    }
+    recordObservation(t, 'allow', `${operation} applied to the owned workspace control`);
+    recordObservation(t, 'deny', `${operation} left outside content, existence and mode unchanged`);
+  });
+}
+
+for (const row of [
+  { id: 'wildcard-child', host: 'child.fixture.example', allowed: ['*.fixture.example'], denied: [], canReach: true },
+  { id: 'wildcard-apex', host: 'fixture.example', allowed: ['*.fixture.example'], denied: [], canReach: false },
+  { id: 'suffix-spoof', host: 'fixture.example.invalid', allowed: ['*.fixture.example'], denied: [], canReach: false },
+  { id: 'explicit-deny-wins', host: 'blocked.fixture.example', allowed: ['*.fixture.example'], denied: ['blocked.fixture.example'], canReach: false },
+]) {
+  test(`[native-network] destination matrix: ${row.id} checks actual service reachability`, async t => {
+    const service = await fixture(t), socketPath = join(service.control, 'matrix.sock');
+    const hosts = [];
+    const server = createServer((request, response) => { hosts.push(request.headers.host); response.end('matrix-service'); });
+    server.listen(socketPath);
+    await once(server, 'listening');
+    t.after(() => new Promise(resolve => server.close(resolve)));
+    const f = await setup(t, { socketPath, domains: ['control.fixture.example', row.host] });
+    const profile = createProfile({ ...f.profile, allowedDomains: row.allowed, deniedDomains: row.denied });
+    const control = await f.shell('curl --fail --silent --show-error --max-time 5 http://control.fixture.example/control', profile);
+    assert.equal(control.exitCode, 0, control.output);
+    assert.match(control.output, /matrix-service/);
+    assert.equal(hosts.length, 1);
+    const attempt = await f.shell(`curl --fail --silent --show-error --max-time 5 ${shellQuote(`http://${row.host}/attempt`)}`, profile);
+    assert.equal(attempt.exitCode === 0, row.canReach, attempt.output);
+    assert.equal(hosts.length, row.canReach ? 2 : 1);
+    recordObservation(t, 'allow', 'wildcard child control reached the owned service');
+    recordObservation(t, row.canReach ? 'allow' : 'deny', `${row.id}: expected destination effect observed`);
+  });
+}
+
+test('[native-network] an allowed HTTP redirect cannot reach a denied destination', async t => {
+  const service = await fixture(t), socketPath = join(service.control, 'redirect.sock'), hosts = [];
+  const server = createServer((request, response) => {
+    hosts.push(request.headers.host);
+    if (request.url === '/control') response.end('redirect-control');
+    else if (request.headers.host === 'allowed.fixture.example') {
+      response.writeHead(302, { location: 'http://denied.fixture.example/target' });
+      response.end();
+    } else response.end('must not reach denied host');
+  });
+  server.listen(socketPath);
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const f = await setup(t, { socketPath, domains: ['allowed.fixture.example', 'denied.fixture.example'] });
+  const profile = createProfile({ ...f.profile, allowedDomains: ['*.fixture.example'], deniedDomains: ['denied.fixture.example'] });
+  assert.equal((await f.shell('curl --fail --silent --max-time 5 http://allowed.fixture.example/control', profile)).exitCode, 0);
+  const redirected = await f.shell('curl --location --fail --silent --show-error --max-time 5 http://allowed.fixture.example/redirect', profile);
+  assert.notEqual(redirected.exitCode, 0);
+  assert.deepEqual(hosts, ['allowed.fixture.example', 'allowed.fixture.example']);
+  recordObservation(t, 'allow', 'initial allowed HTTP request and redirect source reached the owned service');
+  recordObservation(t, 'deny', 'redirect target on a denied host never reached the owned service');
+});
+
+test('[native-launch] credential and loader environment variables do not reach a child interpreter', async t => {
+  const f = await setup(t);
+  const forbidden = ['OLLAMA_API_KEY', 'AWS_ACCESS_KEY_ID', 'SSH_AUTH_SOCK', 'NODE_OPTIONS', 'BASH_ENV', 'LD_PRELOAD', 'DYLD_INSERT_LIBRARIES', 'HTTP_PROXY'];
+  const program = `const {execFileSync}=require('child_process');const data=JSON.parse(execFileSync(process.execPath,['-e','console.log(JSON.stringify(process.env))'],{encoding:'utf8'}));console.log(JSON.stringify({visible:Object.keys(data).filter(key=>${JSON.stringify(forbidden)}.includes(key)),hasCallerCredential:JSON.stringify(data).includes(${JSON.stringify(f.secret)}),control:data.GUARD_CONTROL}));`;
+  const env = Object.fromEntries(forbidden.map(key => [key, f.secret]));
+  const result = await f.shell(`${shellQuote(process.execPath)} -e ${shellQuote(program)}`, f.profile, EMPTY_DELTA, { env: { ...env, GUARD_CONTROL: 'allowed-value' }, timeoutSeconds: 10 });
+  assert.equal(result.exitCode, 0, result.output);
+  assert.ok(!result.output.includes(f.secret));
+  const observation = JSON.parse(result.output.trim());
+  // The sandbox installs its own proxy; it must not preserve the caller value.
+  assert.deepEqual(observation.visible.filter(key => key !== 'HTTP_PROXY'), []);
+  assert.equal(observation.hasCallerCredential, false);
+  assert.equal(observation.control, 'allowed-value');
+  recordObservation(t, 'allow', 'ordinary explicit environment value reached the descendant interpreter');
+  recordObservation(t, 'deny', 'synthetic credential and loader values were absent from descendant output');
 });

@@ -6,5 +6,5 @@ export const suites = {
   native: { files: ['test/native/sandbox.test.mjs'], kind: 'native-os', behavior: ['native-launch', 'native-files', 'native-network', 'native-lifecycle', 'native-isolation'] },
   integration: { files: ['test/integration/pi-tools.test.mjs'], kind: 'simulated-provider-ui', behavior: ['tools', 'final-input', 'user-bash', 'startup', 'nested', 'options'] },
   e2e: { files: ['test/e2e/guard.test.mjs'], kind: 'workflow', behavior: ['workflow', 'package', 'cleanup'] },
-  conformance: { files: ['test/conformance/auto-review.test.mjs'], kind: 'simulated-provider-ui', behavior: ['reference', 'joined', 'creation', 'failures', 'evidence-join'] },
+  conformance: { files: ['test/conformance/auto-review.test.mjs', 'test/conformance/protection.test.mjs'], kind: 'simulated-provider-ui', behavior: ['reference', 'joined', 'creation', 'failures', 'evidence-join', 'scenario-harness', 'boundary-matrix', 'review-routing', 'scoped-grants', 'review-cancellation'] },
 };
