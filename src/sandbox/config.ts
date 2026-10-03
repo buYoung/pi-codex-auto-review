@@ -70,6 +70,12 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
     enableWeakerNetworkIsolation: false,
     allowAppleEvents: false,
   };
+  if (process.platform === 'linux') {
+    // A missing leaf becomes /dev/null in SRT, unreadable on a nodev mount.
+    // A child deny selects its read-only directory placeholder instead. The
+    // parent deny remains; existing worktree .git files are handled by SRT.
+    config.filesystem.denyWrite.push(...config.filesystem.denyWrite.filter(path => basename(path) === '.git' && !profile.denyRead.some(root => isWithin(path, root))).map(path => resolve(path, 'HEAD')));
+  }
   assertLiteralNativePaths([...config.filesystem.denyRead,...(config.filesystem.allowRead ?? []),...config.filesystem.allowWrite,...config.filesystem.denyWrite]);
   return config;
 }

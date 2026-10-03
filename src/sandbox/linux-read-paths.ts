@@ -14,9 +14,7 @@ export async function linuxReadPaths(reads: readonly string[], writes: readonly 
   const result = new Set<string>();
   let entries = 0;
   async function visit(path: string, root: string): Promise<void> {
-    // SRT skips a redundant read mount when a write mount already covers it,
-    // but still needs the read declaration to keep deny-write placeholders readable.
-    if (writes.some(write => isWithin(path, write))) { result.add(path); return; }
+    if (writes.some(write => isWithin(path, write))) return;
     if (!writes.some(write => write !== path && isWithin(write, path))) { result.add(path); return; }
     const children = await readdir(path, {withFileTypes:true});
     entries += children.length;
