@@ -218,7 +218,11 @@ export function ruleDigest(action: GuardAction): string {
 }
 /** A retry gets a new invocation ID, but cannot change session, semantics or context. */
 export function retryIdentity(action: GuardAction, contextId: string): string {
-  return digest({ action: ruleDigest(action), sessionId: action.sessionId, contextId });
+  // A runtime destination belongs to the same semantic command even though its new
+  // invocation necessarily has a different origin digest. Destination/port stay bound.
+  const {originatingActionDigest: ignoredOrigin, ...networkArgs} = action.args;
+  const semantic = action.args.networkDestination && typeof ignoredOrigin === 'string' ? {...action, args: networkArgs} : action;
+  return digest({ action: ruleDigest(semantic), sessionId: action.sessionId, contextId });
 }
 export function approvalEligible(policy: ApprovalPolicy, category: 'sandbox' | 'rules'): boolean {
   return policy === 'on-request' || (typeof policy === 'object' && policy[category] === true);

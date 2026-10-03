@@ -6,6 +6,8 @@ import { ApprovalManager, FileGrantPersistence } from '../../dist/approvals.js';
 import { AuditLog, redact } from '../../dist/audit.js';
 import { decision } from '../../dist/contracts.js';
 import { fixture, ControlledClock } from '../harness/fixtures.mjs';
+import { ReviewLifecycle, reviewFeedback } from '../../dist/review/lifecycle.js';
+import { ReviewContextStore } from '../../dist/review/context.js';
 
 const provider = {complete:async()=>'{"decision":"ask","reason":"confirm"}'};
 const context = choice => ({provider,trustedAuthorization:'',ui:{select:async()=>choice}});
@@ -19,6 +21,54 @@ test('[grants] disabled categories never call reviewers or dialogs and user rout
   assert.equal(reviews, 0); assert.equal(dialogs, 0);
   assert.equal((await manager({approvalsReviewer: 'user'}).admit(action, decision(action, 'ask', 'boundary'), request)).isAllowed, true);
   assert.equal(reviews, 0); assert.equal(dialogs, 1);
+});
+test('[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials',async t=>{
+  const f=await fixture(t),action=f.action('bash',{command:'owned'});
+  const denied={status:'denied',actionDigest:action.digest,contextDigest:'context',policyDigest:'policy',assessment:{risk_level:'high',user_authorization:'low',outcome:'deny',rationale:'denied'}};
+  const lifecycle=new ReviewLifecycle();
+  assert.equal(lifecycle.record(action,'context',denied).shouldInterrupt,false);assert.equal(lifecycle.record(action,'context',denied).shouldInterrupt,false);assert.equal(lifecycle.record(action,'context',denied).shouldInterrupt,true);assert.equal(lifecycle.signal.aborted,true);
+  lifecycle.startTurn();assert.equal(lifecycle.signal.aborted,false);
+  for(let i=0;i<10;i++){assert.equal(lifecycle.record(action,'context',denied).shouldInterrupt,i===9);lifecycle.record(action,'context',{...denied,status:'timed-out',failure:'timeout',reason:'timeout'});}
+  assert.equal(lifecycle.recentDenials.length,10);
+  lifecycle.startTurn();
+  for(let i=0;i<9;i++){lifecycle.record(action,'context',denied);lifecycle.record(action,'context');}
+  for(let i=0;i<50;i++)lifecycle.record(action,'context');
+  assert.equal(lifecycle.record(action,'context',denied).shouldInterrupt,false);
+  assert.match(reviewFeedback(denied).message,/policy circumvention/);
+  assert.match(reviewFeedback({...denied,status:'timed-out'}).message,/not evidence/);
+});
+test('[grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize',async t=>{
+  const f=await fixture(t),m=manager(),action=f.action('write',{path:join(f.outside,'sentinel.txt'),content:'owned'}),store=new ReviewContextStore();store.reset(action.sessionId);store.authorize('Only the named owned effect.');
+  const reviewContext=store.snapshot(10000),requests=[];
+  const provider={complete:async request=>{const data=JSON.parse(request.data);requests.push(data);return data.context.items.some(item=>item.source==='user-confirmation'&&item.content?.type==='exact-action-retry-approval')?'{"outcome":"allow","risk_level":"high","user_authorization":"high"}':'{"outcome":"deny","risk_level":"high","user_authorization":"low"}';}};
+  const context={provider,reviewContext,trustedAuthorization:''},invoke=action=>m.admit(action,decision(action,'ask','owned',{readPaths:[],writePaths:[join(f.outside,'sentinel.txt')],domains:[]}),context);
+  const initial=await invoke(action);assert.equal(initial.isAllowed,false);assert.ok(initial.denialId);
+  const current={sessionId:action.sessionId,contextId:reviewContext.contextId,cwd:action.cwd,policyRevision:action.policyRevision,permissionDigest:action.permissionDigest};
+  assert.throws(()=>m.lifecycle.authorizeRetry(initial.denialId,{...current,contextId:'changed'}),/current context/);
+  m.lifecycle.authorizeRetry(initial.denialId,current);
+  assert.equal((await invoke(f.action('write',{...action.args,content:'different'}))).isAllowed,false);
+  const exact=await invoke(f.action('write',action.args));assert.equal(exact.isAllowed,true);assert.deepEqual(exact.delta.writePaths,[join(f.outside,'sentinel.txt')]);
+  assert.equal((await invoke(f.action('write',action.args))).isAllowed,false);
+  assert.equal(requests.filter(request=>request.context.items.some(item=>item.source==='user-confirmation')).length,1);
+  const critical=m.lifecycle.record(action,reviewContext.contextId,{status:'denied',actionDigest:action.digest,contextDigest:reviewContext.digest,policyDigest:'policy',assessment:{risk_level:'critical',user_authorization:'high',outcome:'deny',rationale:'Critical effect'}});
+  assert.throws(()=>m.lifecycle.authorizeRetry(critical.denialId,current),/Critical-risk/);
+  m.reset('new-session');assert.equal(m.lifecycle.recentDenials.length,0);
+});
+test('[queue] concurrent denials interrupt once and cancel a still-running review before it can authorize',async t=>{
+  const f=await fixture(t),m=manager(),pending=[],signals=[];let interrupts=0;
+  const provider={complete:(_request,{signal})=>{signals.push(signal);return new Promise(resolve=>pending.push(resolve));}};
+  const actions=Array.from({length:4},(_,i)=>f.action('bash',{command:`owned-${i}`}));
+  const attempts=actions.map(action=>m.admit(action,decision(action,'ask','review'),{provider,trustedAuthorization:'',onInterrupt:()=>interrupts++}));
+  await new Promise(resolve=>setImmediate(resolve));
+  for(let i=0;i<3;i++){pending[i]('{"outcome":"deny"}');await new Promise(resolve=>setImmediate(resolve));}
+  pending[3]('{"outcome":"allow"}');
+  const results=await Promise.all(attempts);assert.equal(interrupts,1);assert.ok(results.every(result=>!result.isAllowed));assert.equal(signals[3].aborted,true);
+  await m.settle();
+});
+test('[audit] structured review metadata is bounded and redacted without retaining requests',async t=>{
+  const f=await fixture(t),audit=new AuditLog(join(f.control,'audit.jsonl'),[f.secret]),action=f.action('bash',{command:'owned'});
+  await audit.recordReview(action,{status:'denied',actionDigest:action.digest,contextDigest:'context',policyDigest:'policy',assessment:{risk_level:'high',user_authorization:'low',outcome:'deny',rationale:`token=private-value ${f.secret} ${'long '.repeat(1000)}`}});
+  await audit.flush();const record=JSON.parse((await readFile(audit.path,'utf8')).trim());assert.equal(record.review.status,'denied');assert.ok(record.review.rationale.length<=1000);assert.ok(!JSON.stringify(record).includes('private-value'));assert.ok(!JSON.stringify(record).includes(f.secret));assert.equal(record.args,undefined);
 });
 test('[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source', async t => {
   const f = await fixture(t), m = manager(), action = f.action('bash',{command:'npm test'});

@@ -92,6 +92,7 @@ export async function reviewAction(options: {
     if (typeof value === 'string' && /"decision"\s*:/.test(value)) {
       let legacy: ReviewReply;
       try { legacy = parseReview(value); } catch { throw new GuardError('REVIEW_PARSE', 'Invalid legacy review schema'); }
+      if (legacy.decision === 'deny') return {...legacy, result:{...binding,status:'denied',assessment:{risk_level:'high',user_authorization:'unknown',outcome:'deny',rationale:legacy.reason}}};
       if (legacy.decision === 'allow' && Object.values(policyDecision.delta).some(paths => paths.length)) return {...legacy, decision: options.hasUI ? 'ask' : 'deny', reason: 'Legacy assessment cannot automatically increase permission'};
       if (legacy.decision === 'ask' && !options.hasUI) return {...legacy, decision: 'deny', reason: 'User approval is unavailable in this mode'};
       return legacy;

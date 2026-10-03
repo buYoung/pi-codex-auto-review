@@ -9,6 +9,8 @@ import { GuardController } from './tools/controller.js';
 import type { PermissionProfile } from './contracts.js';
 import type { ReviewProvider } from './reviewer.js';
 import { AUTHORIZATION_ENTRY, safeEvidence } from './review/context.js';
+import { canonicalJson, GuardError } from './contracts.js';
+import { redact } from './audit.js';
 export interface GuardOptions {
   cwd?: string;
   agentDir?: string;
@@ -44,7 +46,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
       }
     });
     pi.on('before_agent_start', event => { guard.reviewContext.instructions(event); });
-    pi.on('agent_start', () => { guard.reviewContext.startTurn(); });
+    pi.on('agent_start', () => { guard.startTurn(); });
     pi.on('message_end', event => { guard.reviewContext.message(event.message); });
     pi.on('tool_call', event => {
       guard.assertReady(); guard.noteCall(event);
@@ -56,7 +58,25 @@ export function createGuardExtension(options: GuardOptions = {}) {
     });
     pi.on('user_bash', (event, context) => { guard.assertReady(); return { operations: guard.userBashOperations(context, event.command) }; });
     pi.on('session_shutdown', async () => { await guard.close(); });
+    pi.registerCommand('approve', {description:'최근 자동 검토 거부 중 정확한 작업 하나를 한 번 재검토합니다.',handler:async(args,context)=>{
+      await context.waitForIdle();
+      const denials=guard.approvals.lifecycle.recentDenials;
+      if (!denials.length) {context.ui.notify('재검토할 최근 거부가 없습니다.','info');return;}
+      let id=args.trim();
+      if (!id) {
+        if (!context.hasUI) throw new GuardError('APPROVAL_UI_UNAVAILABLE','Use /approve <denial-id> to select one exact recent denial');
+        const choices=denials.map(item=>`${item.id} | ${item.action.tool} | ${redact(canonicalJson(item.action.args))} | ${item.assessment.rationale}`);
+        const selected=await context.ui.select('자동 검토 거부 — 한 번 재검토할 작업 선택',choices);
+        if (!selected) return; id=denials[choices.indexOf(selected)]!.id;
+      }
+      const retry=await guard.authorizeRetry(id,context);
+      if (retry.denial.action.source==='user-bash' && !retry.denial.action.args.networkDestination) {
+        await guard.retryUserBash(retry.denial.action,context);context.ui.notify('선택한 명령을 다시 검토하고 실행했습니다.','info');return;
+      }
+      const nested=retry.denial.action.source==='nested'?'Invoke only this exact tool through codemode to preserve the original nested source.':'Retry only this exact tool action.';
+      pi.sendUserMessage(`${nested}\nTool: ${retry.denial.action.tool}\nArguments: ${canonicalJson(retry.args)}\nThe user selected denial ${id} for one retry. The controller holds a one-use exact-action marker; automatic review and policy still apply. Do not repeat unrelated earlier side effects.`,{expandPromptTemplates:false});
+    }});
   };
-  return { factory, assertReady() { if (!controller) throw new Error('pi-guard extension failed to load'); controller.assertReady(); return controller; } };
+  return { factory, assertReady() { if (!controller) throw new Error('pi-codex-permission extension failed to load'); controller.assertReady(); return controller; } };
 }
 export default createGuardExtension().factory;

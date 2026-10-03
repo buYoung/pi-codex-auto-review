@@ -42,7 +42,7 @@ test('[final-input] a later mutable hook is checked at the final consumer and ca
 });
 test('[user-bash] ! and !! return handled operations with native output and denial, never host fallback', async t => {
   const f=await fixture(t), handlers=new Map(), tools=[], reviews=[], extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,settings:{commandRules:[{prefix:[process.execPath],decision:'ask'}]},provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"decision":"allow","reason":"fixture"}';}}});
-  await extension.factory({registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});
   t.after(()=>extension.assertReady().close()); const context={cwd:f.workspace,sessionManager:{getSessionId:()=> 'shell-session'},hasUI:false};
   handlers.get('session_start')({},context);
   for(const excludeFromContext of [false,true]) {
@@ -154,7 +154,7 @@ test('[nested] actual built-in codemode calls reach guarded local tools and reta
 test('[options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer', async t => {
   const f=await fixture(t), calls=[], executor={qualify:async()=>{},close:async()=>{},execute:async(job,profile,delta,options)=>{calls.push({job,profile,delta,options});options.onData?.(Buffer.from('streamed'));return {exitCode:9};}};
   const extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor,provider:{complete:async()=>'{"decision":"allow","reason":"fixture"}'},bashOptions:{commandPrefix:'echo prefix',spawnHook:spawn=>({...spawn,env:{GUARD_OPTION:'provided',SECRET:f.secret}})}}), tools=[], handlers=new Map();
-  await extension.factory({registerTool:tool=>tools.push(tool),on:(name,handler)=>handlers.set(name,handler)});t.after(()=>extension.assertReady().close());
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(name,handler)=>handlers.set(name,handler)});t.after(()=>extension.assertReady().close());
   const context={cwd:f.workspace,sessionManager:pi.SessionManager.inMemory(f.workspace),hasUI:false},caller=new AbortController(); handlers.get('session_start')({},context);
   const updates=[],result=await tools.find(tool=>tool.name==='bash').execute('option-call',{command:'printf original',timeout:0.4},caller.signal,value=>updates.push(value),context);
   assert.equal(calls[0].job.command,'echo prefix\nprintf original');assert.equal(calls[0].options.env.GUARD_OPTION,'provided');assert.ok(!Object.hasOwn(calls[0].options.env,'SECRET'));assert.equal(calls[0].options.timeoutSeconds,0.4);
@@ -164,11 +164,55 @@ test('[tools] the host file queue waits for a cancelled worker to settle before 
   const f=await fixture(t),calls=[];let releaseFirst,started;
   const startedPromise=new Promise(resolve=>started=resolve);
   const executor={qualify:async()=>{},close:async()=>{},execute:async(job,_profile,_delta,options)=>{calls.push({job,options});if(calls.length===1){started();return new Promise((_resolve,reject)=>releaseFirst=()=>reject(new GuardError('CANCELLED','settled cancellation')));}return {content:[{type:'text',text:'second settled'}]};}};
-  const extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor}),tools=[],handlers=new Map();await extension.factory({registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});t.after(()=>extension.assertReady().close());
+  const extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor}),tools=[],handlers=new Map();await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});t.after(()=>extension.assertReady().close());
   const context={cwd:f.workspace,sessionManager:pi.SessionManager.inMemory(f.workspace),mode:'print',hasUI:false},caller=new AbortController();handlers.get('session_start')({},context);const write=tools.find(tool=>tool.name==='write');
   const first=write.execute('first',{path:'serial.txt',content:'first'},caller.signal,undefined,context).then(()=>assert.fail('Cancelled worker succeeded'),error=>assert.equal(error.code,'CANCELLED'));
   await startedPromise;
   const second=write.execute('second',{path:'serial.txt',content:'second'},undefined,undefined,context);caller.abort();
   await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.length,1);assert.equal(calls[0].options.signal.aborted,true);
   releaseFirst();await first;await second;assert.equal(calls.length,2);assert.equal(calls[1].job.args.content,'second');
+});
+test('[tools] three denied reviews interrupt the actual Pi turn before a fourth action',async t=>{
+  const f=await fixture(t);let reviews=0;const events=[];
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>{reviews++;return '{"outcome":"deny","rationale":"Synthetic explicit denial"}';}}});runtime.session.subscribe(event=>events.push(event));
+  await planStream(runtime.session,Array.from({length:5},(_,index)=>[{name:'write',args:{path:join(f.outside,`denied-${index}.txt`),content:'must not exist'}}]));
+  await runtime.session.prompt('Exercise owned denial limits.');
+  assert.equal(reviews,3);assert.ok(events.some(event=>event.type==='agent_end'));
+  const results=events.filter(event=>event.type==='tool_execution_end');assert.ok(results.some(event=>JSON.stringify(event.result).includes('AUTO_REVIEW_DENIED')));assert.ok(results.some(event=>JSON.stringify(event.result).includes('policy circumvention')));
+  for(let index=0;index<5;index++)await assert.rejects(access(join(f.outside,`denied-${index}.txt`)));
+  await planStream(runtime.session,[[{name:'write',args:{path:join(f.outside,'next-turn.txt'),content:'denied'}}]]);await runtime.session.prompt('A new user turn.');assert.equal(reviews,4);
+});
+test('[final-input] authorization changed during a pending review cannot reach native execution',async t=>{
+  const f=await fixture(t),tools=[];let finish,started;const ready=new Promise(resolve=>started=resolve);
+  const extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,provider:{complete:()=>{started();return new Promise(resolve=>finish=resolve);}}});
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{}});t.after(()=>extension.assertReady().close());
+  const sessionManager=pi.SessionManager.inMemory(f.workspace),context={cwd:f.workspace,sessionManager,mode:'print',hasUI:false};
+  const controller=extension.assertReady();controller.reset(sessionManager.getSessionId(),sessionManager);controller.authorizeUser('Write only the owned sentinel.');
+  const pending=tools.find(tool=>tool.name==='write').execute('pending',{path:join(f.outside,'sentinel.txt'),content:'must not happen'},undefined,undefined,context);
+  await ready;controller.authorizeUser('Cancel that write.');finish('{"outcome":"allow"}');
+  await assert.rejects(pending,/authorization changed/);assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
+});
+test('[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution',async t=>{
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt'),reviews=[],statuses=[];
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{
+    const data=JSON.parse(request.data);reviews.push(data);
+    const marker=data.context.items.some(item=>item.source==='user-confirmation'&&item.content?.type==='exact-action-retry-approval');
+    return marker?'{"outcome":"allow","risk_level":"high","user_authorization":"high","rationale":"Exact one-use user override"}':'{"outcome":"deny","risk_level":"high","user_authorization":"low","rationale":"Explicit retry approval required"}';
+  }}});
+  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(_title,choices)=>choices[0],notify:()=>{},setStatus:(_key,value)=>statuses.push(value),setWidget:()=>{}}});
+  const call={name:'write',args:{path:target,content:'retried'}};
+  await planStream(runtime.session,[[call]]);await runtime.session.prompt('Attempt the owned fixture.');assert.equal(await readFile(target,'utf8'),'unchanged');
+  await planStream(runtime.session,[[call]]);
+  let stop,stopError,timer;
+  const retried=new Promise((resolve,reject)=>{
+    timer=setTimeout(()=>reject(new Error('Exact retry did not settle')),10000);
+    stop=runtime.session.subscribe(event=>{if(event.type==='agent_end')resolve();});
+    stopError=runtime.session.extensionRunner.onError(error=>reject(new Error(error.error)));
+  });
+  try{await runtime.session.prompt('/approve');await retried;await runtime.session.waitForIdle();}finally{clearTimeout(timer);stop();stopError();}
+  assert.equal(reviews.length,2);assert.equal(await readFile(target,'utf8'),'retried');
+  await planStream(runtime.session,[[call]]);await runtime.session.prompt('Try the same action again.');
+  assert.equal(reviews.length,3);assert.equal(reviews[2].context.items.some(item=>item.source==='user-confirmation'&&item.content?.type==='exact-action-retry-approval'),false);
+  assert.ok(statuses.some(status=>status?.includes('승인')));assert.ok(statuses.some(status=>status?.includes('거부')));
+  const audit=await readFile(join(f.agentDir,'guard/audit.jsonl'),'utf8');assert.match(audit,/"riskLevel":"high"/);assert.match(audit,/"event":"retry"/);assert.ok(!audit.includes('"args"'));
 });

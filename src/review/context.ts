@@ -29,8 +29,12 @@ export class ReviewContextStore {
   private sessionId = '';
   private contextId = randomUUID();
   private turnId = randomUUID();
+  private authorizationVersion = 0;
+  get identity(): string { return this.contextId; }
+  get turnIdentity(): string { return this.turnId; }
+  get scopeVersion(): number { return this.authorizationVersion; }
   reset(sessionId: string, manager?: ExtensionContext['sessionManager']): void {
-    this.sessionId = sessionId; this.contextId = randomUUID(); this.turnId = randomUUID(); this.items.clear();
+    this.sessionId = sessionId; this.contextId = randomUUID(); this.turnId = randomUUID(); this.items.clear(); this.authorizationVersion++;
     for (const entry of manager?.getBranch?.() ?? []) {
       if (entry.type === 'custom' && entry.customType === AUTHORIZATION_ENTRY) {
         const data = entry.data as {text?: unknown; source?: unknown};
@@ -56,6 +60,7 @@ export class ReviewContextStore {
   toolCall(content: Json, id: string): void { this.add('tool-call', 'evidence', content, `call:${id}`); }
   toolResult(content: Json, id: string): void { this.add('tool-result', 'evidence', content, `result:${id}`); }
   private add(source: ReviewContextItem['source'], trust: ReviewContextItem['trust'], content: Json, id: string): void {
+    if (trust === 'authorization' && source !== 'user-confirmation' && canonicalJson(this.items.get(id)?.content ?? null) !== canonicalJson(safeEvidence(content))) this.authorizationVersion++;
     this.items.set(id, immutable({id, source, trust, content: safeEvidence(content)}));
   }
   snapshot(maxChars: number, exactActionChars = 0): ReviewContext {
