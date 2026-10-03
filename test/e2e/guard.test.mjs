@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, symlink, access, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -157,6 +158,44 @@ test('[workflow] real CLI loads an explicit provider and selects the same model 
   assert.ok(audit.some(row=>row.review?.status==='approved'));assert.ok(audit.some(row=>row.event==='execution'&&row.outcome==='settled'));
   await assert.rejects(exec(process.execPath,[...args.slice(0,-1),'--model','missing-model','Do not run.'],{cwd:repository,env,timeout:60000,maxBuffer:2_000_000}),error=>error.code===1&&error.stderr.includes('Registered model not found'));
   assert.equal((await readFile(trace,'utf8')).trim().split('\n').length,3,'An unavailable selection must not call another model');
+});
+test('[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses',async t=>{
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt'),trace=join(f.agentDir,'calls.jsonl'),requests=[];
+  let mainCalls=0,reviewCalls=0,serverError;
+  const server=createServer(async(request,response)=>{
+    try {
+      let body='';for await(const chunk of request)body+=chunk;
+      const payload=JSON.parse(body),isReview=payload.messages.some(message=>message.role==='system'&&JSON.stringify(message).includes('# Outcome Policy'));
+      if(isReview)reviewCalls++;else mainCalls++;
+      assert.ok(mainCalls<=2&&reviewCalls<=1,'Unexpected extra HTTP model request');
+      requests.push({isReview,maxTokens:payload.max_tokens??payload.max_completion_tokens});
+      const delta=isReview?{content:'{"outcome":"allow","risk_level":"low","user_authorization":"high","rationale":"Owned HTTP fixture"}'}
+        :mainCalls===1?{tool_calls:[{index:0,id:'owned-http-write',type:'function',function:{name:'write',arguments:JSON.stringify({path:target,content:'http-observed-effect'})}}]}
+          :{content:'owned-http-complete'};
+      response.writeHead(200,{'content-type':'text/event-stream'});
+      for(const [content,finish] of [[{role:'assistant',...delta},null],[{},delta.tool_calls?'tool_calls':'stop']]) {
+        response.write('data: '+JSON.stringify({id:`owned-${requests.length}`,object:'chat.completion.chunk',created:1,model:'glm-5.3',choices:[{index:0,delta:content,finish_reason:finish}]})+'\n\n');
+      }
+      response.end('data: [DONE]\n\n');
+    } catch(error) {serverError=error;response.writeHead(500);response.end('Owned fixture error');}
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+  const providerDirectory=join(f.control,'provider'),home=join(f.control,'home');
+  await Promise.all([providerDirectory,home].map(path=>mkdir(path)));
+  const extension=join(providerDirectory,'index.mjs'),policy=join(f.agentDir,'policy.json');
+  const provider={baseUrl:`http://127.0.0.1:${server.address().port}/v1`,api:'openai-completions',apiKey:'owned-observer-key',models:[{id:'glm-5.3',name:'Owned HTTP model',reasoning:false,input:['text'],contextWindow:100000,maxTokens:10000,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]};
+  await writeFile(extension,`export default api=>api.registerProvider('ollama-cloud',${JSON.stringify(provider)});`);
+  await writeFile(policy,JSON.stringify({excludeSlashTmp:true,excludeTmpdir:true,reviewMaxOutputTokens:777}));
+  await writeFile(join(f.agentDir,'settings.json'),JSON.stringify({cacheWarming:'off',compaction:{enabled:false},retry:{enabled:false,provider:{maxRetries:0}}}));
+  const env={...workloadEnvironment(),HOME:home,PI_CODING_AGENT_DIR:f.agentDir,OLLAMA_API_KEY:'owned-observer-key',OLLAMA_MODEL:'glm-5.3',PI_GUARD_CLI_TRACE:trace,...(process.env.PI_GUARD_KERNEL_ARCH?{PI_GUARD_KERNEL_ARCH:process.env.PI_GUARD_KERNEL_ARCH}:{})};
+  const child=await exec(process.execPath,[resolve('dist/cli.js'),'--cwd',f.workspace,'--policy',policy,'--extension',extension,'--extension',resolve('test/docker/cli-observer.mjs'),'--provider','ollama-cloud','--model','glm-5.3','--mode','json','Update the owned HTTP sentinel.'],{cwd:repository,env,timeout:60000,maxBuffer:2_000_000});
+  assert.equal(serverError,undefined);assert.equal(await readFile(target,'utf8'),'http-observed-effect');
+  const calls=(await readFile(trace,'utf8')).trim().split('\n').map(JSON.parse);
+  assert.deepEqual(calls.map(call=>call.isReview),[false,true,false]);
+  assert.deepEqual(requests.map(request=>request.isReview),[false,true,false]);assert.equal(requests[1].maxTokens,777);
+  assert.ok(requests.filter(request=>!request.isReview).every(request=>Number.isInteger(request.maxTokens)&&request.maxTokens>0&&request.maxTokens<=4096));
+  assert.match(child.stdout,/owned-http-complete/);assert.ok(!child.stdout.includes(env.OLLAMA_API_KEY));
 });
 test('[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective',async t=>{
   const f=await fixture(t),globalSkill=join(f.agentDir,'skills','owned-global'),project=join(f.workspace,'.pi');

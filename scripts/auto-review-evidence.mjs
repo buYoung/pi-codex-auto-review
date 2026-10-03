@@ -36,7 +36,7 @@ export const scenarioMatrix = [
   row('UI-and-audit-feedback',[guardian('feedback')],'Bounded redacted review metadata and terminal feedback reflect actual results',[['approvals','structured review metadata'],['conformance','[failures]']]),
   row('wildcard-domain-mismatch',[guardian('routing')],'Wildcard host grants match both policy and real proxy, while direct/denied requests do not reach the service',[['policy','wildcard domains'],['native','allowed proxy control']]),
   row('shell-read-denyWrite-defect',[ref('prompts/templates/guardian/policy_template.md')],'Read-only metadata is readable and only the reviewed target becomes writable',[['policy','write-protected metadata'],['native','reviewed metadata grant']]),
-  row('Docker-recovery-and-provider',[guardian('model')],'Installed provider and packed guard survive reload; the real CLI selects the provider/model for both execution and review',[['integration','explicit installed cloud provider'],['e2e','real CLI'],['e2e','trusted Pi skills']]),
+  row('Docker-recovery-and-provider',[guardian('model')],'Installed provider and packed guard survive reload; the real CLI selects the provider/model for both execution and review',[['integration','explicit installed cloud provider'],['e2e','real CLI'],['e2e','live CLI observer'],['e2e','trusted Pi skills']]),
   row('cross-platform-conformance',[guardian('routing')],'Same-source required platforms and same-image live evidence are required; stale, simulated and wrong-architecture data cannot qualify',[['contracts','incomplete, stale'],['conformance','[evidence-join]']]),
 ];
 
