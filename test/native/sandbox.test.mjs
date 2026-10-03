@@ -54,7 +54,7 @@ test('[native-network] allowed proxy control reaches an owned service and denied
   const server=createServer((_req,res)=>{requests++;res.end('owned-service');}); server.listen(socketPath); await once(server,'listening');
   t.after(()=>new Promise(resolve=>server.close(resolve)));
   const f=await setup(t,{socketPath,domains:['fixture.example']});
-  const url='http://fixture.example/proof', allowed=createProfile({...f.profile,allowedDomains:['fixture.example']});
+  const url='http://fixture.example/proof', allowed=createProfile({...f.profile,allowedDomains:['*.example']});
   const positive=await f.shell(`curl --fail --silent --show-error --max-time 3 ${shellQuote(url)}`,allowed);
   assert.equal(positive.exitCode,0,positive.output); assert.match(positive.output,/owned-service/); assert.equal(requests,1);
   const proxy=await f.shell(`curl --fail --silent --max-time 3 ${shellQuote(url)}`); assert.notEqual(proxy.exitCode,0); assert.equal(requests,1);
@@ -65,6 +65,31 @@ test('[native-network] allowed proxy control reaches an owned service and denied
   const control=await fetch(directURL);assert.equal(await control.text(),'direct-control');assert.equal(directRequests,1);
   const direct=await f.shell(`curl --noproxy '*' --fail --silent --max-time 3 ${shellQuote(directURL)}`,allowed); assert.notEqual(direct.exitCode,0); assert.equal(directRequests,1);assert.equal(requests,1);
   recordObservation(t,'allow','one authorized proxy request reached owned Unix socket service');recordObservation(t,'deny','domain-denied and direct requests did not reach owned service');
+});
+test('[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies',async t=>{
+  const f=await setup(t),metadata=join(f.workspace,'.agents');await mkdir(metadata);
+  const target=join(metadata,'allowed.txt'),sibling=join(metadata,'sibling.txt');await writeFile(target,'before');await writeFile(sibling,'unchanged');
+  const profile=createProfile({...f.profile,readOnlyPaths:[metadata]});
+  assert.equal((await f.shell(`cat ${shellQuote(target)}`,profile)).output,'before');
+  assert.notEqual((await f.shell(`printf blocked > ${shellQuote(target)}`,profile)).exitCode,0);
+  const granted=await f.shell(`printf approved > ${shellQuote(target)}; printf sibling > ${shellQuote(sibling)}`,profile,{readPaths:[],writePaths:[target],domains:[]});
+  assert.notEqual(granted.exitCode,0);assert.equal(await readFile(target,'utf8'),'approved');assert.equal(await readFile(sibling,'utf8'),'unchanged');
+  const outside=join(f.outside,'sentinel.txt');
+  const command=await f.shell(`printf command > ${shellQuote(outside)}; cat ${shellQuote(join(f.control,'protected.txt'))}`,profile,EMPTY_DELTA,{authority:{kind:'reviewed-command',actionDigest:'native-fixture'}});
+  assert.equal(await readFile(outside,'utf8'),'command');assert.notEqual(command.exitCode,0);assert.ok(!command.output.includes(f.secret));
+  assert.notEqual((await f.shell(`printf later > ${shellQuote(outside)}`,profile)).exitCode,0);
+  recordObservation(t,'allow','exact metadata file and one reviewed command changed their owned targets');recordObservation(t,'deny','metadata sibling, later unapproved write and absolute protected credential read remained blocked');
+});
+test('[native-network] live broker approval is attributed and never shared with another invocation',async t=>{
+  const service=await fixture(t);let reached=0;const socketPath=join(service.control,'approval.sock');
+  const server=createServer((_req,res)=>{reached++;res.end('runtime-network');});server.listen(socketPath);await once(server,'listening');t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const f=await setup(t,{socketPath,domains:['dynamic.example']}),requests=[];
+  const command='host=dynamic.example; curl --fail --silent --max-time 5 \"http://$host/proof\"';
+  const allowed=await f.shell(command,f.profile,EMPTY_DELTA,{onNetworkRequest:async(request,signal)=>{requests.push(request);assert.equal(signal.aborted,false);return true;}});
+  assert.equal(allowed.exitCode,0,allowed.output);assert.match(allowed.output,/runtime-network/);assert.equal(reached,1);assert.equal(requests[0].host,'dynamic.example');assert.equal(requests[0].port,80);
+  const denied=await f.shell(command,f.profile,EMPTY_DELTA,{onNetworkRequest:async()=>false});assert.notEqual(denied.exitCode,0);assert.equal(reached,1);
+  const sibling=await f.shell(command);assert.notEqual(sibling.exitCode,0);assert.equal(reached,1);
+  recordObservation(t,'allow','broker-authorized dynamic destination reached owned service');recordObservation(t,'deny','denied and subsequent invocation destinations did not reach service');
 });
 test('[native-lifecycle] cancellation and seconds deadline terminate the final process group before return', async t => {
   const f=await setup(t), caller=new AbortController(), marker=join(f.workspace,'after-cancel.txt'); let observed=false;

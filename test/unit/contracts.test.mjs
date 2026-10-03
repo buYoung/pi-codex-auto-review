@@ -32,7 +32,7 @@ test('[profiles] profiles are immutable and read-only cannot silently gain write
   assert.throws(() => decision(f.action('read', {}), 'allow', 'bad', undefined, true));
 });
 test('[ipc] invalid protocol frames cannot be treated as worker success', () => {
-  for (const frame of [{}, {schemaVersion:1,type:'workload-started',processGroupId:123}, { schemaVersion: 2, type: 'result', result: null }, { schemaVersion: 1, type: 'result' }, { schemaVersion: 1, type: 'data', data: 2 }, { schemaVersion: 1, type: 'update', result: {} }]) assert.throws(() => validateWorkerFrame(frame));
+  for (const frame of [{}, {schemaVersion:1,type:'workload-started',processGroupId:123}, {schemaVersion:1,type:'network-request',requestId:'forged',destination:{host:'example.com'}}, { schemaVersion: 2, type: 'result', result: null }, { schemaVersion: 1, type: 'result' }, { schemaVersion: 1, type: 'data', data: 2 }, { schemaVersion: 1, type: 'update', result: {} }]) assert.throws(() => validateWorkerFrame(frame));
   assert.deepEqual(validateWorkerFrame({ schemaVersion: 1, type: 'result', result: null }).result, null);
 });
 test('[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass', () => {

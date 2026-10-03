@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createBashToolDefinition, withFileMutationQueue, type BashToolOptions, type BashOperations, type ExtensionContext, type ToolDefinition, type ToolCallEvent, type ReadToolOptions } from '@earendil-works/pi-coding-agent';
 import { pathToFileURL } from 'node:url';
-import { createAction, canonicalJson, digest, GuardError, TOOL_NAMES, type ActionSource, type GuardAction, type Json, type PermissionProfile, type WorkerJob, type ExecutionOptions } from '../contracts.js';
+import { createAction, canonicalJson, digest, decision, GuardError, TOOL_NAMES, type ActionSource, type GuardAction, type Json, type PermissionProfile, type WorkerJob, type ExecutionOptions, type PolicyDecision } from '../contracts.js';
 import { PolicyEngine, canonicalPath, resolveToolPath, type GuardSettings } from '../policy/index.js';
 import { ApprovalManager, type ApprovalUI } from '../approvals.js';
 import { PiReviewProvider, type ReviewProvider } from '../reviewer.js';
@@ -10,6 +10,7 @@ import { type SandboxExecutor } from '../sandbox/executor.js';
 import { workloadEnvironment } from '../sandbox/config.js';
 import { ReviewContextStore, safeEvidence } from '../review/context.js';
 import { NativeInvestigation } from '../review/investigation.js';
+import { matchesDomain } from '../policy/domains.js';
 
 export class GuardController {
   readonly policy: PolicyEngine;
@@ -25,6 +26,7 @@ export class GuardController {
     this.approvals = options.approvals;
   }
   async initialize(cwd: string): Promise<void> {
+    await this.policy.initialize(cwd);
     await this.approvals.initialize();
     await this.options.executor.qualify(this.options.profile, cwd);
     this.isReady = true;
@@ -58,24 +60,38 @@ export class GuardController {
       return selected ? scopes[selected as keyof typeof scopes] : undefined;
     } };
   }
-  private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = ''): Promise<Json> {
-    this.assertReady();
-    const signal = options.signal ? AbortSignal.any([options.signal, this.stopped.signal]) : this.stopped.signal;
-    const policyDecision = await this.policy.evaluate(action);
+  private async requestAdmission(action: GuardAction, policyDecision: PolicyDecision, context: ExtensionContext, signal: AbortSignal, trustedAuthorization = '') {
     let reviewContext = policyDecision.kind === 'ask' ? this.reviewContext.snapshot(this.options.settings.reviewContextChars, canonicalJson(action).length + canonicalJson(policyDecision.delta).length + 1000) : undefined;
     if (reviewContext && trustedAuthorization) {
       const data = {...reviewContext, items: [...reviewContext.items, {id: 'direct-user-bash', source: 'user' as const, trust: 'authorization' as const, content: safeEvidence(trustedAuthorization)}]};
       reviewContext = {...data, digest: digest(data)};
     }
-    const admission = await this.approvals.admit(action, policyDecision, { provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.options.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings });
+    return this.approvals.admit(action, policyDecision, { provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.options.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings });
+  }
+  private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = ''): Promise<Json> {
+    this.assertReady();
+    const signal = options.signal ? AbortSignal.any([options.signal, this.stopped.signal]) : this.stopped.signal;
+    const policyDecision = await this.policy.evaluate(action);
+    const admission = await this.requestAdmission(action, policyDecision, context, signal, trustedAuthorization);
     if (!admission.isAllowed) throw new GuardError('PERMISSION_DENIED', admission.reason);
     signal.throwIfAborted();
     if (this.sessionId !== action.sessionId || await canonicalPath(context.cwd, context.cwd) !== action.cwd || this.policy.revision !== action.policyRevision) throw new GuardError('STALE_APPROVAL', 'Execution context changed after admission');
     const finalDecision = await this.policy.evaluate(action);
     if (finalDecision.kind === 'deny') throw new GuardError('PERMISSION_DENIED', finalDecision.reason);
     if(digest(finalDecision.delta)!==digest(policyDecision.delta))throw new GuardError('STALE_APPROVAL','Resolved permissions changed after admission');
+    if (digest(finalDecision.authority ?? null) !== digest(policyDecision.authority ?? null)) throw new GuardError('STALE_APPROVAL', 'Execution authority changed after admission');
     try {
-      const result = await this.options.executor.execute(job, this.options.profile, admission.delta, { ...options, signal, timeoutSeconds: options.timeoutSeconds ?? this.options.settings.executionTimeoutSeconds });
+      const result = await this.options.executor.execute(job, this.options.profile, admission.delta, {
+        ...options, signal, authority: admission.authority, timeoutSeconds: options.timeoutSeconds ?? this.options.settings.executionTimeoutSeconds,
+        onNetworkRequest: async (destination, networkSignal) => {
+          if (networkSignal.aborted || action.sessionId !== this.sessionId || this.options.profile.deniedDomains.some(pattern => matchesDomain(destination.host, pattern))) return false;
+          const networkAction = createAction({toolCallId: `${action.toolCallId}:network:${randomUUID()}`, tool: action.tool, args: {...action.args, networkDestination: {...destination}, originatingActionDigest: action.digest}, cwd: action.cwd, source: action.source, sessionId: action.sessionId, policyRevision: action.policyRevision}, this.options.profile);
+          const networkPolicy = decision(networkAction, 'ask', 'Runtime network request from the exact originating command', {readPaths:[],writePaths:[],domains:[destination.host]});
+          const reviewed = await this.requestAdmission(networkAction, networkPolicy, context, networkSignal, trustedAuthorization);
+          if (networkSignal.aborted || this.sessionId !== action.sessionId || this.policy.revision !== action.policyRevision || await canonicalPath(context.cwd, context.cwd) !== action.cwd) return false;
+          return reviewed.isAllowed;
+        },
+      });
       await this.options.audit.record(action, 'execution', 'settled');
       return result;
     } catch (error) { await this.options.audit.record(action, 'execution', 'failed'); throw error; }
@@ -84,14 +100,21 @@ export class GuardController {
   wrapTool(definition: ToolDefinition<any, any, any>, toolOptions?: ReadToolOptions | BashToolOptions): ToolDefinition<any, any, any> {
     const tool = definition.name as (typeof TOOL_NAMES)[number];
     if (!TOOL_NAMES.includes(tool)) throw new GuardError('UNKNOWN_LOCAL_TOOL', 'Cannot delegate unknown local tool');
-    return { ...definition, execute: async (toolCallId, params, signal, onUpdate, context) => {
+    const parameters = tool === 'bash' ? {...definition.parameters, properties: {...definition.parameters.properties,
+      sandbox_permissions: {type:'string',enum:['use_default','require_escalated'],description:'Request review before this exact command crosses the native sandbox boundary.'},
+      additional_permissions: {type:'object',properties:{readPaths:{type:'array',items:{type:'string'}},writePaths:{type:'array',items:{type:'string'}},domains:{type:'array',items:{type:'string'}}},additionalProperties:false,description:'Narrow permission increase for this invocation; omit for an explicitly reviewed full command.'},
+      justification: {type:'string',description:'Explain the boundary crossing for review.'},
+    }} : definition.parameters;
+    return { ...definition, parameters, execute: async (toolCallId, params, signal, onUpdate, context) => {
       this.assertReady();
       const cwd = await canonicalPath(context.cwd, context.cwd);
       if (tool === 'bash') {
+        const input = params as Record<string, Json>;
+        const requested = JSON.parse(canonicalJson(Object.fromEntries(['sandbox_permissions','additional_permissions','justification'].filter(key => input[key] !== undefined).map(key => [key, input[key]])))) as Record<string, Json>;
         const delegate = createBashToolDefinition(cwd, { ...toolOptions as BashToolOptions, operations: { exec: async (command, finalCwd, options) => {
           const env = workloadEnvironment(options.env);
           const shellPath = (toolOptions as BashToolOptions)?.shellPath ?? '/bin/bash';
-          const args = { command, shellPath, ...(options.timeout !== undefined ? { timeout: options.timeout } : {}), environment: env };
+          const args = { command, shellPath, ...(options.timeout !== undefined ? { timeout: options.timeout } : {}), environment: env, ...requested };
           const resolvedCwd = await canonicalPath(finalCwd, finalCwd);
           const action = createAction({ toolCallId, tool, args: JSON.parse(canonicalJson(args)), cwd: resolvedCwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.options.profile);
           return await this.admitAndExecute(action, {kind:'shell',command,shellPath,cwd:resolvedCwd}, {...context,cwd:finalCwd}, {signal:options.signal,timeoutSeconds:options.timeout,env,onData:options.onData}) as unknown as {exitCode:number|null};

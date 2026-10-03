@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy, type ReviewContext, type ReviewResult } from './contracts.js';
+import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy, type ReviewContext, type ReviewResult, type ExecutionAuthority } from './contracts.js';
 import { deadlineSignal, withSignal, type Clock } from './signals.js';
 import { reviewAction, type ReviewProvider } from './reviewer.js';
 import { AuditLog } from './audit.js';
@@ -26,7 +26,7 @@ export class FileGrantPersistence implements GrantPersistence {
     finally { await rm(temp, { force: true }); }
   }
 }
-export interface Admission { readonly isAllowed: boolean; readonly delta: PermissionDelta; readonly reason: string; readonly grant?: Grant; readonly review?: ReviewResult }
+export interface Admission { readonly isAllowed: boolean; readonly delta: PermissionDelta; readonly reason: string; readonly grant?: Grant; readonly review?: ReviewResult; readonly authority?: ExecutionAuthority }
 export class ApprovalManager {
   private grants: Grant[] = [];
   private tail: Promise<unknown> = Promise.resolve();
@@ -47,17 +47,21 @@ export class ApprovalManager {
     const deny = (reason: string): Admission => ({ isAllowed: false, delta: EMPTY_DELTA, reason });
     if (signal.aborted || action.sessionId !== this.sessionId) return deny('Cancelled or stale session');
     if (policy.actionDigest !== action.digest || policy.kind === 'deny' || policy.isHardDeny) { await this.options.audit.record(action, 'policy', 'deny'); return deny(policy.reason); }
-    if (policy.kind === 'allow') { await this.options.audit.record(action, 'policy', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: policy.reason }; }
+    if (policy.authority && policy.authority.actionDigest !== action.digest) return deny('Authority belongs to another action');
+    if (policy.kind === 'allow') { await this.options.audit.record(action, 'policy', 'allow'); return { isAllowed: true, delta: policy.delta, authority: policy.authority, reason: policy.reason }; }
     if (!approvalEligible(this.options.approvalPolicy ?? 'on-request', policy.approvalCategory ?? 'sandbox')) return deny('Approval policy disables this request category');
-    const cached = this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
+    const obsolete = this.grants.filter(grant => grant.permissionDigest !== action.permissionDigest || grant.policyRevision !== action.policyRevision);
+    if (obsolete.length) { this.grants = this.grants.filter(grant => !obsolete.includes(grant)); await this.options.audit.record(action, 'grant', 'invalidated-policy-or-profile'); }
+    const cached = policy.authority?.kind === 'reviewed-command' ? undefined : this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
     if (cached) { await this.options.audit.record(action, 'grant', cached.scope); return { isAllowed: true, delta: cached.delta, grant: cached, reason: 'Bound rule authorized the action' }; }
     const review = this.options.approvalsReviewer === 'user' ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: context.reviewContext, settings: context.settings });
     if (signal.aborted) return deny('Call cancelled');
     if (review.decision === 'deny') { await this.options.audit.record(action, 'review', review.result?.status ?? 'deny'); return {...deny(review.reason), review: review.result}; }
     if (review.decision === 'allow') {
-      // Child 04 replaces this conservative adapter together with final native permission delivery.
-      if (Object.values(policy.delta).some(paths => paths.length)) return {...deny('Reviewed permission delivery is not enabled yet'), review: review.result};
-      await this.options.audit.record(action, 'review', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: review.reason, review: review.result };
+      if (review.result && (review.result.status !== 'approved' || review.result.actionDigest !== action.digest || context.reviewContext && review.result.contextDigest !== context.reviewContext.digest)) return deny('Review result does not match the bound action and context');
+      if (!review.result && policy.authority?.kind === 'reviewed-command') return deny('Full command approval requires a structured assessment');
+      await this.options.audit.record(action, 'review', 'approved');
+      return { isAllowed: true, delta: policy.delta, authority: policy.authority ?? {kind:'scoped-permissions',actionDigest:action.digest}, reason: review.reason, review: review.result };
     }
     if (!context.ui) return deny('Approval UI unavailable');
     const ui = context.ui;
@@ -71,6 +75,7 @@ export class ApprovalManager {
         if (!choice || choice === 'deny') return deny('User denied the action');
         if (!['once', 'session', 'persistent'].includes(choice)) return deny('Invalid approval scope');
         if (choice === 'persistent' && !this.options.persistence) return deny('Persistent rules are unavailable');
+        if (policy.authority?.kind === 'reviewed-command' && choice !== 'once') return deny('Full command authority can only be approved for one invocation');
         const grant: Grant = immutable({ id: randomUUID(), scope: choice, actionDigest: action.digest, ruleDigest: ruleDigest(action), sessionId: action.sessionId, policyRevision: action.policyRevision, permissionDigest: action.permissionDigest, delta: policy.delta });
         if (choice === 'persistent') {
           const prior = this.grants.filter(item => item.scope === 'persistent');
@@ -81,7 +86,7 @@ export class ApprovalManager {
         if (choice !== 'once') this.grants.push(grant);
         await this.options.audit.record(action, 'approval', choice);
         // Once-grants are consumed at logical admission; helpers share this returned immutable profile.
-        return { isAllowed: true, delta: grant.delta, grant, reason: 'User authorized the bound action' };
+        return { isAllowed: true, delta: grant.delta, grant, authority: policy.authority, reason: 'User authorized the bound action' };
       } catch { await this.options.audit.record(action, 'approval', 'cancelled-or-failed'); return deny('Approval cancelled or failed'); }
       finally { deadline.dispose(); }
     });

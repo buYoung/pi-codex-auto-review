@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { realpath } from 'node:fs/promises';
 import { GuardError, EMPTY_DELTA, type ExecutionOptions, type Json, type PermissionDelta, type PermissionProfile, type WorkerJob, validateWorkerFrame } from '../contracts.js';
 import { nativeConfig, workloadEnvironment } from './config.js';
+import { withSignal } from '../signals.js';
+import { matchesDomain } from '../policy/domains.js';
 
 export interface SandboxExecutor {
   execute(job: WorkerJob, profile: PermissionProfile, delta: PermissionDelta, options?: ExecutionOptions): Promise<Json>;
@@ -25,9 +27,11 @@ export class NativeExecutor implements SandboxExecutor {
   }
   async execute(job: WorkerJob, profile: PermissionProfile, delta: PermissionDelta = EMPTY_DELTA, options: ExecutionOptions = {}): Promise<Json> {
     if (!['darwin', 'linux'].includes(process.platform)) throw new GuardError('UNSUPPORTED_PLATFORM', 'Native isolation supports only Darwin and Linux');
-    const signal = options.signal ? AbortSignal.any([options.signal, this.stop.signal]) : this.stop.signal;
+    const lifetime = new AbortController();
+    const signal = AbortSignal.any([lifetime.signal, this.stop.signal, ...(options.signal ? [options.signal] : [])]);
     signal.throwIfAborted();
-    const config = await nativeConfig(profile, delta, job.cwd);
+    const config = await nativeConfig(profile, delta, job.cwd, options.authority);
+    if (options.onNetworkRequest) config.network.strictAllowlist = false;
     if (this.transport) config.network.mitmProxy = { socketPath: await realpath(this.transport.socketPath), domains: [...this.transport.domains] };
     const timeoutSeconds = options.timeoutSeconds ?? (job.kind === 'shell' ? job.timeoutSeconds : undefined) ?? 120;
     if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) throw new GuardError('INVALID_TIMEOUT', 'Execution timeout must be positive seconds');
@@ -35,6 +39,7 @@ export class NativeExecutor implements SandboxExecutor {
       execArgv: [], serialization: 'json', env: workloadEnvironment(), stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
     });
     // Broker owns the workload process group and is never itself a workload child.
+    const seenNetworkRequests = new Set<string>();
     const task = new Promise<Json>((resolve, reject) => {
       let terminal: Json | undefined, error: Error | undefined, stderr = '', isTerminal = false, forceTimer: NodeJS.Timeout | undefined, processGroupId: number | undefined;
       const killOwnedGroup = () => { if(processGroupId)try{process.kill(-processGroupId,'SIGKILL');}catch(cause){if((cause as NodeJS.ErrnoException).code!=='ESRCH')error??=cause as Error;} };
@@ -51,7 +56,17 @@ export class NativeExecutor implements SandboxExecutor {
       child.on('error', cause => { error ??= cause; });
       child.on('message', raw => {
         try {
-          const control=raw as {schemaVersion?:number;type?:string;processGroupId?:number};
+          const control=raw as {schemaVersion?:number;type?:string;processGroupId?:number;requestId?:string;destination?:{host?:string;port?:number}};
+          if (control.type === 'network-request') {
+            const requestId=control.requestId, destination=control.destination;
+            if (control.schemaVersion!==1 || !requestId || seenNetworkRequests.has(requestId) || !destination || typeof destination.host!=='string' || !/^[a-z0-9][a-z0-9.-]*$/i.test(destination.host) || destination.port!==undefined && (!Number.isInteger(destination.port)||destination.port<1||destination.port>65535) || isTerminal) throw new GuardError('INVALID_IPC','Invalid network approval request');
+            seenNetworkRequests.add(requestId);
+            const request={host:destination.host.toLowerCase(),...(destination.port!==undefined?{port:destination.port}:{})};
+            const pending = signal.aborted || profile.deniedDomains.some(pattern=>matchesDomain(request.host,pattern)) || !options.onNetworkRequest
+              ? Promise.resolve(false) : withSignal(options.onNetworkRequest(request,signal),signal);
+            void pending.catch(()=>false).then(isAllowed=>{if(child.connected)child.send({schemaVersion:1,type:'network-response',requestId,isAllowed:isAllowed===true&&!signal.aborted});});
+            return;
+          }
           if(control.type==='workload-started'){
             if(control.schemaVersion!==1 || !Number.isInteger(control.processGroupId) || control.processGroupId! <= 1 || processGroupId || isTerminal)throw new GuardError('INVALID_IPC','Invalid broker process group');
             processGroupId=control.processGroupId;return;
@@ -67,6 +82,7 @@ export class NativeExecutor implements SandboxExecutor {
       child.once('close', () => {
         if(!isTerminal)killOwnedGroup();
         clearTimeout(deadline); if (forceTimer) clearTimeout(forceTimer); signal.removeEventListener('abort', onAbort);
+        lifetime.abort();
         if (error) reject(error);
         else if (!isTerminal) reject(new GuardError('WORKER_FAILED', `Worker closed without a result${stderr ? `: ${stderr}` : ''}`));
         else resolve(terminal!);

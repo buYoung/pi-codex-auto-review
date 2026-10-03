@@ -12,6 +12,8 @@ import { fixture } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream, offlineModelRuntime, FAKE_MODEL } from '../harness/pi.mjs';
 import { NativeInvestigation } from '../../dist/review/investigation.js';
 import { NativeExecutor } from '../../dist/sandbox/executor.js';
+import { createServer } from 'node:http';
+import { once } from 'node:events';
 
 test('[tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects', async t => {
   const f=await fixture(t), runtime=await guardedFixture(t,f); const events=[]; runtime.session.subscribe(event=>events.push(event));
@@ -39,7 +41,7 @@ test('[final-input] a later mutable hook is checked at the final consumer and ca
   assert.equal(await readFile(target,'utf8'),f.secret);await assert.rejects(access(join(f.workspace,'allowed.txt')));assert.ok(events.some(e=>e.type==='tool_execution_end' && e.isError));
 });
 test('[user-bash] ! and !! return handled operations with native output and denial, never host fallback', async t => {
-  const f=await fixture(t), handlers=new Map(), tools=[], reviews=[], extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"decision":"allow","reason":"fixture"}';}}});
+  const f=await fixture(t), handlers=new Map(), tools=[], reviews=[], extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,settings:{commandRules:[{prefix:[process.execPath],decision:'ask'}]},provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"decision":"allow","reason":"fixture"}';}}});
   await extension.factory({registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});
   t.after(()=>extension.assertReady().close()); const context={cwd:f.workspace,sessionManager:{getSessionId:()=> 'shell-session'},hasUI:false};
   handlers.get('session_start')({},context);
@@ -52,6 +54,35 @@ test('[user-bash] ! and !! return handled operations with native output and deni
   const command=`${shellQuote(process.execPath)} --version`,handled=await handlers.get('user_bash')({command,cwd:f.workspace,excludeFromContext:false},context);
   assert.equal((await handled.operations.exec(command,f.workspace,{onData:()=>{},timeout:3})).exitCode,0);
   assert.ok(reviews.some(request=>request.context.items.some(item=>item.source==='user'&&JSON.stringify(item.content).includes(command))&&request.untrustedAction.source==='user-bash'));
+});
+test('[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call',async t=>{
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt'),requests=[];
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{requests.push(JSON.parse(request.data));return requests.length===1?'{"outcome":"allow","risk_level":"low","user_authorization":"high","rationale":"One owned write"}':'{"outcome":"deny","rationale":"Only first effect is authorized"}';}}});
+  await planStream(runtime.session,[[{name:'write',args:{path:target,content:'approved'}}],[{name:'write',args:{path:target,content:'unapproved'}}]]);
+  await runtime.session.prompt('Write approved to only the named owned sentinel once.');
+  assert.equal(requests.length,2);assert.equal(await readFile(target,'utf8'),'approved');
+  const never=await guardedFixture(t,f,{settings:{approvalPolicy:'never'},provider:{complete:()=>assert.fail('never reached reviewer')}});
+  await planStream(never.session,[[{name:'write',args:{path:target,content:'never'}}]]);await never.session.prompt('Check never mode.');assert.equal(await readFile(target,'utf8'),'approved');
+});
+test('[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined',async t=>{
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt'),script=join(f.workspace,'write.cjs');await writeFile(script,`require('fs').writeFileSync(${JSON.stringify(target)},'command-approved')`);
+  let reviews=0;
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>{reviews++;return '{"outcome":"allow","risk_level":"low","user_authorization":"high"}';}}});
+  const command=`${shellQuote(process.execPath)} ${shellQuote(script)}`;
+  await planStream(runtime.session,[[{name:'bash',args:{command}}]]);await runtime.session.prompt('Run the owned fixture inside the sandbox.');assert.equal(reviews,0);assert.equal(await readFile(target,'utf8'),'unchanged');
+  await planStream(runtime.session,[[{name:'bash',args:{command,sandbox_permissions:'require_escalated',justification:'Write the owned external sentinel'}}]]);await runtime.session.prompt('Approve that one command effect.');assert.equal(reviews,1);assert.equal(await readFile(target,'utf8'),'command-approved');
+  await writeFile(target,'reset');
+  const ruleRuntime=await guardedFixture(t,f,{settings:{commandRules:[{prefix:[process.execPath,script],decision:'allow'}]},provider:{complete:()=>assert.fail('trusted allow rule reached model')}});
+  await planStream(ruleRuntime.session,[[{name:'bash',args:{command}}]]);await ruleRuntime.session.prompt('Run the explicitly trusted command.');assert.equal(await readFile(target,'utf8'),'command-approved');
+});
+test('[tools] runtime network review sees original command and exact destination without replaying earlier effects',async t=>{
+  const f=await fixture(t),socketPath=join(f.control,'dynamic.sock');let requests=0;
+  const server=createServer((_req,res)=>{requests++;res.end('owned response');});server.listen(socketPath);await once(server,'listening');t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const reviews=[],runtime=await guardedFixture(t,f,{executor:new NativeExecutor({socketPath,domains:['late.example']}),provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"outcome":"allow","risk_level":"low","user_authorization":"high"}';}}});
+  const command='printf before >> count.txt; host=late.example; curl --fail --silent --max-time 10 \"http://$host/proof\"';
+  await planStream(runtime.session,[[{name:'bash',args:{command}}]]);await runtime.session.prompt('Contact only the owned synthetic network service.');
+  assert.equal(await readFile(join(f.workspace,'count.txt'),'utf8'),'before');assert.equal(requests,1);assert.equal(reviews.length,1);
+  const action=reviews[0].untrustedAction;assert.equal(action.args.command,command);assert.equal(action.args.networkDestination.host,'late.example');assert.ok(action.args.originatingActionDigest);
 });
 test('[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence', async t => {
   const f=await fixture(t), requests=[];

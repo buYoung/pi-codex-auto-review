@@ -1,11 +1,13 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TOOL_NAMES, type GuardAction, type PermissionDelta, type PermissionProfile, type PolicyDecision, type ApprovalPolicy } from '../contracts.js';
 import { canonicalPath, isWithin, resolveToolPath } from './paths.js';
 import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
 import { reviewPolicy } from '../review/policy.js';
+import { matchesDomain } from './domains.js';
+import { parseRules, ruleCommands, matchesRule, type PrefixRule } from './rules.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
 
 export interface CommandRule { readonly prefix: readonly string[]; readonly decision: 'allow' | 'ask' | 'deny' }
@@ -66,16 +68,33 @@ export async function loadSettings(path: string): Promise<GuardSettings> {
 }
 export async function defaultProfile(cwd: string, settings: GuardSettings, controlPaths: readonly string[] = []): Promise<PermissionProfile> {
   const workspace = await canonicalPath(cwd, cwd), home = homedir();
-  const hardRead = [join(home, '.ssh'), join(home, '.aws'), join(home, '.codex'), join(home, '.pi', 'agent'), ...controlPaths];
-  const hardWrite = [...hardRead, join(workspace, '.git'), join(workspace, '.pi', 'guard'), fileURLToPath(new URL('../', import.meta.url))];
-  return createProfile({ mode: settings.mode, readRoots: [workspace], writeRoots: settings.mode === 'workspace-write' ? [workspace] : [], denyRead: await Promise.all(hardRead.map(p => canonicalPath(p, cwd))), denyWrite: await Promise.all(hardWrite.map(p => canonicalPath(p, cwd))), allowedDomains: [...settings.allowedDomains], deniedDomains: [] });
+  const hardRead = [join(home, '.ssh'), join(home, '.aws'), join(home, '.codex'), join(home, '.pi', 'agent'), ...controlPaths, ...settings.ruleFiles];
+  const hardWrite = [...hardRead, join(workspace, '.pi', 'guard'), fileURLToPath(new URL('../', import.meta.url))];
+  const roots = [...new Set(await Promise.all([workspace, ...settings.writableRoots, ...(!settings.excludeSlashTmp ? ['/tmp'] : []), ...(!settings.excludeTmpdir ? [tmpdir()] : [])].map(path => canonicalPath(path, cwd))))];
+  const readOnlyPaths: string[] = [];
+  for (const root of roots) {
+    const git = join(root, '.git'); readOnlyPaths.push(await canonicalPath(git, cwd));
+    try { if ((await stat(git)).isFile()) { const pointer = /^gitdir:\s*(.+)\s*$/m.exec(await readFile(git, 'utf8')); if (pointer) readOnlyPaths.push(await canonicalPath(resolve(root, pointer[1]!), cwd)); } } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    for (const name of ['.agents', '.codex']) { const path = join(root, name); try { if ((await stat(path)).isDirectory()) readOnlyPaths.push(await canonicalPath(path, cwd)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; } }
+  }
+  return createProfile({ mode: settings.mode, readRoots: ['/'], writeRoots: settings.mode === 'workspace-write' ? roots : [], denyRead: await Promise.all(hardRead.map(p => canonicalPath(p, cwd))), denyWrite: await Promise.all(hardWrite.map(p => canonicalPath(p, cwd))), readOnlyPaths, allowedDomains: [...settings.allowedDomains], deniedDomains: [] });
 }
 export class PolicyEngine {
-  readonly revision: string;
+  private rules: readonly PrefixRule[];
+  private isInitialized: boolean;
+  get revision(): string { return digest({settings: this.settings, profile: this.profile, rules: this.rules, reviewPolicyDigest: reviewPolicy(this.settings.reviewPolicy).digest}); }
   constructor(readonly settings: GuardSettings, readonly profile: PermissionProfile) {
-    this.revision = digest({ settings, profile, reviewPolicyDigest: reviewPolicy(settings.reviewPolicy).digest });
+    this.rules = settings.commandRules.map(rule => ({pattern: rule.prefix, decision: rule.decision === 'ask' ? 'prompt' : rule.decision === 'deny' ? 'forbidden' : 'allow'}));
+    this.isInitialized = settings.ruleFiles.length === 0;
+  }
+  async initialize(cwd = process.cwd()): Promise<void> {
+    if (this.isInitialized) return;
+    const loaded = await Promise.all(this.settings.ruleFiles.map(async path => parseRules(await readFile(resolve(cwd, path), 'utf8'))));
+    this.rules = immutable([...this.rules, ...loaded.flat()]);
+    this.isInitialized = true;
   }
   async evaluate(action: GuardAction): Promise<PolicyDecision> {
+    if (!this.isInitialized) return decision(action, 'deny', 'Command rules have not been loaded', EMPTY_DELTA, true);
     if (action.policyRevision !== this.revision || action.permissionDigest !== digest(this.profile)) return decision(action, 'deny', 'Stale policy or permission profile', EMPTY_DELTA, true);
     if (!TOOL_NAMES.includes(action.tool as never)) return decision(action, 'ask', 'Unknown tool: annotations do not establish permission');
     if (action.tool === 'bash') return this.shellDecision(action);
@@ -86,7 +105,7 @@ export class PolicyEngine {
     const isWrite = action.tool === 'write' || action.tool === 'edit';
     if (profile.denyRead.some(p => isWithin(target, p)) || (isWrite && profile.denyWrite.some(p => isWithin(target, p)))) return decision(action, 'deny', 'Protected path', EMPTY_DELTA, true);
     const canRead = profile.readRoots.some(p => isWithin(target, p));
-    const canWrite = !isWrite || profile.writeRoots.some(p => isWithin(target, p));
+    const canWrite = !isWrite || profile.writeRoots.some(p => isWithin(target, p)) && !(profile.readOnlyPaths ?? []).some(p => isWithin(target, p));
     if (canRead && canWrite) return decision(action, 'allow', 'Within current filesystem permissions');
     return decision(action, 'ask', 'Filesystem permission required', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [target], domains: [] });
   }
@@ -95,50 +114,68 @@ export class PolicyEngine {
     const command = action.args.command;
     if (typeof command !== 'string') return decision(action, 'deny', 'Invalid command input', EMPTY_DELTA, true);
     const analysis = analyzeShell(command);
-    let shouldAsk = !analysis.isSupported;
+    let shouldAsk = false;
     const delta: { readPaths: string[]; writePaths: string[]; domains: string[] } = { readPaths: [], writePaths: [], domains: [] };
+    const commandGroups = ruleCommands(command, typeof action.args.shellPath === 'string' ? action.args.shellPath : '/bin/bash');
+    const matches = commandGroups.map(argv => this.rules.filter(rule => matchesRule(argv, rule)));
+    const forbidden = matches.flat().find(rule => rule.decision === 'forbidden');
+    if (forbidden) return decision(action, 'deny', forbidden.justification ?? 'Command forbidden by trusted rule', EMPTY_DELTA, true);
+    const prompted = matches.flat().find(rule => rule.decision === 'prompt');
+    const isRuleAllowed = !prompted && matches.length > 0 && matches.every(group => group.some(rule => rule.decision === 'allow'));
+    if (prompted) shouldAsk = true;
+    if (action.args.sandbox_permissions !== undefined && !['use_default', 'require_escalated'].includes(String(action.args.sandbox_permissions))) return decision(action, 'deny', 'Invalid sandbox permission request', EMPTY_DELTA, true);
+    const explicit = action.args.additional_permissions;
+    if (explicit !== undefined) {
+      if (!explicit || typeof explicit !== 'object' || Array.isArray(explicit) || Object.keys(explicit).some(key => !['readPaths', 'writePaths', 'domains'].includes(key))) return decision(action, 'deny', 'Invalid additional permissions', EMPTY_DELTA, true);
+      for (const key of ['readPaths', 'writePaths', 'domains'] as const) {
+        const values = explicit[key] ?? [];
+        if (!Array.isArray(values) || values.some(value => typeof value !== 'string' || !value || value.includes('\0'))) return decision(action, 'deny', 'Invalid permission list', EMPTY_DELTA, true);
+        delta[key].push(...values as string[]);
+      }
+      shouldAsk = true;
+    }
     for (const item of analysis.commands) {
       const executable = basename(item.argv[0]!);
-      const matches = this.settings.commandRules.filter(rule => matchesPrefix(item.argv, rule.prefix));
-      if (matches.some(rule => rule.decision === 'deny')) return decision(action, 'deny', 'Command denied by trusted rule', EMPTY_DELTA, true);
-      if (matches.some(rule => rule.decision === 'ask')) shouldAsk = true;
-      const isInterpreter = INTERPRETERS.has(executable);
-      if (isInterpreter) shouldAsk = true;
       const isSafeRead = ['pwd', 'echo', 'printf', 'ls', 'cat', 'head', 'tail', 'wc', 'rg', 'grep', 'find', 'stat', 'true', 'false'].includes(executable);
-      // Every literal operand is checked; the OS independently covers expansion and symlink races.
-      const operands = [...item.reads, ...item.writes, ...item.argv.slice(1).filter(arg => !arg.startsWith('-') && (arg.includes('/') || arg.startsWith('.')))];
-      for (const operand of operands) {
-        const target = await canonicalPath(operand, action.cwd);
-        if (profile.denyRead.some(p => isWithin(target, p)) || profile.denyWrite.some(p => isWithin(target, p))) return decision(action, 'deny', 'Command references a protected path', EMPTY_DELTA, true);
-        if(isSafeRead && !['echo','printf','true','false','pwd'].includes(executable) && !profile.readRoots.some(root=>isWithin(target,root))) {shouldAsk=true;delta.readPaths.push(target);}
+      const operands = item.argv.slice(1).filter(arg => !arg.startsWith('-'));
+      const reads = [...item.reads], writes = [...item.writes];
+      if (analysis.isSupported) {
+        if (isSafeRead && !['echo','printf','true','false','pwd'].includes(executable)) reads.push(...operands);
+        if (['touch', 'mkdir', 'rmdir', 'rm', 'truncate', 'tee', 'chmod', 'chown'].includes(executable)) writes.push(...operands);
+        if (['cp', 'mv'].includes(executable)) { reads.push(...operands.slice(0, -1)); writes.push(...operands.slice(-1)); if (executable === 'mv') writes.push(...operands.slice(0, -1)); }
+        if (executable === 'git' && !['status', 'diff', 'log', 'show', 'ls-files', 'rev-parse'].includes(item.argv[1] ?? '')) writes.push(...(profile.readOnlyPaths ?? []).filter(path => path === join(action.cwd, '.git') || path.includes('/.git/')));
       }
-      for (const path of item.writes) {
+      for (const path of writes) {
         const target = await canonicalPath(path, action.cwd);
-        if (!profile.writeRoots.some(root => isWithin(target, root))) { shouldAsk = true; delta.writePaths.push(target); }
+        if ([...profile.denyRead, ...profile.denyWrite].some(root => isWithin(target, root))) return decision(action, 'deny', 'Command writes a protected path', EMPTY_DELTA, true);
+        if (!profile.writeRoots.some(root => isWithin(target, root)) || (profile.readOnlyPaths ?? []).some(root => isWithin(target, root))) { shouldAsk = true; delta.writePaths.push(target); }
       }
-      for (const path of item.reads) {
+      for (const path of reads) {
         const target = await canonicalPath(path, action.cwd);
+        if (profile.denyRead.some(root => isWithin(target, root))) return decision(action, 'deny', 'Command reads a protected path', EMPTY_DELTA, true);
         if (!profile.readRoots.some(root => isWithin(target, root))) { shouldAsk = true; delta.readPaths.push(target); }
       }
-      if (['curl', 'wget'].includes(executable)) {
+      if (analysis.isSupported && ['curl', 'wget'].includes(executable)) {
         const urls = item.argv.slice(1).filter(arg => /^https?:\/\//.test(arg));
         for (const text of urls) {
           const domain = new URL(text).hostname.toLowerCase();
-          if (this.profile.deniedDomains.includes(domain)) return decision(action, 'deny', 'Network domain denied', EMPTY_DELTA, true);
-          if (!this.profile.allowedDomains.includes(domain)) delta.domains.push(domain);
+          if (profile.deniedDomains.some(pattern => matchesDomain(domain, pattern))) return decision(action, 'deny', 'Network domain denied', EMPTY_DELTA, true);
+          if (!profile.allowedDomains.some(pattern => matchesDomain(domain, pattern))) { delta.domains.push(domain); shouldAsk = true; }
         }
-        shouldAsk = true;
       }
-      const canUseRule = analysis.isSupported && !isInterpreter && matches.some(rule => rule.decision === 'allow');
-      const isSafeGit = executable === 'git' && ['status', 'diff', 'log', 'show', 'ls-files'].includes(item.argv[1] ?? '') && !item.argv.some(arg => arg.startsWith('--output') || arg.startsWith('--ext-diff'));
-      if (!canUseRule && !isSafeRead && !isSafeGit) shouldAsk = true;
-      if (item.writes.length && this.profile.mode === 'read-only') shouldAsk = true;
     }
-    return decision(action, shouldAsk ? 'ask' : 'allow', shouldAsk ? (analysis.reason ?? 'Command requires review') : 'Literal command within current permissions', { readPaths: [...new Set(delta.readPaths)], writePaths: [...new Set(delta.writePaths)], domains: [...new Set(delta.domains)] });
+    for (const key of ['readPaths','writePaths'] as const) delta[key] = [...new Set(await Promise.all(delta[key].map(path => canonicalPath(path, action.cwd))))];
+    if (delta.readPaths.some(path => profile.denyRead.some(root => isWithin(path, root))) || delta.writePaths.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root))) || delta.domains.some(host => !/^[a-z0-9][a-z0-9.-]*$/i.test(host) || profile.deniedDomains.some(pattern => matchesDomain(host, pattern)))) return decision(action, 'deny', 'Requested permissions target an absolute deny', EMPTY_DELTA, true);
+    const boundDelta = {...delta, domains: [...new Set(delta.domains.map(host => host.toLowerCase()))]};
+    if (isRuleAllowed) return immutable({...decision(action, 'allow', 'Trusted prefix rule authorizes this command', boundDelta), authority: {kind:'command-rule', actionDigest:action.digest, ruleDigest:digest(matches)}});
+    const isFullRequest = action.args.sandbox_permissions === 'require_escalated' && explicit === undefined;
+    shouldAsk ||= action.args.sandbox_permissions === 'require_escalated';
+    return immutable({...decision(action, shouldAsk ? 'ask' : 'allow', prompted?.justification ?? (shouldAsk ? 'Command requires permission review' : 'Execute within the current native sandbox'), boundDelta), approvalCategory: prompted ? 'rules' : 'sandbox', ...(isFullRequest ? {authority:{kind:'reviewed-command',actionDigest:action.digest}} : {})});
   }
   private async resolvedProfile(cwd: string): Promise<PermissionProfile> {
     const result = { ...this.profile };
     for (const key of ['readRoots', 'writeRoots', 'denyRead', 'denyWrite'] as const) result[key] = await Promise.all(this.profile[key].map(path => canonicalPath(path, cwd)));
+    if (this.profile.readOnlyPaths) result.readOnlyPaths = await Promise.all(this.profile.readOnlyPaths.map(path => canonicalPath(path, cwd)));
     return result;
   }
 }

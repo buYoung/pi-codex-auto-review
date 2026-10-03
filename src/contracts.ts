@@ -17,6 +17,8 @@ export interface PermissionProfile {
   readonly denyWrite: readonly string[];
   readonly allowedDomains: readonly string[];
   readonly deniedDomains: readonly string[];
+  /** Base sandbox metadata protection; unlike denyWrite, eligible exact actions may request review. */
+  readonly readOnlyPaths?: readonly string[];
 }
 export interface PermissionDelta {
   readonly readPaths: readonly string[];
@@ -82,7 +84,8 @@ export type ReviewResult = ReviewBinding & (
 );
 export type ExecutionAuthority =
   | { readonly kind: 'sandbox' | 'scoped-permissions'; readonly actionDigest: string }
-  | { readonly kind: 'command-rule'; readonly actionDigest: string; readonly ruleDigest: string };
+  | { readonly kind: 'command-rule'; readonly actionDigest: string; readonly ruleDigest: string }
+  | { readonly kind: 'reviewed-command'; readonly actionDigest: string };
 export interface RetryAuthorization {
   readonly id: string;
   readonly denialId: string;
@@ -119,7 +122,10 @@ export interface ExecutionOptions {
   readonly env?: NodeJS.ProcessEnv;
   readonly onData?: (data: Buffer) => void;
   readonly onUpdate?: (result: ToolResult) => void;
+  readonly authority?: ExecutionAuthority;
+  readonly onNetworkRequest?: (request: NetworkApprovalRequest, signal: AbortSignal) => Promise<boolean>;
 }
+export interface NetworkApprovalRequest { readonly host: string; readonly port?: number }
 export type WorkerJob =
   | { kind: 'shell'; command: string; cwd: string; shellPath?: string; timeoutSeconds?: number; env?: NodeJS.ProcessEnv }
   | { kind: 'tool'; tool: ToolName; args: Record<string, Json>; cwd: string; toolCallId: string; options?: Omit<ReadToolOptions,'operations'> }
@@ -131,6 +137,8 @@ export type WorkerFrame =
   | { schemaVersion: 1; type: 'error'; code: string; message: string };
 /** Only the unsandboxed broker's private IPC channel can send this control frame. */
 export interface BrokerControlFrame { readonly schemaVersion: 1; readonly type: 'workload-started'; readonly processGroupId: number }
+/** Private controller/broker IPC only. Workload stdout must still reject these frame types. */
+export interface BrokerNetworkRequest { readonly schemaVersion: 1; readonly type: 'network-request'; readonly requestId: string; readonly destination: NetworkApprovalRequest }
 export interface TestEvidence {
   readonly schemaVersion?: 1 | 2;
   readonly runId?: string;
@@ -187,6 +195,7 @@ export function createProfile(input: PermissionProfile): PermissionProfile {
   for (const key of ['readRoots', 'writeRoots', 'denyRead', 'denyWrite'] as const) {
     if (!Array.isArray(input[key]) || input[key].some(p => typeof p !== 'string' || !isAbsolute(p) || p.includes('\0'))) throw new GuardError('INVALID_PROFILE', `Invalid ${key}`);
   }
+  if (input.readOnlyPaths !== undefined && (!Array.isArray(input.readOnlyPaths) || input.readOnlyPaths.some(path => typeof path !== 'string' || !isAbsolute(path) || path.includes('\0')))) throw new GuardError('INVALID_PROFILE', 'Invalid readOnlyPaths');
   if (input.mode === 'read-only' && input.writeRoots.length) throw new GuardError('INVALID_PROFILE', 'Read-only profiles cannot contain write roots');
   for (const key of ['allowedDomains', 'deniedDomains'] as const) {
     if (!Array.isArray(input[key]) || input[key].some(p => typeof p !== 'string' || !/^(\*\.)?[a-z0-9][a-z0-9.-]*$/i.test(p))) throw new GuardError('INVALID_PROFILE', `Invalid ${key}`);
