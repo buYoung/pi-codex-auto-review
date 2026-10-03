@@ -51,17 +51,18 @@ export function parseAssessment(value: unknown): ReviewAssessment {
     if (first < 0 || last < first) throw new GuardError('REVIEW_PARSE', 'Invalid review JSON');
     try { data = JSON.parse(value.slice(first, last + 1)); } catch { throw new GuardError('REVIEW_PARSE', 'Invalid review JSON'); }
   }
-  if (!data || Array.isArray(data) || Object.keys(data).some(key => !['risk_level', 'user_authorization', 'outcome', 'rationale'].includes(key)) || !['allow', 'deny'].includes(String(data.outcome))) throw new GuardError('REVIEW_PARSE', 'Invalid review schema');
-  const risk = data.risk_level ?? (data.outcome === 'allow' ? 'low' : 'high'), authorization = data.user_authorization ?? 'unknown';
-  if (!['low', 'medium', 'high', 'critical'].includes(String(risk)) || !['unknown', 'low', 'medium', 'high'].includes(String(authorization)) || (data.rationale !== undefined && (typeof data.rationale !== 'string' || data.rationale.length > 4000))) throw new GuardError('REVIEW_PARSE', 'Invalid risk assessment');
+  if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).some(key => !['risk_level', 'user_authorization', 'outcome', 'rationale'].includes(key)) || typeof data.outcome !== 'string' || !['allow', 'deny'].includes(data.outcome)) throw new GuardError('REVIEW_PARSE', 'Invalid review schema');
+  const risk = data.risk_level === undefined ? (data.outcome === 'allow' ? 'low' : 'high') : data.risk_level;
+  const authorization = data.user_authorization === undefined ? 'unknown' : data.user_authorization;
+  if (typeof risk !== 'string' || !['low', 'medium', 'high', 'critical'].includes(risk) || typeof authorization !== 'string' || !['unknown', 'low', 'medium', 'high'].includes(authorization) || (data.rationale !== undefined && (typeof data.rationale !== 'string' || data.rationale.length > 4000))) throw new GuardError('REVIEW_PARSE', 'Invalid risk assessment');
   const rationale = typeof data.rationale === 'string' && data.rationale.trim() ? data.rationale : data.outcome === 'allow' ? 'Auto-review returned a low-risk allow decision.' : 'Auto-review denied the action without a rationale.';
-  const cannotAllow = risk === 'critical' || (risk === 'high' && !['medium', 'high'].includes(String(authorization)));
+  const cannotAllow = risk === 'critical' || (risk === 'high' && !['medium', 'high'].includes(authorization));
   return immutable({risk_level: risk, user_authorization: authorization, outcome: cannotAllow ? 'deny' : data.outcome, rationale: cannotAllow && data.outcome === 'allow' ? 'Assessment contradicts the mandatory risk threshold' : rationale} as ReviewAssessment);
 }
 export function parseReview(value: unknown): ReviewReply {
   if (typeof value !== 'string' || value.length > 4096) throw new Error('Invalid review output');
   const data = JSON.parse(value) as Record<string, unknown>;
-  if (!data || Object.keys(data).some(key => !['decision', 'reason'].includes(key)) || !['allow', 'ask', 'deny'].includes(String(data.decision)) || typeof data.reason !== 'string' || data.reason.length > 1000) throw new Error('Invalid review schema');
+  if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).some(key => !['decision', 'reason'].includes(key)) || typeof data.decision !== 'string' || !['allow', 'ask', 'deny'].includes(data.decision) || typeof data.reason !== 'string' || data.reason.length > 1000) throw new Error('Invalid review schema');
   return immutable({ decision: data.decision as DecisionKind, reason: data.reason, isLegacy: true });
 }
 export async function reviewAction(options: {

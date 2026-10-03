@@ -37,6 +37,18 @@ test('[grants] denial breaker uses three consecutive or ten of fifty reviews and
   assert.match(reviewFeedback(denied).message,/policy circumvention/);
   assert.match(reviewFeedback({...denied,status:'timed-out'}).message,/not evidence/);
 });
+test('[cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn',async t=>{
+  const f=await fixture(t),m=manager(),modelAction=f.action('bash',{command:'pwd'}),userAction=f.action('bash',{command:'pwd'},{source:'user-bash'});
+  const denied={provider:{complete:async()=>'{"outcome":"deny"}'},trustedAuthorization:''};
+  for(let index=0;index<3;index++)await m.admit(modelAction,decision(modelAction,'ask','review'),denied);
+  assert.equal(m.lifecycle.signal.aborted,true);
+  assert.equal((await m.admit(userAction,decision(userAction,'allow','owned'),denied)).isAllowed,true);
+  assert.equal((await m.admit(modelAction,decision(modelAction,'allow','owned'),denied)).isAllowed,false);
+  const caller=new AbortController();caller.abort();
+  assert.equal((await m.admit(userAction,decision(userAction,'allow','owned'),{...denied,signal:caller.signal})).isAllowed,false);
+  m.reset('another-session');
+  assert.equal((await m.admit(userAction,decision(userAction,'allow','owned'),denied)).isAllowed,false);
+});
 test('[grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize',async t=>{
   const f=await fixture(t),m=manager(),action=f.action('write',{path:join(f.outside,'sentinel.txt'),content:'owned'}),store=new ReviewContextStore();store.reset(action.sessionId);store.authorize('Only the named owned effect.');
   const reviewContext=store.snapshot(10000),requests=[];

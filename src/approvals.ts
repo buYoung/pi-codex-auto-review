@@ -47,7 +47,7 @@ export class ApprovalManager {
   invalidate(): void { this.reset(this.sessionId); this.grants = []; }
   async admit(action: GuardAction, policy: PolicyDecision, context: { provider: ReviewProvider; ui?: ApprovalUI; trustedAuthorization: string; signal?: AbortSignal; reviewContext?: ReviewContext; settings?: GuardSettings; onReviewStart?: () => void; onReviewResult?: (result?: ReviewResult) => void; onInterrupt?: () => void }): Promise<Admission> {
     this.sessionId ??= action.sessionId;
-    const signal = AbortSignal.any([this.epoch.signal, this.lifecycle.signal, ...(context.signal ? [context.signal] : [])]);
+    const signal = AbortSignal.any([this.epoch.signal, ...(action.source === 'user-bash' ? [] : [this.lifecycle.signal]), ...(context.signal ? [context.signal] : [])]);
     const deny = (reason: string): Admission => ({ isAllowed: false, delta: EMPTY_DELTA, reason });
     if (signal.aborted || action.sessionId !== this.sessionId) return deny('Cancelled or stale session');
     if (policy.actionDigest !== action.digest || policy.kind === 'deny' || policy.isHardDeny) { await this.options.audit.record(action, 'policy', 'deny'); return deny(policy.reason); }

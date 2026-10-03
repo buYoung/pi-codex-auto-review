@@ -37,6 +37,46 @@ test('[workflow] protected SDK direct shell and failed reload cannot activate a 
   await assert.rejects(runtime.session.prompt('After failed reload.'),/failed to load|not ready/);
   await assert.rejects(access(join(f.workspace,'reload.txt')));
 });
+test('[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request', async t => {
+  const f=await fixture(t), target=join(f.outside,'sentinel.txt'), events=[],requests=[];let reviews=0;
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>JSON.stringify({outcome:'allow',risk_level:[++reviews===1?'critical':'high'],user_authorization:'unknown'})}});
+  runtime.session.subscribe(event=>events.push(event));
+  await planStream(runtime.session,[[{name:'write',args:{path:target,content:'must not escape'}}],[{name:'write',args:{path:target,content:'must still not escape'}}]]);
+  const stream=runtime.session.agent.streamFunction;
+  runtime.session.agent.streamFunction=(...args)=>{requests.push(structuredClone(args[1].messages));return stream(...args);};
+  await runtime.session.prompt('Check malformed review output against the owned sentinel.');
+  assert.equal(reviews,2);assert.equal(await readFile(target,'utf8'),'unchanged');
+  const results=events.filter(event=>event.type==='tool_execution_end');
+  assert.equal(results.length,2);assert.ok(results.every(event=>event.isError&&JSON.stringify(event.result).includes('AUTO_REVIEW_FAILED')));
+  assert.equal(requests.length,3);assert.ok(requests[1].some(message=>message.role==='toolResult'&&JSON.stringify(message).includes('AUTO_REVIEW_FAILED')));
+  const audit=(await readFile(join(f.agentDir,'guard/audit.jsonl'),'utf8')).trim().split('\n').map(JSON.parse);
+  assert.equal(audit.filter(row=>row.review?.status==='failed').length,2);
+  assert.ok(!audit.some(row=>row.outcome==='approved'));
+});
+test('[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit', async t => {
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt'),secret='quoted-fixture-private-value';
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>JSON.stringify({outcome:'allow',risk_level:'low',user_authorization:'high',rationale:`Owned file; token="${secret}" is not logged.`})}});
+  await planStream(runtime.session,[[{name:'write',args:{path:target,content:'approved'}}]]);
+  await runtime.session.prompt('Update only the owned sentinel.');
+  assert.equal(await readFile(target,'utf8'),'approved');
+  const text=await readFile(join(f.agentDir,'guard/audit.jsonl'),'utf8'),rows=text.trim().split('\n').map(JSON.parse);
+  assert.ok(rows.some(row=>row.review?.status==='approved'));assert.ok(!text.includes(secret));
+  assert.ok(rows.some(row=>row.event==='execution'&&row.outcome==='settled'));
+});
+test('[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime', async t => {
+  const f=await fixture(t),events=[];let reviews=0;
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>{reviews++;return '{"outcome":"deny","rationale":"Owned denial-limit scenario"}';}}});
+  runtime.session.subscribe(event=>events.push(event));
+  await planStream(runtime.session,Array.from({length:4},(_,index)=>[{name:'write',args:{path:join(f.outside,`denied-${index}.txt`),content:'blocked'}}]));
+  await runtime.session.prompt('Exercise denial limits with owned targets.');
+  assert.equal(reviews,3);
+  for(let index=0;index<4;index++)await assert.rejects(access(join(f.outside,`denied-${index}.txt`)));
+  const result=await runtime.session.executeBash('printf direct-user-after-denial');
+  assert.equal(result.exitCode,0);assert.equal(result.output,'direct-user-after-denial');
+  const results=events.filter(event=>event.type==='tool_execution_end');
+  assert.ok(results.every(event=>event.isError));
+  assert.equal(results.filter(event=>JSON.stringify(event.result).includes('AUTO_REVIEW_DENIED')).length,3);
+});
 test('[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets', async t => {
   const f=await fixture(t), artifacts=join(f.root,'artifacts'), consumer=join(f.root,'consumer'), home=join(f.control,'fake-home');
   await Promise.all([artifacts,consumer,home].map(path=>mkdir(path,{recursive:true})));

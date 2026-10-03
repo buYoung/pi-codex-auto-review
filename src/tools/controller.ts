@@ -56,7 +56,6 @@ export class GuardController {
     return {denial, args};
   }
   async retryUserBash(action: GuardAction, context: ExtensionContext): Promise<void> {
-    this.startTurn();
     const next = createAction({...action,toolCallId:randomUUID()},this.policy.profile);
     const command=String(next.args.command),shellPath=String(next.args.shellPath??'/bin/bash');
     await this.admitAndExecute(next,{kind:'shell',command,shellPath,cwd:next.cwd},context,{timeoutSeconds:typeof next.args.timeout==='number'?next.args.timeout:undefined,env:next.args.environment as NodeJS.ProcessEnv});
@@ -155,7 +154,7 @@ export class GuardController {
   }
   private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = '', retryArguments?: Readonly<Record<string, Json>>): Promise<Json> {
     this.assertReady();
-    const signal = AbortSignal.any([this.stopped.signal,this.approvals.lifecycle.signal,...(options.signal ? [options.signal] : [])]);
+    const signal = AbortSignal.any([this.stopped.signal,...(action.source === 'user-bash' ? [] : [this.approvals.lifecycle.signal]),...(options.signal ? [options.signal] : [])]);
     const authorizationVersion = this.reviewContext.scopeVersion;
     const policyDecision = await this.policy.evaluate(action, signal);
     const admission = await this.requestAdmission(action, policyDecision, context, signal, trustedAuthorization);

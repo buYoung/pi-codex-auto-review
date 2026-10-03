@@ -18,15 +18,18 @@ export class ReviewLifecycle {
   invalidateRetries(): void { this.retries.clear(); }
   record(action: GuardAction, contextId: string, result?: ReviewResult): { denialId?: string; shouldInterrupt: boolean } {
     const isDenied = result?.status === 'denied';
-    this.consecutive = isDenied ? this.consecutive + 1 : 0;
-    this.window.push(isDenied); if (this.window.length > 50) this.window.shift();
+    const isModelAction = action.source !== 'user-bash';
+    if (isModelAction) {
+      this.consecutive = isDenied ? this.consecutive + 1 : 0;
+      this.window.push(isDenied); if (this.window.length > 50) this.window.shift();
+    }
     let denialId: string | undefined;
     if (isDenied) {
       denialId = randomUUID();
       this.history.push(immutable({id: denialId, action, contextId, assessment: {...result.assessment, rationale: redact(result.assessment.rationale).slice(0, 1000)}}));
       this.history = this.history.slice(-10);
     }
-    const shouldInterrupt = !this.turn.signal.aborted && (this.consecutive >= 3 || this.window.filter(Boolean).length >= 10);
+    const shouldInterrupt = isModelAction && !this.turn.signal.aborted && (this.consecutive >= 3 || this.window.filter(Boolean).length >= 10);
     if (shouldInterrupt) this.turn.abort(new GuardError('REVIEW_CIRCUIT_OPEN', 'Automatic review denial limit reached for this turn'));
     return {denialId, shouldInterrupt};
   }

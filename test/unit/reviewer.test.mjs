@@ -51,6 +51,12 @@ test('[review] pinned short/full assessments and policy retain risk thresholds a
   assert.equal(parseAssessment('```json\n{"outcome":"deny"}\n```').user_authorization,'unknown');
   for(const risk of ['critical','high'])assert.equal(parseAssessment(JSON.stringify({outcome:'allow',risk_level:risk,user_authorization:'unknown'})).outcome,'deny');
   for(const output of ['{}','{"outcome":"allow","grant":"persistent"}','{"outcome":"allow","risk_level":"safe"}'])assert.throws(()=>parseAssessment(output));
+  for(const [field,value] of [['risk_level',['critical']],['risk_level',['high']],['risk_level',null],['user_authorization',['high']],['user_authorization',null],['outcome',['allow']]]) {
+    const output=JSON.stringify({outcome:'allow',risk_level:'high',user_authorization:'high',[field]:value});
+    assert.throws(()=>parseAssessment(output),/schema|assessment/);
+    const reply=await reviewAction({...options,provider:{complete:async()=>output}});
+    assert.equal(reply.decision,'deny');assert.equal(reply.result.failure,'invalid-output');
+  }
   const approved=await reviewAction({...options,provider:{complete:async()=>'{"outcome":"allow","risk_level":"medium","user_authorization":"high","rationale":"Owned narrow write"}'}});
   assert.equal(approved.result.status,'approved');assert.equal(approved.result.actionDigest,action.digest);
   const denied=await reviewAction({...options,provider:{complete:async()=>'{"outcome":"deny"}'}});assert.equal(denied.result.status,'denied');
