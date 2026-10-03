@@ -13,7 +13,9 @@ test('[external-policy] Codex MCP annotation precedence and four approval modes'
   }
   const action=createAction({tool:'mcp__owned__read',toolCallId:'owned',args:{},source:'model',cwd:process.cwd(),sessionId:'s',policyRevision:'p'},createProfile({mode:'read-only',readRoots:[process.cwd()],writeRoots:[],denyRead:[],denyWrite:[],allowedDomains:[],deniedDomains:[]}));
   const identity={kind:'mcp',server:'owned',tool:'read',registration:'r',annotations:{readOnlyHint:true}};
-  assert.equal(externalPolicy(action,identity,validateSettings({})).requiresFreshReview,true);
+  assert.equal(externalPolicy(action,identity,validateSettings({})).kind,'allow');
+  assert.equal(externalPolicy(action,{...identity,requiresStrictReview:true},validateSettings({})).requiresFreshReview,true);
+  assert.equal(externalPolicy(action,{...identity,approvalMode:'approve'},validateSettings({})).kind,'allow');
   assert.equal(externalPolicy(action,identity,validateSettings({approvalsReviewer:'user'})).kind,'allow');
   assert.equal(externalPolicy(action,{...identity,requiresUserInput:true},validateSettings({})).requiresUserInput,true);
   const cua={...identity,kind:'computer-use',annotations:{destructiveHint:true}};

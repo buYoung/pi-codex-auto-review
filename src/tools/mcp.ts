@@ -68,7 +68,7 @@ function guardedTransport(base: Transport, server: string, registration: string,
           ...(typeof meta.connector_id === 'string' ? {connectorId:meta.connector_id} : {}),
           requiresUserInput:meta.codex_requires_user_input === true,
           isSensitiveAction:meta.codex_sensitive_action === true,
-          requiresStrictReview:meta.codex_strict_auto_review === true,
+          requiresStrictReview:invocation.identity.requiresStrictReview === true || meta.codex_strict_auto_review === true,
         };
         try {
           await invocation.checkCurrent();

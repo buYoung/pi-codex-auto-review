@@ -26,7 +26,7 @@ export function requiresMcpApproval(annotations: ToolAnnotations = {}, mode: Ext
   return (annotations.destructiveHint ?? true) || (annotations.openWorldHint ?? true);
 }
 export function externalPolicy(action: GuardAction, identity: ExternalToolIdentity, settings: GuardSettings): PolicyDecision {
-  const isFresh = settings.approvalsReviewer === 'auto_review' || identity.requiresStrictReview === true || identity.isSensitiveAction === true || identity.requiresUserInput === true;
+  const isFresh = identity.requiresStrictReview === true || identity.isSensitiveAction === true || identity.requiresUserInput === true;
   const isOrdinaryComputerUse = identity.kind === 'computer-use' && settings.approvalsReviewer === 'user' && !isFresh;
   const shouldReview = isFresh || !isOrdinaryComputerUse && requiresMcpApproval(identity.annotations, identity.approvalMode);
   return immutable({...decision(action, shouldReview ? 'ask' : 'allow', shouldReview ? 'Review the exact registered external action' : 'Registered external tool approval policy permits this action'), approvalCategory:'mcp_elicitations', requiresFreshReview:isFresh, requiresUserInput:identity.requiresUserInput === true});

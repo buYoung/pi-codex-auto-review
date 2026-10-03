@@ -83,7 +83,7 @@ Pi와 명시적으로 신뢰한 확장은 제어 계층입니다. 임의의 같�
 
 보호 진입점은 선택한 `agentDir`의 전역 지침과 프로젝트 루트부터 현재 디렉터리까지의 지침을 자동 탐색합니다. 같은 디렉터리에서는 `AGENTS.override.md`, `AGENTS.md`, `projectDocFallbackFilenames` 순서로 선택합니다. 기본 루트 표시는 `.git`이며 `projectRootMarkers: []`는 상위 탐색을 끕니다. 프로젝트 지침의 합산 한도는 `projectDocMaxBytes`의 기본값 32768바이트입니다. Pi가 비신뢰로 표시한 프로젝트는 제외하고, 새로고침 때 다시 읽습니다. 보호 파일로 연결되는 별칭은 거부하며, 도구 출력에 등장한 파일명을 지침의 출처로 취급하지 않습니다.
 
-MCP는 Pi에 등록된 서버와 `agentDir/mcp.json`, 신뢰한 프로젝트의 `.pi/mcp.json`을 사용합니다. 서버의 실제 도구 등록을 최종 실행 승인에 연결하며, 검토 중 등록 정보가 바뀌거나 호출이 취소되면 실행하지 않습니다. 이미 서버에 전달한 요청의 취소 효과는 외부 공급자의 구현에 달려 있습니다. `auto_review`는 읽기 전용 표시나 이전 승인으로 검토를 생략하지 않습니다. 사용자 검토 모드는 Codex의 annotation 우선순위를 따릅니다. `createGuardedRuntime()`의 `mcp: false`로 연결을 끄거나, `mcpToolPolicies`의 `서버/도구` 키에 `approvalMode`와 `kind`를 지정할 수 있습니다.
+MCP는 Pi에 등록된 서버와 `agentDir/mcp.json`, 신뢰한 프로젝트의 `.pi/mcp.json`을 사용합니다. 서버의 실제 도구 등록을 최종 실행 승인에 연결하며, 검토 중 등록 정보가 바뀌거나 호출이 취소되면 실행하지 않습니다. 이미 서버에 전달한 요청의 취소 효과는 외부 공급자의 구현에 달려 있습니다. 일반 경로는 검토자 종류와 별개로 Codex의 annotation 우선순위와 승인 모드를 따릅니다. 엄격한 검토 요청·민감 작업·필수 사용자 입력은 새 승인을 요구하며, 읽기 전용 표시나 이전 승인으로 생략하지 않습니다. `createGuardedRuntime()`의 `mcp: false`로 연결을 끄거나, `mcpToolPolicies`의 `서버/도구` 키에 `approvalMode`와 `kind`를 지정할 수 있습니다.
 
 Computer Use 실행 도구는 설치된 공급자가 제공해야 합니다. `node_repl`의 `js`나 `externalExtensions`의 신뢰한 어댑터를 승인 계층에 연결할 수 있습니다. 민감한 중첩 요청은 살아 있는 원래 호출에 결합해 별도로 검토합니다. `codex_requires_user_input`은 모델이 대신 승인하지 않습니다. 빈 승인 폼은 처리하지만, 입력 필드가 있는 일반 폼과 URL 인증 요청은 이 어댑터에서 거부합니다.
 
