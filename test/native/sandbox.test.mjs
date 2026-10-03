@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile, symlink, link, access, mkdir, rename } from 'node:fs/promises';
+import { readFile, writeFile, symlink, link, access, mkdir, rename, mkdtemp, realpath, rm } from 'node:fs/promises';
 import { constants as osConstants } from 'node:os';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { join } from 'node:path';
 import { NativeExecutor } from '../../dist/sandbox/executor.js';
 import { shellQuote, workloadEnvironment } from '../../dist/sandbox/config.js';
-import { EMPTY_DELTA, createProfile } from '../../dist/contracts.js';
+import { EMPTY_DELTA, createProfile, createAction } from '../../dist/contracts.js';
+import { PolicyEngine, validateSettings } from '../../dist/policy/index.js';
 import { fixture } from '../harness/fixtures.mjs';
 const recordObservation=(t,kind,effect)=>t.diagnostic('NATIVE_OBSERVATION:'+JSON.stringify({kind,effect,isObserved:true,platform:`${process.platform}-${process.arch}`}));
 
@@ -65,6 +66,23 @@ test('[native-network] allowed proxy control reaches an owned service and denied
   const control=await fetch(directURL);assert.equal(await control.text(),'direct-control');assert.equal(directRequests,1);
   const direct=await f.shell(`curl --noproxy '*' --fail --silent --max-time 3 ${shellQuote(directURL)}`,allowed); assert.notEqual(direct.exitCode,0); assert.equal(directRequests,1);assert.equal(requests,1);
   recordObservation(t,'allow','one authorized proxy request reached owned Unix socket service');recordObservation(t,'deny','domain-denied and direct requests did not reach owned service');
+});
+test('[native-files] backend convenience write paths cannot override a read-only profile or borrow a narrow grant',async t=>{
+  const f=await setup(t);await mkdir('/tmp/claude',{recursive:true});
+  const scratch=await realpath(await mkdtemp('/tmp/claude/pi-owned-native-'));t.after(()=>rm(scratch,{recursive:true,force:true}));
+  const target=join(scratch,'sentinel.txt');await writeFile(target,'unchanged');
+  const profile=createProfile({...f.profile,mode:'read-only',readRoots:['/'],writeRoots:[]});
+  assert.notEqual((await f.shell(`printf escaped > ${shellQuote(target)}`,profile)).exitCode,0);
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  await assert.rejects(f.shell(`printf escaped > ${shellQuote(target)}`,profile,{readPaths:[],writePaths:[target],domains:[]}),/enclosing directory/);
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  const policy=new PolicyEngine(validateSettings({mode:'read-only'}),profile),command=`printf reviewed > ${shellQuote(target)}`;
+  const action=createAction({toolCallId:'scratch-review',tool:'bash',args:{command},cwd:f.workspace,source:'model',sessionId:'fixture',policyRevision:policy.revision},profile);
+  const assessment=await policy.evaluate(action);assert.equal(assessment.kind,'ask');assert.deepEqual(assessment.delta.writePaths,[await realpath('/tmp/claude')]);
+  assert.equal((await f.shell(command,profile,assessment.delta)).exitCode,0);assert.equal(await readFile(target,'utf8'),'reviewed');
+  assert.notEqual((await f.shell(command,profile)).exitCode,0);
+  recordObservation(t,'allow','explicitly disclosed runtime directory grant reached the named owned target');
+  recordObservation(t,'deny','runtime convenience directory did not override read-only or broaden an exact-file grant');
 });
 test('[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies',async t=>{
   const f=await setup(t),metadata=join(f.workspace,'.agents');await mkdir(metadata);

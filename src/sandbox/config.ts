@@ -6,6 +6,7 @@ import { GuardError, createProfile, type PermissionDelta, type PermissionProfile
 import { canonicalPath, isWithin } from '../policy/paths.js';
 import { matchesDomain } from '../policy/domains.js';
 import { linuxReadPaths } from './linux-read-paths.js';
+import { runtimeWritePaths } from './runtime-write-paths.js';
 
 export function shellQuote(text: string): string { return `'${text.replace(/'/g, "'\\''")}'`; }
 const AMBIENT_ENV = new Set(['PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ', 'TERM']);
@@ -30,6 +31,8 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   const lifted = baseProtected.filter(root => writes.some(path => isWithin(path, root)));
   // Removing a base metadata deny must not expose its siblings through the original workspace root.
   const writeRoots = isCommandAuthority ? ['/'] : lifted.length ? writes : [...profile.writeRoots, ...writes];
+  const unapprovedDefaults = (await runtimeWritePaths(cwd)).filter(root => !writeRoots.some(path => isWithin(root, path)));
+  if (unapprovedDefaults.some(root => writeRoots.some(path => isWithin(path, root)))) throw new GuardError('NATIVE_SCOPE_UNSUPPORTED', 'A nested runtime default write path requires its enclosing directory in the reviewed native scope');
   const packageRoot = fileURLToPath(new URL('../../', import.meta.url));
   const nodeRoot = resolve(dirname(await realpath(process.execPath)), '..');
   const dependencyRoots: string[] = [];
@@ -49,7 +52,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
       denyRead: ['/', ...profile.denyRead],
       allowRead: await linuxReadPaths([...systemRead, ...(isCommandAuthority ? ['/'] : profile.readRoots), ...reads, ...writes], writeRoots),
       allowWrite: writeRoots,
-      denyWrite: [...profile.denyWrite, ...profile.denyRead, ...(isCommandAuthority ? [] : baseProtected.filter(root => !lifted.includes(root))), ...dependencyRoots, resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), resolve(packageRoot, 'package-lock.json')],
+      denyWrite: [...profile.denyWrite, ...profile.denyRead, ...unapprovedDefaults, ...(isCommandAuthority ? [] : baseProtected.filter(root => !lifted.includes(root))), ...dependencyRoots, resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), resolve(packageRoot, 'package-lock.json')],
       allowGitConfig: isCommandAuthority || writes.some(path => /[/\\]\.git(?:[/\\]config)?$/.test(path)),
     },
     network: { allowedDomains: isCommandAuthority ? ['*'] : [...profile.allowedDomains, ...delta.domains], deniedDomains: [...profile.deniedDomains], strictAllowlist: true, allowAllUnixSockets: false, allowLocalBinding: false },

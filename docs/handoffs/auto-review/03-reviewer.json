@@ -65,5 +65,29 @@
     "provider": "controlled; not live qualification"
   },
   "unresolved": [],
-  "recordedAt": "2026-10-03T00:08:20.268Z"
+  "recordedAt": "2026-10-03T00:08:20.268Z",
+  "finalFollowup": {
+    "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+    "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+    "platformResults": {
+      "darwin-arm64": {
+        "status": "pass",
+        "tests": 71,
+        "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/platform.json"
+      },
+      "linux-x64": {
+        "status": "environment-blocked",
+        "tests": 0,
+        "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-07-412Z-cf557ca0-87f5-4a10-96c0-66074bf96361/linux-x64/docker-offline.json"
+      },
+      "linux-arm64": {
+        "status": "pass",
+        "tests": 71,
+        "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-37-58-990Z-d948c0be-dd4c-453a-ba86-c82bed05b0b5/linux-arm64/docker-offline.json"
+      }
+    },
+    "finalReport": "docs/handoffs/auto-review/07-conformance.json",
+    "finalStatus": "environment-blocked",
+    "correction": "Output guidance now preserves low-risk denials required by an explicit security policy, instead of suggesting every low-risk output must allow."
+  }
 }

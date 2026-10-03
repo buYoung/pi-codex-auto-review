@@ -8,6 +8,7 @@ import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
 import { reviewPolicy } from '../review/policy.js';
 import { matchesDomain } from './domains.js';
 import { parseRules, ruleCommands, matchesRule, type PrefixRule } from './rules.js';
+import { runtimeWritePaths } from '../sandbox/runtime-write-paths.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
 
 export interface CommandRule { readonly prefix: readonly string[]; readonly decision: 'allow' | 'ask' | 'deny' }
@@ -107,8 +108,8 @@ export class PolicyEngine {
     const canRead = profile.readRoots.some(p => isWithin(target, p));
     const canWrite = !isWrite || profile.writeRoots.some(p => isWithin(target, p)) && !(profile.readOnlyPaths ?? []).some(p => isWithin(target, p));
     if (canRead && canWrite) return decision(action, 'allow', 'Within current filesystem permissions');
-    const writePath = isWrite && !canWrite ? await this.creationWriteScope(target) : target;
-    return decision(action, 'ask', writePath === target ? 'Filesystem permission required' : 'Linux file creation requires the existing parent directory in this invocation; review this full write scope', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [writePath], domains: [] });
+    const writePath = isWrite && !canWrite ? await this.nativeWriteScope(target, action.cwd) : target;
+    return decision(action, 'ask', writePath === target ? 'Filesystem permission required' : 'The native backend requires the enclosing directory in this invocation; review this full write scope', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [writePath], domains: [] });
   }
   private async shellDecision(action: GuardAction): Promise<PolicyDecision> {
     const profile = await this.resolvedProfile(action.cwd);
@@ -167,11 +168,14 @@ export class PolicyEngine {
     }
     for (const key of ['readPaths','writePaths'] as const) delta[key] = [...new Set(await Promise.all(delta[key].map(path => canonicalPath(path, action.cwd))))];
     if (delta.readPaths.some(path => profile.denyRead.some(root => isWithin(path, root))) || delta.writePaths.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root))) || delta.domains.some(host => !/^[a-z0-9][a-z0-9.-]*$/i.test(host) || profile.deniedDomains.some(pattern => matchesDomain(host, pattern)))) return decision(action, 'deny', 'Requested permissions target an absolute deny', EMPTY_DELTA, true);
-    const boundDelta = {...delta, domains: [...new Set(delta.domains.map(host => host.toLowerCase()))]};
+    const writeScopes = await Promise.all(delta.writePaths.map(path => this.nativeWriteScope(path, action.cwd)));
+    const hasCreationScope = writeScopes.some((path, index) => path !== delta.writePaths[index]);
+    const boundDelta = {...delta, writePaths: [...new Set(writeScopes)], domains: [...new Set(delta.domains.map(host => host.toLowerCase()))]};
     if (isRuleAllowed) return immutable({...decision(action, 'allow', 'Trusted prefix rule authorizes this command', boundDelta), authority: {kind:'command-rule', actionDigest:action.digest, ruleDigest:digest(matches)}});
     const isFullRequest = action.args.sandbox_permissions === 'require_escalated' && explicit === undefined;
     shouldAsk ||= action.args.sandbox_permissions === 'require_escalated';
-    return immutable({...decision(action, shouldAsk ? 'ask' : 'allow', prompted?.justification ?? (shouldAsk ? 'Command requires permission review' : 'Execute within the current native sandbox'), boundDelta), approvalCategory: prompted ? 'rules' : 'sandbox', ...(isFullRequest ? {authority:{kind:'reviewed-command',actionDigest:action.digest}} : {})});
+    const reason = hasCreationScope ? 'The native backend requires the enclosing directory in this invocation; review this full write scope' : prompted?.justification ?? (shouldAsk ? 'Command requires permission review' : 'Execute within the current native sandbox');
+    return immutable({...decision(action, shouldAsk ? 'ask' : 'allow', reason, boundDelta), approvalCategory: prompted ? 'rules' : 'sandbox', ...(isFullRequest ? {authority:{kind:'reviewed-command',actionDigest:action.digest}} : {})});
   }
   private async resolvedProfile(cwd: string): Promise<PermissionProfile> {
     const result = { ...this.profile };
@@ -179,11 +183,10 @@ export class PolicyEngine {
     if (this.profile.readOnlyPaths) result.readOnlyPaths = await Promise.all(this.profile.readOnlyPaths.map(path => canonicalPath(path, cwd)));
     return result;
   }
-  private async creationWriteScope(target: string): Promise<string> {
-    if (process.platform !== 'linux') return target;
+  private async nativeWriteScope(target: string, cwd: string): Promise<string> {
     let candidate = target;
-    for (;;) {
-      try { await stat(candidate); return candidate; }
+    while (process.platform === 'linux') {
+      try { await stat(candidate); break; }
       catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
         const parent = dirname(candidate);
@@ -191,5 +194,7 @@ export class PolicyEngine {
         candidate = parent;
       }
     }
+    const defaults = await runtimeWritePaths(cwd);
+    return defaults.find(root => isWithin(candidate, root)) ?? candidate;
   }
 }
