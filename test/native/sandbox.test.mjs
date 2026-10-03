@@ -69,6 +69,37 @@ test('[native-files] real shell/file/descendant/symlink writes cannot change an 
   await assert.rejects(f.execute({kind:'file',operation:'write',path:allowed,content:'changed'},readOnly)); assert.equal(await readFile(allowed,'utf8'),'allowed');
   recordObservation(t,'allow','workspace write/read and read-only read');recordObservation(t,'deny','outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked');
 });
+test('[native-files] pre-existing hard-link aliases cannot read protected data or modify an outside inode',async t=>{
+  const f=await setup(t),readAlias=join(f.workspace,'read-alias'),writeAlias=join(f.workspace,'write-alias'),target=join(f.outside,'sentinel.txt');
+  await link(join(f.control,'protected.txt'),readAlias);
+  await assert.rejects(f.shell('cat read-alias'),error=>error.code==='HARD_LINK_BOUNDARY');
+  await rm(readAlias);
+  await link(target,writeAlias);
+  await assert.rejects(f.shell('printf escaped > write-alias',createProfile({...f.profile,readRoots:['/']})),error=>error.code==='HARD_LINK_BOUNDARY');
+  assert.equal(await readFile(target,'utf8'),'unchanged');await rm(writeAlias);
+  const owned=join(f.workspace,'owned'),ownedAlias=join(f.workspace,'owned-alias');
+  await writeFile(owned,'before');await link(owned,ownedAlias);
+  assert.equal((await f.shell('printf allowed > owned-alias; cat owned')).output,'allowed');
+  await rm(ownedAlias);
+  // Link creation inside the sandbox remains subject to the kernel's source-write boundary.
+  const readable=createProfile({...f.profile,readRoots:['/']});
+  await f.shell(`ln ${shellQuote(target)} runtime-alias; printf runtime-escape > runtime-alias`,readable);
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  recordObservation(t,'allow','pre-existing hard links wholly contained in admitted roots remain usable');
+  recordObservation(t,'deny','pre-existing protected-read and outside-write aliases rejected before launch; runtime source link did not change outside inode');
+});
+test('[native-files] a narrow reviewed grant does not expose another name of a hard-linked inode',async t=>{
+  const f=await setup(t),target=join(f.outside,'sentinel.txt'),sibling=join(f.outside,'hard-sibling');
+  await link(target,sibling);
+  const readable=createProfile({...f.profile,readRoots:['/']});
+  await assert.rejects(f.shell(`printf escaped > ${shellQuote(target)}`,readable,{readPaths:[],writePaths:[target],domains:[]}),error=>error.code==='HARD_LINK_BOUNDARY');
+  assert.equal(await readFile(sibling,'utf8'),'unchanged');
+  const grant={readPaths:[],writePaths:[f.outside],domains:[]};
+  assert.equal((await f.shell(`printf admitted > ${shellQuote(target)}`,readable,grant)).exitCode,0);
+  assert.equal(await readFile(sibling,'utf8'),'admitted');
+  recordObservation(t,'deny','an exact-file grant cannot mutate a sibling alias of the same inode');
+  recordObservation(t,'allow','a reviewed directory containing every link permits the disclosed shared-inode effect');
+});
 test('[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not', async t => {
   const serviceFixture=await fixture(t); let requests=0;
   const socketPath=join(serviceFixture.control,'network.sock');

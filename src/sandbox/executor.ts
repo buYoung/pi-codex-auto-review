@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { realpath } from 'node:fs/promises';
 import { GuardError, EMPTY_DELTA, type ExecutionOptions, type Json, type PermissionDelta, type PermissionProfile, type WorkerJob, validateWorkerFrame } from '../contracts.js';
 import { nativeConfig, workloadEnvironment } from './config.js';
+import { assertHardLinkBoundaries } from './hard-links.js';
 import { withSignal } from '../signals.js';
 import { matchesDomain } from '../policy/domains.js';
 
@@ -31,10 +32,12 @@ export class NativeExecutor implements SandboxExecutor {
     const signal = AbortSignal.any([lifetime.signal, this.stop.signal, ...(options.signal ? [options.signal] : [])]);
     signal.throwIfAborted();
     const config = await nativeConfig(profile, delta, job.cwd, options.authority);
+    await assertHardLinkBoundaries(profile, delta, config, signal);
     if (options.onNetworkRequest) config.network.strictAllowlist = false;
     if (this.transport) config.network.mitmProxy = { socketPath: await realpath(this.transport.socketPath), domains: [...this.transport.domains] };
     const timeoutSeconds = options.timeoutSeconds ?? (job.kind === 'shell' ? job.timeoutSeconds : undefined) ?? 120;
     if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) throw new GuardError('INVALID_TIMEOUT', 'Execution timeout must be positive seconds');
+    signal.throwIfAborted();
     const child = fork(fileURLToPath(new URL('./broker.js', import.meta.url)), [], {
       execArgv: [], serialization: 'json', env: workloadEnvironment(), stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
     });
