@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
+import { loadContextFiles } from './context-files.js';
 
 export async function assertSupportedPi(): Promise<string> {
   let path = dirname(fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')));
@@ -39,7 +40,8 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
     const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,
+          agentsFilesOverride:()=>{const controller=guard.assertReady();return {agentsFiles:loadContextFiles({cwd:input.cwd,agentDir:input.agentDir,profile:controller.policy.profile,settings:controller.options.settings,isProjectTrusted:settingsManager.isProjectTrusted()})};}}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();

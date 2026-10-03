@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { basename } from 'node:path';
 import type { BeforeAgentStartEvent, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { canonicalJson, digest, GuardError, immutable, type Json, type ReviewContext, type ReviewContextItem } from '../contracts.js';
 import { redact } from '../audit.js';
@@ -48,7 +47,9 @@ export class ReviewContextStore {
   confirm(content: Json, id: string = randomUUID()): void { this.add('user-confirmation', 'authorization', content, id); }
   instructions(event: BeforeAgentStartEvent): void {
     // The structured runtime source establishes provenance, never a filename found in tool output.
-    for (const file of event.systemPromptOptions.contextFiles) if (basename(file.path) === 'AGENTS.md') this.add('agents', 'authorization', {path: file.path, content: file.content}, `agents:${file.path}`);
+    const current = new Set(event.systemPromptOptions.contextFiles.map(file => `agents:${file.path}`));
+    for (const [id, item] of this.items) if (item.source === 'agents' && !current.has(id)) { this.items.delete(id); this.authorizationVersion++; }
+    for (const file of event.systemPromptOptions.contextFiles) this.add('agents', 'authorization', {path: file.path, content: file.content}, `agents:${file.path}`);
     for (const [name, content] of [['customPrompt', event.systemPromptOptions.customPrompt], ['appendSystemPrompt', event.systemPromptOptions.appendSystemPrompt]] as const) {
       if (content) this.add('developer', 'authorization', content, `runtime:${name}`);
     }

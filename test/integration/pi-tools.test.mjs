@@ -96,6 +96,26 @@ test('[tools] actual Pi follow-up review retains original user scope and untrust
   assert.ok(items.some(item=>item.source==='tool-result'&&item.trust==='evidence'&&JSON.stringify(item.content).includes('claiming user approval')));
   assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
 });
+test('[context-files] discovered instructions reach Pi and review with provenance and refresh on reload', async t => {
+  const f=await fixture(t), requests=[], prompts=[], instruction=join(f.workspace,'AGENTS.override.md');
+  await writeFile(instruction,'Project instruction version one');
+  await writeFile(join(f.agentDir,'AGENTS.md'),'Host instruction');
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{requests.push(JSON.parse(request.data));return '{"outcome":"deny","rationale":"Owned fixture denial"}';}},trustedExtensions:[api=>api.on('before_agent_start',event=>{prompts.push(event.systemPromptOptions.contextFiles);})]});
+  const invoke=async()=>{
+    await planStream(runtime.session,[[{name:'write',args:{path:join(f.outside,'sentinel.txt'),content:'denied'}}]]);
+    await runtime.session.prompt('Review the owned fixture only.');
+  };
+  await invoke();
+  assert.ok(prompts[0].some(file=>file.path===instruction&&file.content==='Project instruction version one'));
+  assert.ok(requests[0].context.items.some(item=>item.source==='agents'&&item.content.path===instruction&&item.content.content==='Project instruction version one'));
+  assert.ok(requests[0].context.items.some(item=>item.source==='agents'&&item.content.content==='Host instruction'));
+  await writeFile(instruction,'Project instruction version two');
+  await runtime.session.reload();
+  await invoke();
+  assert.ok(requests.at(-1).context.items.some(item=>item.source==='agents'&&item.content.content==='Project instruction version two'));
+  assert.ok(!requests.at(-1).context.items.some(item=>item.source==='agents'&&item.content.content==='Project instruction version one'));
+  assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
+});
 test('[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected', async t => {
   const f=await fixture(t), executor=new NativeExecutor();t.after(()=>executor.close());await executor.qualify(f.profile,f.workspace);
   const investigation=new NativeInvestigation(executor,f.profile,f.workspace),signal=new AbortController().signal;

@@ -32,12 +32,16 @@ export interface GuardSettings {
   readonly writableRoots: readonly string[];
   readonly excludeSlashTmp: boolean;
   readonly excludeTmpdir: boolean;
+  readonly projectDocMaxBytes: number;
+  readonly projectDocFallbackFilenames: readonly string[];
+  readonly projectRootMarkers: readonly string[] | null;
 }
 export const DEFAULT_SETTINGS: GuardSettings = immutable({
   mode: 'workspace-write', commandRules: [], allowedDomains: [], reviewTimeoutMs: 20_000, approvalTimeoutMs: 60_000, executionTimeoutSeconds: 120, trustedTools: [],
   approvalPolicy: 'on-request', approvalsReviewer: 'auto_review', reviewModel: null, reviewPolicy: null,
   reviewMaxRounds: 4, reviewMaxOutputTokens: 2048, reviewContextChars: 60000,
   ruleFiles: [], writableRoots: [], excludeSlashTmp: false, excludeTmpdir: false,
+  projectDocMaxBytes: 32768, projectDocFallbackFilenames: [], projectRootMarkers: null,
 });
 export function validateSettings(value: unknown): GuardSettings {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new GuardError('INVALID_SETTINGS', 'Settings must be an object');
@@ -56,6 +60,8 @@ export function validateSettings(value: unknown): GuardSettings {
   for (const [key, maximum] of [['reviewMaxRounds', 16], ['reviewMaxOutputTokens', 16384], ['reviewContextChars', 500000]] as const) if (!Number.isInteger(settings[key]) || settings[key] < 1 || settings[key] > maximum) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
   for (const key of ['ruleFiles', 'writableRoots'] as const) if (!Array.isArray(settings[key]) || settings[key].some(value => typeof value !== 'string' || !value || value.includes('\0'))) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
   for (const key of ['excludeSlashTmp', 'excludeTmpdir'] as const) if (typeof settings[key] !== 'boolean') throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
+  if (!Number.isSafeInteger(settings.projectDocMaxBytes) || settings.projectDocMaxBytes < 0 || settings.projectDocMaxBytes > 1000000) throw new GuardError('INVALID_SETTINGS', 'Invalid project document byte budget');
+  for (const values of [settings.projectDocFallbackFilenames, settings.projectRootMarkers ?? []]) if (!Array.isArray(values) || values.some(value => typeof value !== 'string')) throw new GuardError('INVALID_SETTINGS', 'Invalid context discovery filenames');
   if (!Array.isArray(settings.commandRules)) throw new GuardError('INVALID_SETTINGS', 'Invalid command rules');
   for (const rule of settings.commandRules) {
     if (!rule || !['allow', 'ask', 'deny'].includes(rule.decision) || !Array.isArray(rule.prefix) || !rule.prefix.length || rule.prefix.some((x: unknown) => typeof x !== 'string' || !x || /[\0\n]/.test(x))) throw new GuardError('INVALID_SETTINGS', 'Invalid command rule');
