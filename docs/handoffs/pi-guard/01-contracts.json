@@ -1,20 +1,19 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+  "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+  "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
-    "@earendil-works/pi-ai": "0.99.1",
-    "@anthropic-ai/sandbox-runtime": "0.0.78"
+    "@earendil-works/pi-ai": "0.99.1"
   },
   "modulePaths": [
     "src/contracts.ts",
     "src/reports.ts"
   ],
   "moduleHashes": {
-    "src/contracts.ts": "e2c07fa5d4abf5dc15fab833ce9ad49b753ff074c4c06301bc08fda31372995d",
+    "src/contracts.ts": "0c4751ba4c8e1eff90eab63ba1e420dfed11b4e5c8f2c484aa4c46a4c339eee7",
     "src/reports.ts": "2e2185634bba4cef33adb6917557a6f379012a6c74745f27f6a2b2f7cbd1956c"
   },
   "testFiles": [
@@ -32,9 +31,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/contracts.json",
-      "startedAt": "2026-10-03T09:42:58.672Z",
+      "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/contracts.json",
+      "startedAt": "2026-10-03T16:29:38.280Z",
       "provenance": "executed",
       "suite": "contracts",
       "status": "pass",
@@ -85,11 +84,7 @@
           "status": "pass"
         },
         {
-          "name": "[dependency-security] sandbox RSA verification accepts valid PKCS1 and PSS controls",
-          "status": "pass"
-        },
-        {
-          "name": "[dependency-security] GHSA-86w9-cpqp-85rv nested DigestAlgorithm garbage never verifies",
+          "name": "[dependency-security] the extension has no sandbox runtime or bundled production dependencies",
           "status": "pass"
         },
         {
@@ -98,17 +93,16 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+      "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+      "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
-        "@earendil-works/pi-ai": "0.99.1",
-        "@anthropic-ai/sandbox-runtime": "0.0.78"
+        "@earendil-works/pi-ai": "0.99.1"
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T09:42:59.789Z"
+      "recordedAt": "2026-10-03T16:29:38.954Z"
     }
   ],
   "buildProof": {
@@ -116,7 +110,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T09:42:58.655Z"
+    "recordedAt": "2026-10-03T16:29:38.271Z"
   },
   "publicPiApis": [
     "createGuardExtension (package)",
@@ -190,7 +184,7 @@
       "command-rule",
       "reviewed-command"
     ],
-    "isolation": "base profile immutable, actual native delta disclosed before review and specific to one execution"
+    "isolation": "approval metadata only; no OS filesystem or network isolation"
   },
   "grantContract": {
     "scopes": [
@@ -244,7 +238,7 @@
   },
   "startupProtection": {
     "entry": "dist/cli.js or createGuardedRuntime",
-    "barrier": "version/extension/native checks plus prompt/reload/direct user shell guards",
+    "barrier": "version/extension/controller checks plus prompt/reload/direct user shell guards",
     "ordinaryPi": "Extension loader may discard failures; ordinary startup is not protected"
   },
   "timeoutUnits": {
@@ -257,12 +251,12 @@
     "policy": "npm run test:policy",
     "reviewer": "npm run test:reviewer",
     "approvals": "npm run test:approvals",
-    "native": "npm run test:native",
+    "execution": "npm run test:execution",
     "integration": "npm run test:integration",
     "e2e": "npm run test:e2e",
     "conformance": "npm run test:conformance"
   },
-  "recordedAt": "2026-10-03T09:56:10.997Z",
-  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/01-contracts.json"
+  "recordedAt": "2026-10-03T16:29:48.282Z",
+  "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/01-contracts.json"
 }

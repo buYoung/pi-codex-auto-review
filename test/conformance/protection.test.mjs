@@ -4,7 +4,7 @@ import { mkdir, readFile, symlink, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createProfile } from '../../dist/contracts.js';
 import { defaultProfile, validateSettings } from '../../dist/policy/index.js';
-import { shellQuote } from '../../dist/sandbox/config.js';
+import { shellQuote } from '../harness/shell.mjs';
 import { fixture } from '../harness/fixtures.mjs';
 import { FAKE_MODEL, guardedFixture } from '../harness/pi.mjs';
 import { replayScenario, replayReviews } from '../harness/scenarios.mjs';
@@ -184,30 +184,27 @@ test('[review-routing] a timed-out review and its late allow reply cannot trigge
   assert.equal(audit.filter(item => item.event === 'execution').length, 0);
 });
 
-// Codex request_permissions.rs checks that a read-only approval cannot grant
-// unrequested cwd/tmp writes. Existing targets avoid claiming exact-file
-// creation on Linux, whose enclosing-directory requirement is tested elsewhere.
+// Each tool call needs its own approval; approval is not an OS write grant.
 for (const location of ['cwd', 'temporary']) {
   test(`[scoped-grants] read-only ${location} sibling stays protected after an exact-file approval`, async t => {
     const f = await fixture(t), target = join(f.outside, 'sentinel.txt');
     const sibling = join(location === 'cwd' ? f.workspace : f.outside, 'unrequested.txt');
     await writeFile(sibling, 'unchanged sibling');
     const profile = createProfile({ ...f.profile, mode: 'read-only', readRoots: ['/'], writeRoots: [] });
-    const program = `const fs=require('fs');fs.writeFileSync(${JSON.stringify(target)},'approved');fs.writeFileSync(${JSON.stringify(sibling)},'escaped');`;
-    const command = nodeCommand(program);
     const { replay } = await runScenario(t, f, {
       options: { profile, settings: { mode: 'read-only' } },
       calls: [
-        { name: 'bash', args: { command, additional_permissions: { writePaths: [target] } } },
-        { name: 'bash', args: { command: nodeCommand(`require('fs').writeFileSync(${JSON.stringify(target)},'later')`) } },
+        { name: 'write', args: { path: target, content: 'approved' } },
+        { name: 'write', args: { path: sibling, content: 'escaped' } },
+        { name: 'write', args: { path: target, content: 'later' } },
       ],
       replies: [request => {
         assert.deepEqual(JSON.parse(request.data).requestedPermissionDelta.writePaths, [target]);
         return allow;
-      }],
+      },()=>deny,()=>deny],
     });
-    assert.ok(replay.results.every(result => result.isError));
-    assert.equal(await readFile(target, 'utf8'), 'approved', 'Permitted prefix effects are not rolled back when a later operation fails');
+    assert.deepEqual(replay.results.map(result => result.isError), [false,true,true]);
+    assert.equal(await readFile(target, 'utf8'), 'approved');
     assert.equal(await readFile(sibling, 'utf8'), 'unchanged sibling');
   });
 }

@@ -9,7 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 async function qualifyProcessReaping() {
   const initProcess = (await readFile('/proc/1/comm', 'utf8')).trim();
   // The shell exits before its background child. The container's PID 1 must
-  // adopt and reap that child; otherwise repeated native runs exhaust pids.max.
+  // adopt and reap that child; otherwise repeated shell runs exhaust pids.max.
   const { stdout } = await promisify(execFile)('/bin/sh', ['-c', 'sleep 0.2 & printf "%s" "$!"'], {
     timeout: 5000, env: { PATH: process.env.PATH },
   });
@@ -26,23 +26,19 @@ async function qualifyProcessReaping() {
   throw new Error('Container PID 1 did not reap an exited orphan process; run the verification container with --init');
 }
 
-export async function nativePreflight() {
+export async function executionPreflight() {
   const processReaping = await qualifyProcessReaping();
   const startup=process.env.PI_GUARD_PACKAGED_STARTUP??'/opt/installed/package/dist/startup.js';
-  const {NativeExecutor}=await import(pathToFileURL(resolve(startup,'../sandbox/executor.js')).href);
+  const {PiExecutor}=await import(pathToFileURL(resolve(startup,'../tools/executor.js')).href);
   const {createProfile,EMPTY_DELTA}=await import(pathToFileURL(resolve(startup,'../contracts.js')).href);
-  const root=await mkdtemp('/tmp/pi-cloud-native-'),cwd=join(root,'workspace'),outside=join(root,'outside');await mkdir(cwd);await mkdir(outside);
-  const sentinel=join(outside,'sentinel.txt');await writeFile(sentinel,'unchanged');
-  const executor=new NativeExecutor(),profile=createProfile({mode:'workspace-write',readRoots:[cwd],writeRoots:[cwd],denyRead:[],denyWrite:[],allowedDomains:[],deniedDomains:[]});
+  const root=await mkdtemp('/tmp/pi-cloud-execution-'),cwd=join(root,'workspace');await mkdir(cwd);
+  const executor=new PiExecutor(),profile=createProfile({mode:'workspace-write',readRoots:[cwd],writeRoots:[cwd],denyRead:[],denyWrite:[],allowedDomains:[],deniedDomains:[]});
   try {
-    await executor.qualify(profile,cwd);
     await executor.execute({kind:'file',operation:'write',path:join(cwd,'allowed.txt'),content:'owned',cwd},profile,EMPTY_DELTA);
     assert.equal(await readFile(join(cwd,'allowed.txt'),'utf8'),'owned');
-    await assert.rejects(executor.execute({kind:'file',operation:'write',path:sentinel,content:'must not happen',cwd},profile,EMPTY_DELTA));
-    assert.equal(await readFile(sentinel,'utf8'),'unchanged');
-    // Linux may accept a write into its private masking tmpfs. It must never create a host file.
-    await executor.execute({kind:'file',operation:'write',path:join(root,'denied.txt'),content:'private overlay only',cwd},profile,EMPTY_DELTA).catch(()=>{});
-    await assert.rejects(access(join(root,'denied.txt')));
-    return {permittedEffect:true,deniedEffect:true,platform:`${process.platform}-${process.arch}`,processReaping};
+    const cancelled=new AbortController();cancelled.abort();
+    await assert.rejects(executor.execute({kind:'file',operation:'write',path:join(cwd,'cancelled.txt'),content:'must not happen',cwd},profile,EMPTY_DELTA,{signal:cancelled.signal}));
+    await assert.rejects(access(join(cwd,'cancelled.txt')));
+    return {permittedEffect:true,cancellationPreventedEffect:true,platform:`${process.platform}-${process.arch}`,processReaping};
   }finally{await executor.close();await rm(root,{recursive:true,force:true});}
 }

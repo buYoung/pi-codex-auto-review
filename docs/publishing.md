@@ -14,7 +14,7 @@ Node.js 24.14.0과 pnpm 10을 사용할 수 있는 터미널에서 저장소 루
 npm ci --ignore-scripts
 ```
 
-의존성 설치와 CI 빌드는 기존 `package-lock.json`을 사용합니다. `pnpm`은 릴리스 스크립트의 실행 진입점으로 사용하며, `pnpm-lock.yaml`로 설치 방식을 바꾸지 않습니다. 기존 npm 의존성 보정과 배포 시 의존성 묶음을 유지하기 위한 선택입니다.
+의존성 설치와 CI 빌드는 기존 `package-lock.json`을 사용합니다. `pnpm`은 릴리스 스크립트의 실행 진입점으로 사용하며, `pnpm-lock.yaml`로 설치 방식을 바꾸지 않습니다. 현재 패키지는 샌드박스 의존성을 묶지 않고 Pi 호스트를 peer dependency로 사용합니다.
 
 ### npm Trusted Publisher
 
@@ -57,13 +57,13 @@ pnpm release
 
 1. `macos-14` ARM64와 `ubuntu-22.04` x64에서 같은 커밋의 Rust 규칙 엔진을 Rust 1.95.0으로 빌드합니다.
 2. 패키지 작업은 태그와 `package.json` 버전이 일치하고 태그 커밋이 `origin/master`에 포함되는지 확인합니다.
-3. npm 잠금 파일로 의존성을 설치하고 두 실행 파일을 취합합니다. `npm pack`의 `prepack`이 TypeScript와 실행 파일 형식·CPU·소스 해시, 보정된 의존성 및 필수 배포 파일을 검사합니다.
+3. npm 잠금 파일로 의존성을 설치하고 두 실행 파일을 취합합니다. `npm pack`의 `prepack`이 TypeScript와 실행 파일 형식·CPU·소스 해시, 필수 배포 파일을 검사합니다. 삭제한 샌드박스 빌드 결과를 정리하고 `dist/sandbox`·`node_modules`가 압축 파일에 없는지도 검사합니다.
 4. 검증한 `pi-codex-auto-review-<버전>.tgz`를 `npm-package` 결과물에 보관합니다.
 5. 별도 게시 작업이 같은 결과물을 내려받아 OIDC로 npm에 게시합니다.
 
 **Actions → npm 배포 → Run workflow**로 수동 실행하면 압축 패키지 준비만 수행하며 게시 작업은 생략합니다. 태그 게시에는 같은 워크플로의 태그 실행을 사용합니다.
 
-Linux 실행 파일은 Ubuntu 22.04의 GNU 환경에서 빌드합니다. Alpine 등 musl 환경과 macOS x64·Linux ARM64는 이 배포의 지원 대상에 포함하지 않습니다. 격리·승인 동작의 플랫폼 검증은 [검증 안내](testing/auto-review-protection.md)를 따릅니다.
+Linux 규칙 엔진은 Ubuntu 22.04의 GNU 환경에서 빌드합니다. Alpine 등 musl 환경과 macOS x64·Linux ARM64는 이 규칙 엔진 배포의 지원 대상에 포함하지 않습니다. 승인 동작의 검증은 [검증 안내](testing/auto-review-protection.md)를 따릅니다.
 
 ## 중단과 실패 후 확인
 
@@ -81,16 +81,16 @@ git ls-remote origin refs/heads/master 'refs/tags/v*'
 
 ## 게시 결과와 Pi 설치 확인
 
-`0.1.2` 게시 후 다음 명령으로 확인합니다.
+`0.1.3` 게시 후 다음 명령으로 확인합니다.
 
 ```sh
-npm view pi-codex-auto-review@0.1.2 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.1.2
+npm view pi-codex-auto-review@0.1.3 version --registry=https://registry.npmjs.org/
+pi install npm:pi-codex-auto-review@0.1.3
 pi list
 pi
 ```
 
-다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. Pi 등록 성공만으로 보호 시작을 보장하지 않습니다. [사용법](usage.md)의 보호 CLI·SDK 진입점에서 규칙 엔진과 OS 샌드박스 준비가 성공하는지 확인합니다.
+다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. 설치 후 `/approve`와 `/approve-model`이 표시되고 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.md)을 따릅니다.
 
 ## 로컬에서 압축 패키지만 준비
 

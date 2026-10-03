@@ -8,7 +8,7 @@ import { parseAssessment } from '../../dist/reviewer.js';
 import { reviewPolicy } from '../../dist/review/policy.js';
 import { fixture } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream } from '../harness/pi.mjs';
-import { shellQuote } from '../../dist/sandbox/config.js';
+import { shellQuote } from '../harness/shell.mjs';
 import { reference, validateLiveEvidence, liveCaseIds } from '../../scripts/auto-review-evidence.mjs';
 import { suites } from '../../scripts/suites.mjs';
 
@@ -34,7 +34,7 @@ test('[joined] ordinary execution, automatic elevation, review denial and absolu
   }}});
   runtime.session.subscribe(event=>{if(event.type==='tool_execution_end')events.push(event);});
   await planStream(runtime.session,[
-    [{name:'bash',args:{command:`${shellQuote(process.execPath)} -e 'process.stdout.write("routine-control")'`}}],
+    [{name:'bash',args:{command:'printf routine-control'}}],
     [{name:'write',args:{path:target,content:'approved'}}],
     [{name:'write',args:{path:target,content:'denied'}}],
     [{name:'read',args:{path:join(f.control,'protected.txt')}}],
@@ -46,12 +46,11 @@ test('[joined] ordinary execution, automatic elevation, review denial and absolu
   assert.equal(events[3].isError,true);assert.ok(!JSON.stringify(events).includes(f.secret));
 });
 
-test('[creation] reviewed shell creation exposes the actual Linux parent scope and leaves sibling and later effects unchanged',async t=>{
+test('[creation] reviewed shell creation describes the exact target and later writes need a new approval',async t=>{
   const f=await fixture(t),target=join(f.outside,'created.txt'),requests=[];
   const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{
     const data=JSON.parse(request.data);requests.push(data);
-    const expected=process.platform==='linux'?f.outside:target;
-    if(requests.length===1)assert.deepEqual(data.requestedPermissionDelta.writePaths,[expected]);
+    if(requests.length===1)assert.deepEqual(data.requestedPermissionDelta.writePaths,[target]);
     return JSON.stringify({outcome:requests.length===1?'allow':'deny',risk_level:'low',rationale:'Owned scope'});
   }}});
   await planStream(runtime.session,[[{name:'bash',args:{command:`printf approved > ${shellQuote(target)}`}}],[{name:'write',args:{path:join(f.outside,'sentinel.txt'),content:'later'}}]]);
@@ -76,21 +75,21 @@ test('[failures] actual Pi distinguishes provider and schema failures from polic
 test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify',()=>{
   // These synthetic records test the evidence validator; they never leave this test as live proof.
   const identity={sourceDigest:'a'.repeat(64),contractDigest:'b'.repeat(64),model:'glm-5.3'},platform='linux-x64';
-  const versions={'@earendil-works/pi-coding-agent':'0.99.1','@anthropic-ai/sandbox-runtime':'0.0.78'};
+  const versions={'@earendil-works/pi-coding-agent':'0.99.1'};
   const results=Object.fromEntries(Object.entries(suites).map(([name,suite])=>[name,{
     schemaVersion:2,suite:name,command:`npm run test:${name}`,testFiles:suite.files,coveredBehavior:suite.behavior,status:'pass',platform,...identity,runtimeVersions:versions,evidenceKind:suite.kind,provenance:'executed',runId:'owned-synthetic',artifactPath:`owned/${name}.json`,startedAt:'2026-10-03T00:00:00Z',recordedAt:'2026-10-03T00:00:01Z',blockedReasons:[],
     tests:suite.behavior.map(tag=>({name:`[${tag}] owned validator example`,status:'pass'})),
     ...(name==='native'?{nativeControls:[{kind:'allow',effect:'owned',isObserved:true,platform},{kind:'deny',effect:'owned',isObserved:true,platform}]}:{}),
   }]));
   const offline={schemaVersion:2,runId:'owned-synthetic',artifactPath:'owned/platform.json',status:'pass',platform,...identity,results,imageDigest:`sha256:${'c'.repeat(64)}`,pluginArtifactDigest:'d'.repeat(64)};
-  const report={...offline,mode:'conformance',provenance:'executed',provider:{id:'ollama-cloud',package:'pi-ollama-cloud',version:'0.12.2',model:identity.model},startup:{guardLoaded:true,providerLoaded:true,reloadPassed:true,webToolsAbsent:true,usagePolling:false},networkRequests:9,nativeCapabilities:{weakerNestedSandbox:false,weakerNetworkIsolation:false,preflight:{permittedEffect:true,deniedEffect:true}},
+  const report={...offline,mode:'conformance',provenance:'executed',provider:{id:'ollama-cloud',package:'pi-ollama-cloud',version:'0.12.2',model:identity.model},startup:{guardLoaded:true,providerLoaded:true,reloadPassed:true,webToolsAbsent:true,usagePolling:false},networkRequests:9,executionCapabilities:{osIsolation:false,preflight:{permittedEffect:true,cancellationPreventedEffect:true}},
     live:{status:'pass',evidenceKind:'live-provider',limits:{maxCallsPerCase:24,deadlineMsPerCase:180000},cases:liveCaseIds.map(id=>({id,status:'pass',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:['authorized-outside','reviewer-policy-denied'].includes(id)?1:0},elapsedMs:3000,auditRecords:2,approvedReviews:1,deniedReviews:1,deniedToolEvents:1,feedbackCodes:['AUTO_REVIEW_DENIED']})),cli:{status:'pass',entrypoint:'packed-cli',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:1},elapsedMs:3000,auditRecords:2,approvedReviews:1}}};
   assert.equal(validateLiveEvidence(report,offline,identity),report);
   for(const mutate of [
     r=>r.sourceDigest='stale',r=>r.platform='linux-arm64',r=>r.provenance='simulated',r=>r.imageDigest=`sha256:${'e'.repeat(64)}`,
     r=>r.live.evidenceKind='simulated-provider-ui',r=>r.live.cases.pop(),r=>r.live.cases[1].calls.reviewer=0,
     r=>r.live.cases[3].deniedReviews=0,r=>r.live.cases[2].effectObserved=false,r=>r.live.cases[0].credentialScanPassed=false,
-    r=>r.live.cases[0].status='environment-blocked',r=>r.live.cases[1].calls.main=25,r=>r.nativeCapabilities.weakerNestedSandbox=true,
+    r=>r.live.cases[0].status='environment-blocked',r=>r.live.cases[1].calls.main=25,r=>r.executionCapabilities.preflight.cancellationPreventedEffect=false,
     r=>delete r.live.cli,r=>r.live.cli.entrypoint='sdk',r=>r.live.cli.calls.reviewer=0,r=>r.live.cli.calls.reviewer=0.5,
     r=>r.live.cli.effectObserved=false,r=>r.live.cli.credentialScanPassed=false,r=>r.live.cli.model='other-model',
   ]){const invalid=structuredClone(report);mutate(invalid);assert.throws(()=>validateLiveEvidence(invalid,offline,identity));}

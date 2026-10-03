@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+  "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+  "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
-    "@earendil-works/pi-ai": "0.99.1",
-    "@anthropic-ai/sandbox-runtime": "0.0.78"
+    "@earendil-works/pi-ai": "0.99.1"
   },
   "modulePaths": [
     "src/policy/index.ts",
@@ -17,10 +16,10 @@
     "src/policy/domains.ts"
   ],
   "moduleHashes": {
-    "src/policy/index.ts": "cd4b0b1d2187293cefdfc09273e0514237626496aa5fdab462e0fb1b076dab57",
+    "src/policy/index.ts": "294082cf7feb48a2e5469113bdcb022be2f5f1c8b3c5c4af0ea30d44de8b7d68",
     "src/policy/paths.ts": "6dd55f0f848857b287ab6e7a15c8776c544744df74bdb2d1edf5d845860bc868",
     "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7",
-    "src/policy/rules.ts": "2586150308fb7e95f5ba56ef2a8acee0be5d384b5c7b77a8f68786beab6bfd7b",
+    "src/policy/rules.ts": "0ee09eef07f7a6e3249e5ae39d1f67a59de233c88a1d56bde9585ce3384906e1",
     "src/policy/domains.ts": "fab600c362a75e94ed15c1d302d666bcc73efed4408850fab4520208112675db"
   },
   "testFiles": [
@@ -40,9 +39,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T09:42:59.801Z",
+      "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T16:29:38.964Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
@@ -71,7 +70,7 @@
           "status": "pass"
         },
         {
-          "name": "[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant",
+          "name": "[shell] ordinary reads run directly and advanced syntax cannot borrow a prefix grant",
           "status": "pass"
         },
         {
@@ -87,7 +86,7 @@
           "status": "pass"
         },
         {
-          "name": "[shell] wildcard domains agree with native rules and explicit elevation is action scoped",
+          "name": "[shell] literal network destinations follow rules and dynamic commands require review",
           "status": "pass"
         },
         {
@@ -103,7 +102,7 @@
           "status": "pass"
         },
         {
-          "name": "[rules] all network_rule protocols and overlay ordering reach policy and native config",
+          "name": "[rules] all network_rule protocols and overlay ordering reach approval policy",
           "status": "pass"
         },
         {
@@ -128,17 +127,16 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+      "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+      "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
-        "@earendil-works/pi-ai": "0.99.1",
-        "@anthropic-ai/sandbox-runtime": "0.0.78"
+        "@earendil-works/pi-ai": "0.99.1"
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T09:43:00.597Z"
+      "recordedAt": "2026-10-03T16:29:39.345Z"
     }
   ],
   "buildProof": {
@@ -146,9 +144,9 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T09:42:58.655Z"
+    "recordedAt": "2026-10-03T16:29:38.271Z"
   },
-  "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters run inside the base sandbox unless an explicit boundary grant or rule prompts review.",
+  "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters require review unless a trusted command rule authorizes them.",
   "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
   "exports": [
     "PolicyEngine",
@@ -158,7 +156,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-03T09:56:11.000Z",
-  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/02-policy.json"
+  "recordedAt": "2026-10-03T16:29:48.283Z",
+  "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/02-policy.json"
 }

@@ -2,8 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { access, chmod, readFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { createRequire } from 'node:module';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { repository, releasePlatforms, nativeSourceDigest, sha256 } from './native-artifact.mjs';
 
@@ -32,16 +31,6 @@ for (const platform of releasePlatforms) {
   await access(binaryPath, constants.X_OK);
 }
 
-const rootRequire = createRequire(join(repository, 'package.json'));
-const sandboxRequire = createRequire(rootRequire.resolve('@anthropic-ai/sandbox-runtime'));
-const forgePath = sandboxRequire.resolve('node-forge/package.json');
-const forgePackage = JSON.parse(await readFile(forgePath, 'utf8'));
-assert.equal(forgePackage.version, '1.4.1-0', '보정된 node-forge를 포함하려면 npm ci --ignore-scripts를 실행해야 합니다');
-const lock = JSON.parse(await readFile(join(repository, 'package-lock.json'), 'utf8'));
-const forgeRelativePath = relative(repository, forgePath).replaceAll('\\', '/');
-const forgeLock = lock.packages[forgeRelativePath.replace(/\/package\.json$/, '')];
-assert.equal(forgeLock?.resolved, 'https://codeload.github.com/digitalbazaar/forge/tar.gz/ceba34402e329f0365134f23fe19898756527d65', 'node-forge 수정 소스 고정 불일치');
-
 const packed = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
   cwd: repository, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, shell: process.platform === 'win32',
 });
@@ -50,16 +39,16 @@ assert.equal(packed.status, 0, packed.stderr);
 const [packageInfo] = JSON.parse(packed.stdout);
 const files = new Set(packageInfo.files.map(file => file.path));
 for (const path of [
-  'dist/index.js', 'dist/startup.js', 'dist/cli.js', 'dist/sandbox/worker.js', 'dist/sandbox/broker.js',
+  'dist/index.js', 'dist/startup.js', 'dist/cli.js', 'dist/tools/executor.js', 'dist/approval-commands.js',
   'LICENSE', 'NOTICE', 'native/execpolicy/LICENSE', 'native/execpolicy/NOTICE',
-  'docs/usage.md', 'docs/publishing.md', forgeRelativePath,
+  'docs/usage.md', 'docs/publishing.md',
   ...releasePlatforms.flatMap(platform => [`dist/native/${platform}/pi-guard-execpolicy`, `dist/native/${platform}/artifact.json`]),
 ]) assert.ok(files.has(path), `배포 파일 누락: ${path}`);
-assert.ok(packageInfo.bundled.includes('@anthropic-ai/sandbox-runtime'), 'sandbox-runtime 의존성 묶음 누락');
+assert.ok(![...files].some(path => path.startsWith('dist/sandbox/') || path.startsWith('node_modules/')), '제거한 샌드박스 또는 런타임 의존성이 포함됐습니다');
 assert.ok(![...files].some(path => /^(src|test|tmp|vendor)\//.test(path) || /^node_modules\/@earendil-works\//.test(path)), '개발 파일 또는 Pi 호스트가 배포 패키지에 포함됐습니다');
 const currentPlatform = `${process.platform}-${process.arch}`;
 if (releasePlatforms.includes(currentPlatform)) {
   const { evaluateRules } = await import(pathToFileURL(join(repository, 'dist/policy/rules.js')).href);
   await evaluateRules([]);
 }
-console.log(`배포 준비 확인: ${releasePlatforms.join(', ')}; sandbox-runtime과 보정된 node-forge 포함`);
+console.log(`배포 준비 확인: ${releasePlatforms.join(', ')}; 승인 검토 확장과 규칙 엔진 포함`);

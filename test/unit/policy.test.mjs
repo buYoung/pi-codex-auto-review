@@ -32,17 +32,17 @@ test('[rules] deny outranks allow for every compound segment and stale identitie
   assert.equal((await f.evaluate('bash', { command: 'git status && git push' })).kind, 'deny');
   assert.equal((await f.evaluate('bash', { command: 'git status | git push' })).kind, 'deny');
   assert.equal((await f.evaluate('bash', { command: 'git status; git push' })).kind, 'deny');
-  assert.equal((await f.evaluate('bash', { command: 'gitx status' })).kind, 'allow');
+  assert.equal((await f.evaluate('bash', { command: 'gitx status' })).kind, 'ask');
   assert.equal((await f.policy.evaluate(f.action('read', { path: 'a' }, { policyRevision: 'stale' }))).kind, 'deny');
   assert.equal((await f.evaluate('unverified', { readOnlyHint: true })).kind, 'ask');
 });
-test('[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant', async t => {
+test('[shell] ordinary reads run directly and advanced syntax cannot borrow a prefix grant', async t => {
   const f = await setup(t, { commandRules: [{ prefix: ['node'], decision: 'allow' }, { prefix: ['echo'], decision: 'allow' }] });
   assert.deepEqual(analyzeShell("printf '%s' 'a b'").commands[0].argv, ['printf','%s','a b']);
   assert.equal((await f.evaluate('bash', { command: "printf '%s' 'a b'" })).kind, 'allow');
-  for (const command of ['echo $(node dangerous.js)', 'echo `whoami`', 'echo $HOME', 'echo *.txt', 'echo ok # comment', 'echo ok & node a', 'A=1 echo ok', 'cat <<EOF', "echo 'unclosed"]) { const result=await f.evaluate('bash',{command});assert.equal(result.kind,'allow',command);assert.equal(result.authority,undefined,command); }
+  for (const command of ['echo $(node dangerous.js)', 'echo `whoami`', 'echo $HOME', 'echo *.txt', 'echo ok # comment', 'echo ok & node a', 'A=1 echo ok', 'cat <<EOF', "echo 'unclosed"]) { const result=await f.evaluate('bash',{command});assert.equal(result.kind,'ask',command);assert.equal(result.authority,undefined,command); }
   const interpreter=await f.evaluate('bash',{command:'node -e "process.exit(0)"'});assert.equal(interpreter.authority.kind,'command-rule');
-  assert.equal((await f.evaluate('bash',{command:'npm test'})).kind,'allow');
+  assert.equal((await f.evaluate('bash',{command:'npm test'})).kind,'ask');
   assert.equal((await f.evaluate('bash',{command:`echo x > '${f.control}/protected.txt'`})).kind, 'deny');
   const result = await f.evaluate('bash',{command:`echo x > '${f.outside}/sentinel.txt'`});
   assert.equal(result.kind, 'ask'); assert.deepEqual(result.delta.writePaths, [join(f.outside, 'sentinel.txt')]);
@@ -82,12 +82,12 @@ test('[settings] default readable roots, temporary roots and Git worktree metada
   for(const path of [join(f.workspace,'.git'),join(f.workspace,'.agents'),join(f.workspace,'.codex'),gitdir])assert.ok(profile.readOnlyPaths.includes(path),path);
   assert.ok(profile.denyRead.includes(f.control));
 });
-test('[shell] wildcard domains agree with native rules and explicit elevation is action scoped',async t=>{
+test('[shell] literal network destinations follow rules and dynamic commands require review',async t=>{
   const f=await setup(t,{}, {allowedDomains:['*.example.com'],deniedDomains:['*.blocked.example.com']});
   const allowed=await f.evaluate('bash',{command:'curl https://api.example.com'});assert.equal(allowed.kind,'allow');assert.deepEqual(allowed.delta.domains,[]);
   assert.equal((await f.evaluate('bash',{command:'curl https://example.com'})).kind,'ask');
   assert.equal((await f.evaluate('bash',{command:'curl https://a.blocked.example.com'})).isHardDeny,true);
-  const dynamic=await f.evaluate('bash',{command:'host=api.example.com; curl \"http://$host/proof\"'});assert.equal(dynamic.kind,'allow');assert.deepEqual(dynamic.delta.domains,[]);
+  const dynamic=await f.evaluate('bash',{command:'host=api.example.com; curl \"http://$host/proof\"'});assert.equal(dynamic.kind,'ask');assert.deepEqual(dynamic.delta.domains,[]);
   const full=await f.evaluate('bash',{command:'node action.js',sandbox_permissions:'require_escalated'});assert.equal(full.kind,'ask');assert.equal(full.authority.kind,'reviewed-command');
   const scoped=await f.evaluate('bash',{command:'node action.js',additional_permissions:{writePaths:[join(f.outside,'owned.txt')]}});assert.equal(scoped.kind,'ask');assert.equal(scoped.authority,undefined);
   assert.equal((await f.evaluate('bash',{command:'echo x',additional_permissions:{writePaths:[f.control]}})).isHardDeny,true);

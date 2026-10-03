@@ -14,30 +14,21 @@ const ref = file => `https://github.com/openai/codex/blob/${reference.revision}/
 const guardian = file => ref(`ext/guardian-reviewer/src/${file}.rs`);
 const row = (id, references, expected, proofs) => ({id,references,expected,proofs:proofs.map(([suite,pattern])=>({suite,pattern}))});
 export const scenarioMatrix = [
-  row('automatic-boundary-approval',[guardian('routing')],'Structured approval executes the exact outside action without UI and does not grant the next call',[['integration','structured automatic approval'],['conformance','[joined]']]),
-  row('policy-risk-and-authorization',[guardian('assessment'),ref('prompts/templates/guardian/policy_template.md')],'Pinned policy bytes, risk threshold and explicit policy denials remain effective',[['conformance','[reference]'],['reviewer','pinned short/full']]),
-  row('retained-context-and-trust',[guardian('model')],'Original scope reaches follow-up review; tool text and hidden reasoning cannot become authorization',[['reviewer','retained authorization'],['integration','actual Pi follow-up']]),
-  row('read-only-investigation',[guardian('model')],'Only bounded native read inspection is available; protected reads, writes and network are denied',[['integration','native reviewer investigation'],['reviewer','registered model override']]),
-  row('review-model-selection',[guardian('model')],'Configured registered review model and final limits reach the provider',[['reviewer','registered model override']]),
-  row('ordinary-actions-and-routing',[guardian('routing')],'Ordinary interpreter runs confined without review; never/granular/user routing are distinct',[['policy','ordinary commands'],['approvals','disabled categories'],['conformance','[joined]']]),
-  row('command-rule-format-and-authority',[ref('execpolicy/src/parser.rs'),ref('execpolicy/src/policy.rs')],'Pinned Codex Starlark, host executables and network rules reach matching and native configuration; command authority remains invocation-bound',[['policy','literal Codex'],['policy','Codex Starlark'],['policy','host executable'],['policy','all network_rule'],['integration','explicit full-command']]),
-  row('context-file-discovery',[ref('core/src/agents_md.rs')],'Trusted project discovery preserves precedence, byte bounds, read protection and runtime provenance across reload',[['policy','[context-files]'],['integration','discovered instructions']]),
-  row('Pi-official-MCP',[ref('core/src/mcp_tool_call.rs'),ref('core/src/session/mcp.rs')],'Official Pi MCP actions preserve strict automatic, human-only, stale and cancelled routing without Computer Use name exceptions',[['policy','[external-policy]'],['integration','[external-tools]'],['e2e','real MCP node_repl'],['e2e','npm tarball']]),
-  row('Pi-controller-integrity',[ref('prompts/templates/guardian/policy_template.md')],'Model actions cannot rewrite Pi execution settings or trusted extension modules before reload; explicit host changes remain effective',[['e2e','trusted project MCP'],['e2e','trusted extension entrypoint']]),
-  row('literal-native-permission-boundaries',[ref('prompts/templates/guardian/policy_template.md')],'Literal filenames cannot become broader native patterns; unsupported permission roots fail closed while ordinary workspace filenames remain usable',[['native','SDK permission roots'],['e2e','literal metacharacters']]),
-  row('review-failure-and-user-lifetimes',[ref('protocol/src/approvals.rs'),ref('core/src/guardian/review.rs')],'Malformed enums never execute, quoted rationale stays valid and redacted, and a stopped model turn does not cancel a later direct user command',[['e2e','malformed risk enums'],['e2e','quoted review rationale'],['e2e','denial circuit']]),
-  row('preexisting-hard-link-boundaries',[ref('prompts/templates/guardian/policy_template.md')],'Pre-existing inode aliases cannot cross protected reads or narrow write grants; contained links remain usable',[['native','pre-existing hard-link'],['native','narrow reviewed grant does not expose']]),
-  row('additional-network-protocols',[ref('execpolicy/src/rule.rs')],'HTTPS certificate verification, SOCKS5 TCP and IPv6 proxy controls succeed while denied and direct traffic stays isolated',[['native','HTTPS CONNECT'],['native','SOCKS5 TCP'],['native','IPv6 proxy']]),
-  row('filesystem-temp-protected-paths',[ref('prompts/templates/guardian/policy_template.md')],'Read/write protections, temporary roots, Git metadata, scoped writes and protected credential directories reach native consumers',[['policy','default readable roots'],['native','reviewed metadata grant'],['native','backend convenience write paths'],['native','missing metadata write protections'],['integration','caller metadata permissions'],['integration','complete explicitly selected agent credential directory'],['conformance','[creation]']]),
-  row('dynamic-network-origin',[guardian('routing')],'Review sees the original command and exact dynamic destination without replaying preceding effects',[['integration','runtime network review'],['native','live broker approval']]),
-  row('distinct-failure-states',[guardian('completion'),guardian('feedback')],'Denial, timeout, cancellation and technical failure remain distinguishable and never execute',[['reviewer','configured milliseconds'],['reviewer','caller cancellation'],['conformance','[failures]']]),
-  row('circuit-breaker',[guardian('circuit_breaker')],'Three consecutive or ten of fifty denials interrupt the real Pi turn',[['approvals','denial breaker'],['integration','three denied reviews']]),
-  row('exact-one-retry',[guardian('retry')],'One exact /approve marker reaches fresh review, changed or stale actions cannot borrow it',[['approvals','exact one-use retry'],['integration','real Pi approve'],['integration','authorization changed']]),
-  row('UI-and-audit-feedback',[guardian('feedback')],'Bounded redacted review metadata and terminal feedback reflect actual results',[['approvals','structured review metadata'],['conformance','[failures]']]),
-  row('wildcard-domain-mismatch',[guardian('routing')],'Wildcard host grants match both policy and real proxy, while direct/denied requests do not reach the service',[['policy','wildcard domains'],['native','allowed proxy control']]),
-  row('shell-read-denyWrite-defect',[ref('prompts/templates/guardian/policy_template.md')],'Read-only metadata is readable and only the reviewed target becomes writable',[['policy','write-protected metadata'],['native','reviewed metadata grant']]),
-  row('Docker-recovery-and-provider',[guardian('model')],'Installed provider and packed guard survive reload; the real CLI selects the provider/model for both execution and review',[['integration','explicit installed cloud provider'],['e2e','real CLI'],['e2e','live CLI observer'],['e2e','trusted Pi skills']]),
-  row('cross-platform-conformance',[guardian('routing')],'Same-source required platforms and same-image live evidence are required; stale, simulated and wrong-architecture data cannot qualify',[['contracts','incomplete, stale'],['conformance','[evidence-join]']]),
+  row('approval-routing',[guardian('routing')],'Each reviewed action follows the selected model or user route before Pi execution',[['integration','structured automatic approval'],['conformance','[joined]'],['integration','[approval-settings]']]),
+  row('risk-and-authorization',[guardian('assessment')],'Risk thresholds and explicit policy denials remain effective',[['conformance','[reference]'],['reviewer','pinned short/full']]),
+  row('context-and-trust',[guardian('model')],'User authorization and untrusted tool evidence remain distinct',[['reviewer','retained authorization'],['integration','actual Pi follow-up']]),
+  row('investigation',[guardian('model')],'Reviewer investigation exposes only bounded read-only tools',[['integration','read-only reviewer investigation'],['reviewer','registered model override']]),
+  row('command-rules',[ref('execpolicy/src/parser.rs')],'Pinned Starlark rules feed approval decisions; unknown commands require review',[['policy','Codex Starlark'],['policy','all network_rule'],['integration','unknown executable commands']]),
+  row('context-files',[ref('core/src/agents_md.rs')],'Trusted discovery preserves precedence and byte bounds',[['policy','[context-files]'],['integration','discovered instructions']]),
+  row('MCP',[ref('core/src/mcp_tool_call.rs')],'Registered final arguments and required human input reach the correct approval route',[['integration','[external-tools]'],['e2e','real MCP node_repl']]),
+  row('controller-files',[],'Direct protected tool paths remain denied before review',[['conformance','[boundary-matrix]'],['e2e','trusted project MCP'],['e2e','trusted extension entrypoint']]),
+  row('settings',[],'Both menus persist choices, cancel cleanly and apply the auxiliary model without changing the main model',[['integration','[approval-settings]']]),
+  row('SDK-execution',[],'Original SDK callbacks, environment, cancellation and deadlines reach the consumer',[['execution','[execution]'],['execution','[cancellation]'],['integration','[options]']]),
+  row('failures',[guardian('feedback')],'Denied, failed, timed-out and cancelled reviews never authorize execution',[['reviewer','configured milliseconds'],['conformance','[failures]'],['conformance','[review-cancellation]']]),
+  row('scoped-approvals',[],'Approval of one tool call does not approve sibling or subsequent calls',[['conformance','[scoped-grants]'],['conformance','[creation]']]),
+  row('circuit-breaker',[guardian('circuit_breaker')],'Repeated denied reviews interrupt the Pi turn',[['approvals','denial breaker'],['integration','three denied reviews']]),
+  row('audit-and-package',[],'Audits redact synthetic markers and a packed extension loads through the actual Pi host',[['approvals','[audit]'],['e2e','[package]'],['e2e','[cleanup]']]),
+  row('evidence',[],'Stale, simulated and incomplete records cannot qualify as executed live-provider proof',[['contracts','incomplete, stale'],['conformance','[evidence-join]']]),
 ];
 
 export const liveCaseIds = ['routine-allowed','authorized-outside','protected-path-denied','reviewer-policy-denied'];
@@ -51,8 +42,8 @@ export function validateLiveEvidence(report, offline, identity) {
   assert.equal(report.provider?.model,identity.model);
   for(const key of ['guardLoaded','providerLoaded','reloadPassed','webToolsAbsent'])assert.equal(report.startup?.[key],true);
   assert.equal(report.startup?.usagePolling,false);
-  assert.equal(report.nativeCapabilities?.weakerNestedSandbox,false);assert.equal(report.nativeCapabilities?.weakerNetworkIsolation,false);
-  assert.equal(report.nativeCapabilities?.preflight?.permittedEffect,true);assert.equal(report.nativeCapabilities?.preflight?.deniedEffect,true);
+  assert.equal(report.executionCapabilities?.osIsolation,false);
+  assert.equal(report.executionCapabilities?.preflight?.permittedEffect,true);assert.equal(report.executionCapabilities?.preflight?.cancellationPreventedEffect,true);
   assert.ok(report.networkRequests>0);
   const live=report.live;assert.equal(live?.status,'pass');assert.equal(live?.evidenceKind,'live-provider');
   assert.deepEqual(live.cases.map(item=>item.id),liveCaseIds);

@@ -3,7 +3,7 @@ import { CODEX_POLICY_TEMPLATE, CODEX_TENANT_POLICY } from './upstream-policy.js
 
 export function reviewPolicy(custom: string | null = null): { text: string; digest: string } {
   const environment = `# Execution Environment
-The exact coding-agent action and permission delta are supplied as data. Its native sandbox remains enforced.
+The exact Pi tool action and requested scope are supplied as data. This extension reviews approval; it does not create an OS sandbox or enforce filesystem/network isolation.
 You can investigate local facts only through the provided read-only file inspection tools.
 Those tools cannot mutate files, request elevation, use the network, or access protected controller/credential paths.
 User-authenticated model transport is separate from investigation tools.

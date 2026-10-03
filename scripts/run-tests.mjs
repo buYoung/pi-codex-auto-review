@@ -26,7 +26,7 @@ export async function contractDigest() {
 }
 export async function runtimeVersions() {
   const versions = { node: process.version };
-  for (const name of ['@earendil-works/pi-coding-agent', '@earendil-works/pi-ai', '@anthropic-ai/sandbox-runtime']) {
+  for (const name of ['@earendil-works/pi-coding-agent', '@earendil-works/pi-ai']) {
     if (name === '@earendil-works/pi-ai') {
       let dir = fileURLToPath(new URL('.', import.meta.resolve('@earendil-works/pi-coding-agent')));
       for (let i = 0; i < 8; i++) {

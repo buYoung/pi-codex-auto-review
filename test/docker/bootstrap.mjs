@@ -8,8 +8,7 @@ import { sourceDigest, contractDigest, runtimeVersions, runSuite } from '../../s
 import { suites } from '../../scripts/suites.mjs';
 import { cloudFixture } from './runtime.mjs';
 import { liveSmoke } from './live-smoke.mjs';
-import { nativePreflight } from './preflight.mjs';
-import { seccompRuntime } from '../../dist/sandbox/seccomp.js';
+import { executionPreflight } from './preflight.mjs';
 
 const mode=process.argv[2]??'offline';
 if(!['offline','live','conformance'].includes(mode))throw new Error('Expected offline, live or conformance mode');
@@ -24,7 +23,7 @@ const originalFetch=globalThis.fetch;
 let networkRequests=0;
 globalThis.fetch=(...args)=>{networkRequests++;if(!isLive)throw new Error('Offline provider attempted network access');return originalFetch(...args);};
 try{
-  preflight=await nativePreflight();
+  preflight=await executionPreflight();
   assert.equal(identity.packages['pi-ollama-cloud'],'0.12.2');
   assert.equal(identity.packages['@earendil-works/pi-coding-agent'],'0.99.1');
   const fixture=await cloudFixture({isLive:false,modelId:model});
@@ -47,8 +46,8 @@ try{
 }finally{globalThis.fetch=originalFetch;}
 const status=tests.some(test=>test.status==='fail')||Object.values(results).some(result=>result.status==='fail')?'fail':tests.some(test=>test.status==='environment-blocked')||Object.values(results).some(result=>result.status==='environment-blocked')?'environment-blocked':'pass';
 const platform=`${process.platform}-${process.arch}`;
-const nativeCapabilities={platform,processArchitecture:process.arch,kernelArchitecture:seccompRuntime()?.architecture,reportedMachine:(await promisify(execFile)('uname',['-m'])).stdout.trim(),seccompHelperArchitecture:seccompRuntime()?.architecture,bwrap:(await promisify(execFile)('bwrap',['--version'])).stdout.trim(),fd:(await promisify(execFile)('fd',['--version'])).stdout.trim(),weakerNestedSandbox:false,weakerNetworkIsolation:false,preflight,controls:results.native?.nativeControls??[]};
-const report={schemaVersion:2,runId:run.runId,artifactPath:`${run.artifactPath}/docker-${mode}.json`,status,mode,platform,sourceDigest:identity.sourceDigest,contractDigest:identity.contractDigest,provenance:'executed',command:run.command,identity,imageDigest:run.imageDigest,pluginArtifactDigest:identity.plugin.sha256,provider:run.provider,runtimeVersions:await runtimeVersions(),nativeCapabilities,startup,live,networkRequests,tests,results,blockedReasons:blockedReason?[blockedReason]:[],recordedAt:new Date().toISOString()};
+const executionCapabilities={platform,processArchitecture:process.arch,reportedMachine:(await promisify(execFile)('uname',['-m'])).stdout.trim(),fd:(await promisify(execFile)('fd',['--version'])).stdout.trim(),osIsolation:false,preflight};
+const report={schemaVersion:2,runId:run.runId,artifactPath:`${run.artifactPath}/docker-${mode}.json`,status,mode,platform,sourceDigest:identity.sourceDigest,contractDigest:identity.contractDigest,provenance:'executed',command:run.command,identity,imageDigest:run.imageDigest,pluginArtifactDigest:identity.plugin.sha256,provider:run.provider,runtimeVersions:await runtimeVersions(),executionCapabilities,startup,live,networkRequests,tests,results,blockedReasons:blockedReason?[blockedReason]:[],recordedAt:new Date().toISOString()};
 await writeImmutable(join(run.directory,`docker-${mode}.json`),report);
 if(!isLive)await writeImmutable(join(run.directory,'platform.json'),{...report,results});
 console.log(JSON.stringify({status,artifactPath:report.artifactPath,platform,startup,live,blockedReasons:report.blockedReasons}));

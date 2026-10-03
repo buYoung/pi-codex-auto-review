@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   linux-x64:
-    name: Linux x64 네이티브 및 Docker 검증
+    name: Linux x64 Pi 실행 및 Docker 검증
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -26,9 +26,8 @@ jobs:
       - name: Prepare isolated runner
         run: |
           sudo apt-get update
-          sudo apt-get install -y bubblewrap socat ripgrep fd-find libcap2-bin
+          sudo apt-get install -y ripgrep fd-find
           if ! command -v fd >/dev/null 2>&1; then sudo ln -s /usr/bin/fdfind /usr/local/bin/fd; fi
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm audit --audit-level=low
@@ -49,7 +48,7 @@ jobs:
           compression-level: 0
           if-no-files-found: error
   windows-x64:
-    name: Windows x64 규칙 및 사전 거부 검증
+    name: Windows x64 규칙 및 파일 실행 검증
     runs-on: windows-2025
     timeout-minutes: 30
     env:

@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { evaluateRules, parseRules, CODEX_EXECPOLICY_REVISION } from '../../dist/policy/rules.js';
 import { PolicyEngine, validateSettings } from '../../dist/policy/index.js';
 import { createAction } from '../../dist/contracts.js';
-import { nativeConfig } from '../../dist/sandbox/config.js';
 import { fixture } from '../harness/fixtures.mjs';
 
 // Ported boundaries from Codex a956835d/execpolicy parser, host_executable and network-rule tests.
@@ -40,7 +39,7 @@ prefix_rule(pattern=[${JSON.stringify(program)}, "push"], decision="forbidden")`
   assert.equal(result.matches[3][0].decision, 'allow');
 });
 
-test('[rules] all network_rule protocols and overlay ordering reach policy and native config', async t => {
+test('[rules] all network_rule protocols and overlay ordering reach approval policy', async t => {
   const f = await fixture(t);
   const paths = [join(f.control, 'base.rules'), join(f.control, 'overlay.rules')];
   await writeFile(paths[0], `
@@ -61,11 +60,10 @@ network_rule(host="prompt.example.com", protocol="https", decision="prompt")
   assert.equal((await policy.evaluate(action('api.example.com'))).kind, 'allow');
   assert.equal((await policy.evaluate(action('blocked.example.com'))).isHardDeny, true);
   assert.equal((await policy.evaluate(action('prompt.example.com'))).kind, 'ask');
-  const config = await nativeConfig(policy.profile, {readPaths:[], writePaths:[], domains:[]}, f.workspace);
-  assert.ok(config.network.allowedDomains.includes('tcp.example.com'));
-  assert.ok(config.network.deniedDomains.includes('udp.example.com'));
-  assert.ok(!config.network.deniedDomains.includes('api.example.com'));
-  assert.ok(config.network.allowedDomains.includes('::1'));
+  assert.ok(policy.profile.allowedDomains.includes('tcp.example.com'));
+  assert.ok(policy.profile.deniedDomains.includes('udp.example.com'));
+  assert.ok(!policy.profile.deniedDomains.includes('api.example.com'));
+  assert.ok(policy.profile.allowedDomains.includes('::1'));
   assert.equal((await policy.evaluate(action('[::1]'))).kind,'allow');
 });
 

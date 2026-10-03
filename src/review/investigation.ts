@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createProfile, EMPTY_DELTA, GuardError, canonicalJson, type Json, type PermissionProfile } from '../contracts.js';
-import type { SandboxExecutor } from '../sandbox/executor.js';
+import type { ToolExecutor } from '../tools/executor.js';
 import { canonicalPath, isWithin } from '../policy/paths.js';
 import { safeEvidence } from './context.js';
 
@@ -9,8 +9,8 @@ export const INVESTIGATION_TOOLS = [
   {name: 'inspect_directory', description: 'List local directory metadata without modifying it.', parameters: {type: 'object', properties: {path: {type: 'string'}}, required: ['path'], additionalProperties: false}},
 ] as const;
 export interface ReviewInvestigation { execute(name: string, args: unknown, signal: AbortSignal): Promise<string> }
-export class NativeInvestigation implements ReviewInvestigation {
-  constructor(private readonly executor: SandboxExecutor, private readonly profile: PermissionProfile, private readonly cwd: string) {}
+export class LocalInvestigation implements ReviewInvestigation {
+  constructor(private readonly executor: ToolExecutor, private readonly profile: PermissionProfile, private readonly cwd: string) {}
   async execute(name: string, args: unknown, signal: AbortSignal): Promise<string> {
     signal.throwIfAborted();
     if (!['inspect_file', 'inspect_directory'].includes(name) || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof (args as {path?:unknown}).path !== 'string') throw new GuardError('REVIEW_INVESTIGATION', 'Only bounded read-only inspection is supported');

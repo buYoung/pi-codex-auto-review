@@ -125,6 +125,8 @@ export interface ExecutionOptions {
   readonly env?: NodeJS.ProcessEnv;
   readonly onData?: (data: Buffer) => void;
   readonly onUpdate?: (result: ToolResult) => void;
+  /** Execute the original Pi definition after admission, in the same process. */
+  readonly delegate?: (signal: AbortSignal) => Promise<Json>;
   readonly authority?: ExecutionAuthority;
   readonly onNetworkRequest?: (request: NetworkApprovalRequest, signal: AbortSignal) => Promise<boolean>;
 }

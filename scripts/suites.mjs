@@ -3,8 +3,8 @@ export const suites = {
   policy: { files: ['test/unit/policy.test.mjs', 'test/unit/execpolicy.test.mjs', 'test/unit/context-files.test.mjs', 'test/unit/external.test.mjs'], kind: 'unit-doubles', behavior: ['paths', 'rules', 'shell', 'settings', 'context-files', 'external-policy'] },
   reviewer: { files: ['test/unit/reviewer.test.mjs'], kind: 'simulated-provider-ui', behavior: ['review', 'deadlines', 'cancellation'] },
   approvals: { files: ['test/unit/approvals.test.mjs'], kind: 'simulated-provider-ui', behavior: ['grants', 'queue', 'persistence', 'audit'] },
-  native: { files: ['test/native/sandbox.test.mjs'], kind: 'native-os', behavior: ['native-launch', 'native-files', 'native-network', 'native-lifecycle', 'native-isolation'] },
-  integration: { files: ['test/integration/pi-tools.test.mjs', 'test/integration/mcp.test.mjs'], kind: 'simulated-provider-ui', behavior: ['tools', 'final-input', 'user-bash', 'startup', 'nested', 'options', 'context-files', 'external-tools'] },
+  execution: { files: ['test/execution/executor.test.mjs'], kind: 'workflow', behavior: ['execution', 'cancellation'] },
+  integration: { files: ['test/integration/pi-tools.test.mjs', 'test/integration/mcp.test.mjs', 'test/integration/approval-settings.test.mjs'], kind: 'simulated-provider-ui', behavior: ['tools', 'final-input', 'user-bash', 'startup', 'nested', 'options', 'context-files', 'external-tools','approval-settings'] },
   e2e: { files: ['test/e2e/guard.test.mjs'], kind: 'workflow', behavior: ['workflow', 'package', 'cleanup'] },
   conformance: { files: ['test/conformance/auto-review.test.mjs', 'test/conformance/protection.test.mjs'], kind: 'simulated-provider-ui', behavior: ['reference', 'joined', 'creation', 'failures', 'evidence-join', 'scenario-harness', 'boundary-matrix', 'review-routing', 'scoped-grants', 'review-cancellation'] },
 };

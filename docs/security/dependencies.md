@@ -1,6 +1,16 @@
 # 의존성 보안 수정
 
-2026-10-03 확인한 높은 심각도 3개 감사 항목을 조치했다. 깨끗한 `npm ci --ignore-scripts` 설치 후 실제 사용되는 버전은 `node-forge 1.4.1-0`, `brace-expansion 5.0.12`이며 npm 감사 결과는 0건이다. 실행 증거는 [보안 인계](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/handoffs/auto-review/11-dependency-security.json)에 기록한다.
+현재 소스는 `@anthropic-ai/sandbox-runtime`, 그 하위 `node-forge`, `bundleDependencies`를 제거했다. 배포 패키지에 `node_modules`를 포함하지 않으며 Pi 호스트는 peer dependency로 사용한다. 설치된 Pi의 의존성을 이 확장이 교체하지 않는다.
+
+## 0.1.3 배포 전 감사
+
+2026-10-04 잠금 파일 기준으로 `npm audit --omit=dev --audit-level=high`는 취약점 0건이다. 개발 의존성을 포함한 `npm audit --audit-level=high`는 `release-it 21.0.1`의 `basic-ftp`·`undici` 하위 의존성과 그 상위 경로에서 높은 심각도 6건을 보고했다. 이 개발 도구들은 배포 압축 파일에 포함되지 않는다.
+
+`npm audit fix --force`가 제안하는 조치는 `release-it 20.2.0`으로의 주요 버전 변경이므로 이번 릴리스에서 적용하지 않았다. 개발 도구의 감사 항목은 미해결로 남기며, 배포 의존성의 감사 통과와 구분한다.
+
+## 이전 샌드박스 버전의 조치 기록
+
+아래는 샌드박스 제거 전의 기록이다. 당시 높은 심각도 3개 감사 항목을 조치했고, 설치된 `node-forge 1.4.1-0`, `brace-expansion 5.0.12`와 감사 0건을 기록했다. 현재 개발 의존성 전체의 감사 결과를 뜻하지 않는다. 원래 근거는 [보안 인계](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/handoffs/auto-review/11-dependency-security.json)에 보존한다.
 
 | 항목 | 적용한 수정 | 배포 상태 |
 | --- | --- | --- |
@@ -34,9 +44,9 @@ npm audit --json
 
 이 보정은 저장소의 잠금 파일로 설치한 환경에 적용된다. 별도로 설치된 Pi 호스트나 다른 프로젝트의 의존성을 자동으로 바꾸지는 않는다. 다른 환경에서는 실제로 해석되는 의존성과 해당 환경의 감사 결과를 별도로 확인해야 한다.
 
-## npm 배포에서의 유지
+## 현재 npm 배포
 
-설치된 의존성의 `overrides`는 소비자 프로젝트에 적용되지 않고 `package-lock.json`도 게시되지 않는다. 따라서 npm 배포 패키지는 `bundleDependencies`로 `@anthropic-ai/sandbox-runtime`과 그 하위 의존성을 함께 포함한다. 잠금 파일로 설치한 보정된 `node-forge`도 묶음에 들어가며, 게시 전 검사는 고정된 소스 URL·설치 버전과 압축 패키지의 포함 여부를 확인한다.
+설치된 의존성의 `overrides`는 소비자 프로젝트에 적용되지 않고 `package-lock.json`도 게시되지 않는다. 이전 패키지에 묶었던 샌드박스 런타임은 현재 소스에서 제거했다. 게시 전 검사는 샌드박스 코드와 `node_modules`가 압축 파일에 남지 않는지 확인한다.
 
 Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. 개발용 `vendor/pi-coding-agent-0.99.1-security.1.tgz`도 배포하지 않으므로 별도로 설치된 Pi의 `brace-expansion` 보정은 이 패키지의 보장 범위에 포함되지 않는다.
 

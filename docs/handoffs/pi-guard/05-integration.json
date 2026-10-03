@@ -1,29 +1,33 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+  "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+  "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
-    "@earendil-works/pi-ai": "0.99.1",
-    "@anthropic-ai/sandbox-runtime": "0.0.78"
+    "@earendil-works/pi-ai": "0.99.1"
   },
   "modulePaths": [
     "src/index.ts",
     "src/startup.ts",
     "src/cli.ts",
-    "src/tools/controller.ts"
+    "src/tools/controller.ts",
+    "src/approval-commands.ts",
+    "src/approval-settings.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "c3ef6c1d0fe88b4a4bfb9bac7a9e956dbbe3014cf6d8b45f22b748376cdebc4c",
-    "src/startup.ts": "3fe698450fe42c2c293eec6cce4030425336804772b009c40b9e40cb917b0c59",
+    "src/index.ts": "7aca68d30ee7ec21b04bb93b671d1a2b88a80d81de1cd7cc29663fbe0d2048ac",
+    "src/startup.ts": "4e8233c2d71e148b959a88bc0a925e2aaa499398e25cc075a379d9d5acaead0f",
     "src/cli.ts": "68c6b5590b2f539347fd7071f8d532f718f33c893b9442ca8f8a23f3e1b28747",
-    "src/tools/controller.ts": "86b185b541f7a44851b433d82c7fbc571720ee03a76d96f68b4c34c9226e534c"
+    "src/tools/controller.ts": "ef49e0437b45fa60ee2db0046e0979b8b253ad8fceb2167a45d9b4a9959aa26f",
+    "src/approval-commands.ts": "5a3c9b78531a0559cbd413e641cc900fbb52541a778f51b0cb93428a6d308cb7",
+    "src/approval-settings.ts": "c03a555c86a42572d41a23bf475c2951958791bc53ad1ea58f64c5194bf7317b"
   },
   "testFiles": [
     "test/integration/pi-tools.test.mjs",
-    "test/integration/mcp.test.mjs"
+    "test/integration/mcp.test.mjs",
+    "test/integration/approval-settings.test.mjs"
   ],
   "coveredBehavior": [
     "tools",
@@ -33,21 +37,23 @@
     "nested",
     "options",
     "context-files",
-    "external-tools"
+    "external-tools",
+    "approval-settings"
   ],
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T09:43:37.776Z",
+      "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T16:29:40.611Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
       "command": "npm run test:integration",
       "testFiles": [
         "test/integration/pi-tools.test.mjs",
-        "test/integration/mcp.test.mjs"
+        "test/integration/mcp.test.mjs",
+        "test/integration/approval-settings.test.mjs"
       ],
       "coveredBehavior": [
         "tools",
@@ -57,7 +63,8 @@
         "nested",
         "options",
         "context-files",
-        "external-tools"
+        "external-tools",
+        "approval-settings"
       ],
       "tests": [
         {
@@ -77,11 +84,11 @@
           "status": "pass"
         },
         {
-          "name": "[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined",
+          "name": "[tools] unknown executable commands are reviewed before Pi execution and trusted rules retain precedence",
           "status": "pass"
         },
         {
-          "name": "[tools] runtime network review sees original command and exact destination without replaying earlier effects",
+          "name": "[tools] the original network command is reviewed once before Pi runs it without replaying earlier effects",
           "status": "pass"
         },
         {
@@ -93,7 +100,7 @@
           "status": "pass"
         },
         {
-          "name": "[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected",
+          "name": "[tools] read-only reviewer investigation reads owned evidence while mutation and protected paths are rejected",
           "status": "pass"
         },
         {
@@ -105,11 +112,11 @@
           "status": "pass"
         },
         {
-          "name": "[tools] outside creation reviews its actual native scope and cannot approve a later sibling",
+          "name": "[tools] outside creation reviews the exact target and cannot approve a later sibling",
           "status": "pass"
         },
         {
-          "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+          "name": "[startup] public startup performs no execution qualification and still rejects discarded factories and unknown tools",
           "status": "pass"
         },
         {
@@ -133,7 +140,7 @@
           "status": "pass"
         },
         {
-          "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
+          "name": "[tools] the host file queue waits for a cancelled invocation to settle before admitting another mutation",
           "status": "pass"
         },
         {
@@ -145,7 +152,7 @@
           "status": "pass"
         },
         {
-          "name": "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution",
+          "name": "[tools] real Pi approve command changes the approval route without sending a retry prompt",
           "status": "pass"
         },
         {
@@ -199,20 +206,43 @@
         {
           "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
           "status": "pass"
+        },
+        {
+          "name": "[approval-settings] approve configures user or model review and the selected route reaches the original write tool",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] Escape and unavailable UI preserve settings without saving or executing anything",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] reload restores both selections and the persisted model remains selected in the picker",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] settings changes cancel a pending old-model approval before its late allow can write",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
-      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+      "sourceDigest": "fb4f1ef569d9477afa234cb84275d9ee863ede0e9ee302867f22fb37ffc1f173",
+      "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
-        "@earendil-works/pi-ai": "0.99.1",
-        "@anthropic-ai/sandbox-runtime": "0.0.78"
+        "@earendil-works/pi-ai": "0.99.1"
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T09:48:32.380Z"
+      "recordedAt": "2026-10-03T16:29:42.497Z"
     }
   ],
   "buildProof": {
@@ -220,7 +250,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T09:42:58.655Z"
+    "recordedAt": "2026-10-03T16:29:38.271Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -233,21 +263,21 @@
     "json"
   ],
   "toolRoutes": {
-    "bash": "host Pi formatting and operations -> bound admission -> native shell worker",
-    "files": "host Pi schemas/renderers -> bound admission -> public Pi definitions inside native worker",
+    "bash": "host Pi formatting and operations -> bound admission -> Pi BashOperations",
+    "files": "host Pi schemas/renderers -> bound admission -> original public Pi definitions",
     "codemode": "public built-in QuickJS -> ctx.executeTool -> same final wrappers",
     "userBash": "always handled operations; final prefix/cwd/env/options rechecked",
     "reload": "readiness barrier prevents discarded extension fallback"
   },
   "trustBoundaries": [
     "Pi and explicitly trusted extensions are controllers",
-    "remote MCP internals and arbitrary trusted in-process effects are outside native workload confinement",
+    "remote MCP internals and arbitrary trusted in-process effects are outside approval interception",
     "unknown tools require explicit trusted adapters"
   ],
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-03T09:56:11.007Z",
-  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-03T16:29:48.286Z",
+  "runId": "2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T16-29-35-137Z-a05d5992-a3e1-4611-b6fc-23b1cccd6a04/darwin-arm64/05-integration.json"
 }
