@@ -1,6 +1,6 @@
 # Pi 자동 검토 전체 개선과 실행 검증
 
-2026-10-03 전체 검토에서 확인한 승인 경계와 Pi 통합 결함을 수정했다. 같은 최종 소스에서 macOS·Linux ARM64가 각각 157개, GLM 5.3 실모델이 5개를 통과했다. 새 소스의 실제 Linux x64·Windows 검증은 공개 브랜치 게시 승인이 필요해 남겨뒀다. 검증 기준은 실제 Pi 등록·호출·패키지 실행과 최종 파일·네트워크 효과다.
+2026-10-03 전체 검토에서 확인한 승인 경계와 Pi 통합 결함을 수정하고, 후속 GitHub Actions의 Linux x64·Windows 검증과 x64 실모델 검증까지 마쳤다. 필수 검증 집계는 `complete`다. 검증 기준은 실제 Pi 등록·호출·패키지 실행과 최종 파일·네트워크 효과다.
 
 ## 구현 결과
 
@@ -37,7 +37,7 @@ MCP 동시 호출 검사에서는 같은 호출자 ID를 재사용한 두 요청
 
 ## 최종 검증 기록
 
-구현 커밋은 `0840889`이며, 아래 실행의 소스 해시는 `3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41`이다. 이후 문서 기록은 실행 소스를 바꾸지 않는다.
+구현 커밋은 `0840889`, 후속 CI 실행 커밋은 `9edf806`이며, 아래 실행의 소스 해시는 `3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41`이다. 이후 문서 기록은 실행 소스를 바꾸지 않는다.
 
 | 검증 | 실제 결과 | 근거 |
 | --- | --- | --- |
@@ -45,20 +45,26 @@ MCP 동시 호출 검사에서는 같은 호출자 ID를 재사용한 두 요청
 | 의존성 감사 | 취약점 0건 | `npm audit --audit-level=high` |
 | MCP 집중 검사 | 13개 통과 | `node --import ./test/harness/environment.mjs --test test/integration/mcp.test.mjs` |
 | Linux ARM64 Docker | 157개 통과, E2E 15개 포함 | [오프라인 실행](../../../.reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/docker-offline.json) |
-| GLM 5.3 실모델 | SDK 4개·설치 CLI 1개 통과 | [같은 이미지의 실모델 실행](../../../.reports/pi-guard/runs/2026-10-03T09-42-41-561Z-911a8569-75ec-4c01-84a9-1ff19d6237dd/linux-arm64/docker-conformance.json) |
-| macOS ARM64 | 157개 통과, E2E 15개 포함 | [최종 실행](../../../.reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/final.json) |
+| GLM 5.3 실모델·ARM64 | SDK 4개·설치 CLI 1개 통과 | [같은 이미지의 실모델 실행](../../../.reports/pi-guard/runs/2026-10-03T09-42-41-561Z-911a8569-75ec-4c01-84a9-1ff19d6237dd/linux-arm64/docker-conformance.json) |
+| macOS ARM64 | 157개 통과, E2E 15개 포함 | [원본 macOS 실행](../../../.reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/final.json) |
 | macOS 감사 기록 | 260건 검사 통과 | 같은 최종 실행의 `cleanup.auditProof` |
-| 실제 Linux x64·Windows CI | 현재 소스 미실행 | 공개 검증 브랜치 게시 승인 대기 |
+| 실제 Linux x64 CI | 157개 통과, E2E 15개 포함 | [네이티브 실행](../../../.reports/pi-guard/runs/2026-10-03T10-08-11-766Z-624bfc59-dc2a-4160-bc69-84c175c0469d/linux-x64/platform.json) |
+| Linux x64 Docker CI | 157개 통과, E2E 15개 포함 | [CI Docker 실행](../../../.reports/pi-guard/runs/2026-10-03T10-13-04-122Z-cb290edf-bf67-4e20-9584-d1e6d1e3b2b2/linux-x64/docker-offline.json) |
+| Windows x64 CI | 정책 5개 통과, 미지원 실행의 사전 차단 확인 | [Windows 실행](../../../.reports/pi-guard/runs/2026-10-03T10-09-39-984Z-1b51b71b-7831-4ddd-a023-8c48f148372b/win32-x64/windows.json) |
+| 로컬 x64 Docker·에뮬레이션 | 157개 통과, E2E 15개 포함 | [불러온 이미지의 오프라인 실행](../../../.reports/pi-guard/runs/2026-10-03T10-23-16-508Z-7ce88422-341f-4c95-9fb0-36f235429aa8/linux-x64/docker-offline.json) |
+| GLM 5.3 실모델·x64 | SDK 4개·설치 CLI 1개 통과 | [같은 x64 이미지의 실모델 실행](../../../.reports/pi-guard/runs/2026-10-03T10-32-51-398Z-9037942c-d74e-40dc-ba14-34cacc3b78ff/linux-x64/docker-conformance.json) |
 
-macOS·Linux ARM64의 각 157개는 계약 11개, 정책 16개, 검토자 7개, 승인 11개, 네이티브 30개, 통합 35개, E2E 15개, 보호 시나리오 32개다. 최종 집계는 `environment-blocked`로 종료됐다. 실행한 검사에서의 실패가 아니라, 필수 실제 Linux x64·동일 x64 이미지의 실모델 근거가 아직 없기 때문이다. Windows도 현재 소스에서는 `not-run`이다.
+각 전체 검사의 157개는 계약 11개, 정책 16개, 검토자 7개, 승인 11개, 네이티브 30개, 통합 35개, E2E 15개, 보호 시나리오 32개다. 초기 macOS 집계는 x64 근거가 없어 `environment-blocked`였으나, 이번 CI와 동일 x64 이미지의 실모델 근거를 결합한 최종 집계는 `complete`다. 원본 실패·미완료 기록은 그대로 보존했다.
 
-Docker 오프라인·실모델 실행은 같은 이미지 `sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04`를 사용했다. 호스트·워크로드·seccomp 도우미가 모두 ARM64이며 에뮬레이션을 사용하지 않았다. 각 컨테이너는 실행 후 제거됐다. 외부 컨테이너는 내부 중첩 샌드박스를 허용하는 검증 설정을 사용하며, 내부 파일·네트워크·seccomp 제한과 허용·차단 대조군은 유지했다.
+최종 집계는 저장소의 플랫폼·실모델 검증기와 시나리오 대조표를 사용했다. 소스·계약이 동일한 기존 macOS 157개와 감사 기록 260건을 재사용했으며, macOS 검사를 새로 실행한 것으로 표시하지 않는다. 사용한 원본 경로와 집계 방식은 [후속 검증 인계](26-github-actions-qualification.json)에 기록했다.
+
+ARM64 Docker 오프라인·실모델 실행은 같은 이미지 `sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04`를 사용했다. 호스트·워크로드·seccomp 도우미가 모두 ARM64이며 에뮬레이션을 사용하지 않았다. 각 컨테이너는 실행 후 제거됐다. 외부 컨테이너는 내부 중첩 샌드박스를 허용하는 검증 설정을 사용하며, 내부 파일·네트워크·seccomp 제한과 허용·차단 대조군은 유지했다.
+
+x64 CI 이미지를 로컬 Docker에 불러올 때 구성 해시와 매니페스트 해시가 서로 다른 ID로 표시됐다. 구성 참조와 19개 파일 계층의 동일성을 확인하고, 로컬 ID로 오프라인 검사와 실모델 검사를 모두 실행했다. 이 두 실행은 ARM 호스트에서 x64 프로그램을 실행한 결과이며, CI의 실제 Linux x64 호스트 결과와 구분한다. 이미지 해시와 대조 결과는 후속 인계의 `imageTransfer`에 있다.
 
 실모델은 `pi-ollama-cloud` 0.12.2의 `ollama-cloud` / `glm-5.3`이다. SDK 네 사례와 CLI 모두 주 모델을 각 2회 호출했다. 추가 승인·정책 거부·CLI 사례는 검토자도 각 1회 호출했다. 실제 허용·차단 효과, CLI의 승인 감사 기록, 다섯 사례의 키 비노출 검사가 통과했다.
 
-현재 소스를 실제 Linux x64·Windows에서 검증하려고 기존 GitHub Actions 검증 브랜치에 게시를 시도했으나, 자동 승인 검토가 원격 게시 권한이 불명확하다는 이유로 거부했다. 후속 조회로 사용자 계정 `buYoung`이 해당 공개 저장소의 소유자이고 관리자임을 확인했다. 공개 게시에 한해 사용자 확인을 요청했으며 응답 없이 다시 게시하지 않는다. 과거 소스의 CI 성공 결과를 이번 소스의 검증으로 표시하지 않는다.
-
-승인 후 사용할 브랜치는 `codex/auto-review-platform-verification-20261003`이며, 기존 [플랫폼 검증 워크플로](../../../.github/workflows/auto-review-platforms.yml)가 실제 Linux x64·Windows 검증을 실행한다. Ollama 키는 CI로 전송하지 않는다. x64 이미지의 오프라인 결과와 로컬 실모델 결과까지 같은 소스로 결합해야 전체 집계를 완료할 수 있다.
+초기 공개 게시 승인 대기는 사용자의 후속 GitHub Actions 검증 요청으로 해소했다. 기존 `codex/auto-review-platform-verification-20261003` 브랜치에 `9edf806`을 게시했고, [실제 CI 실행](https://github.com/buYoung/pi-codex-permission/actions/runs/37115196278)의 두 작업이 모두 성공했다. [플랫폼 검증 워크플로](../../../.github/workflows/auto-review-platforms.yml)는 변경하지 않았다. Ollama 키는 CI로 전송하지 않고 로컬 Docker 환경변수로만 사용했다.
 
 ## 남는 지원 경계
 
