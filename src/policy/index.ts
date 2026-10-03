@@ -9,6 +9,7 @@ import { reviewPolicy } from '../review/policy.js';
 import { matchesDomain, isNetworkHost, isDomainPattern, normalizeHost } from './domains.js';
 import { evaluateRules, ruleCommands, matchesRule, type PrefixRule, type RuleSource, type RuleMatch, type CompiledRules } from './rules.js';
 import { runtimeWritePaths } from '../sandbox/runtime-write-paths.js';
+import { hasNativePatternChars } from '../sandbox/paths.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
 
 export interface CommandRule { readonly prefix: readonly string[]; readonly decision: 'allow' | 'ask' | 'deny' }
@@ -130,6 +131,7 @@ export class PolicyEngine {
     const canWrite = !isWrite || profile.writeRoots.some(p => isWithin(target, p)) && !(profile.readOnlyPaths ?? []).some(p => isWithin(target, p));
     if (canRead && canWrite) return decision(action, 'allow', 'Within current filesystem permissions');
     const writePath = isWrite && !canWrite ? await this.nativeWriteScope(target, action.cwd) : target;
+    if ((!canRead && hasNativePatternChars(target)) || (!canWrite && hasNativePatternChars(writePath))) return decision(action, 'deny', 'Native permission roots containing *, ?, [ or ] cannot be approved as literal paths', EMPTY_DELTA, true);
     return decision(action, 'ask', writePath === target ? 'Filesystem permission required' : 'The native backend requires the enclosing directory in this invocation; review this full write scope', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [writePath], domains: [] });
   }
   private async shellDecision(action: GuardAction, signal?: AbortSignal): Promise<PolicyDecision> {
@@ -199,6 +201,7 @@ export class PolicyEngine {
     const writeScopes = await Promise.all(delta.writePaths.map(path => this.nativeWriteScope(path, action.cwd)));
     const hasCreationScope = writeScopes.some((path, index) => path !== delta.writePaths[index]);
     const boundDelta = {...delta, writePaths: [...new Set(writeScopes)], domains: [...new Set(delta.domains.map(normalizeHost))]};
+    if ([...boundDelta.readPaths,...boundDelta.writePaths].some(hasNativePatternChars)) return decision(action, 'deny', 'Native permission roots containing *, ?, [ or ] cannot be approved as literal paths', EMPTY_DELTA, true);
     if (isRuleAllowed) return immutable({...decision(action, 'allow', 'Trusted prefix rule authorizes this command', boundDelta), authority: {kind:'command-rule', actionDigest:action.digest, ruleDigest:digest(matches)}});
     const isFullRequest = action.args.sandbox_permissions === 'require_escalated' && explicit === undefined;
     shouldAsk ||= action.args.sandbox_permissions === 'require_escalated';

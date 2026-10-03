@@ -8,6 +8,7 @@ import { matchesDomain, isNetworkHost, normalizeHost } from '../policy/domains.j
 import { linuxReadPaths } from './linux-read-paths.js';
 import { runtimeWritePaths } from './runtime-write-paths.js';
 import { seccompRuntime } from './seccomp.js';
+import { assertLiteralNativePaths } from './paths.js';
 
 export function shellQuote(text: string): string { return `'${text.replace(/'/g, "'\\''")}'`; }
 const AMBIENT_ENV = new Set(['PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ', 'TERM']);
@@ -25,6 +26,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   for (const key of ['readPaths', 'writePaths', 'domains'] as const) if (!Array.isArray(delta[key]) || delta[key].some(x => typeof x !== 'string')) throw new GuardError('INVALID_DELTA', 'Invalid permission delta');
   const reads = await Promise.all(delta.readPaths.map(path => canonicalPath(path, cwd)));
   const writes = await Promise.all(delta.writePaths.map(path => canonicalPath(path, cwd)));
+  assertLiteralNativePaths([cwd,...profile.readRoots,...profile.writeRoots,...profile.denyRead,...profile.denyWrite,...(profile.readOnlyPaths ?? []),...reads,...writes]);
   if (reads.some(path => profile.denyRead.some(root => isWithin(path, root))) || writes.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root)))) throw new GuardError('HARD_DENY', 'Permission delta targets a protected path');
   if (delta.domains.some(domain => !isNetworkHost(domain) || profile.deniedDomains.some(pattern => matchesDomain(domain, pattern)))) throw new GuardError('HARD_DENY', 'Invalid or denied network domain');
   const isCommandAuthority = authority?.kind === 'command-rule' || authority?.kind === 'reviewed-command';
@@ -48,7 +50,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   }
   const systemRead = ['/usr', '/bin', '/sbin', '/System', '/Library', '/opt/homebrew', '/private/etc', '/etc', '/dev', '/proc', '/sys', nodeRoot, packageRoot, ...dependencyRoots];
   const seccomp = seccompRuntime();
-  return {
+  const config: SandboxRuntimeConfig = {
     ...(seccomp ? {seccomp: {applyPath: seccomp.applyPath}} : {}),
     filesystem: {
       // All user data starts unreadable; runtime/assets and the admitted roots are carve-outs.
@@ -64,4 +66,6 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
     enableWeakerNetworkIsolation: false,
     allowAppleEvents: false,
   };
+  assertLiteralNativePaths([...config.filesystem.denyRead,...(config.filesystem.allowRead ?? []),...config.filesystem.allowWrite,...config.filesystem.denyWrite]);
+  return config;
 }

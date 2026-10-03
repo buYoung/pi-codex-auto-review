@@ -24,6 +24,19 @@ async function setup(t, transport) {
   const shell=async(command,profile=f.profile,delta=EMPTY_DELTA,options={})=>{const output=[];const result=await execute({kind:'shell',command},profile,delta,{...options,onData:data=>{output.push(data);options.onData?.(data);}});return {...result,output:Buffer.concat(output).toString()};};
   return {...f,executor,execute,shell};
 }
+test('[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns',async t=>{
+  const f=await setup(t),literal=join(f.workspace,'literal-[ab]'),effect=join(f.workspace,'unexpected.txt');
+  await writeFile(literal,'owned');
+  for(const key of ['readRoots','writeRoots','denyRead','denyWrite','readOnlyPaths']) {
+    const profile=createProfile({...f.profile,[key]:[...(f.profile[key]??[]),literal]});
+    await assert.rejects(f.execute({kind:'file',operation:'write',path:effect,content:'must not run'},profile),error=>error.code==='NATIVE_PATH_UNSUPPORTED',key);
+    await assert.rejects(access(effect));
+  }
+  for(const key of ['readPaths','writePaths']) {
+    await assert.rejects(f.execute({kind:'file',operation:'write',path:effect,content:'must not run'},f.profile,{...EMPTY_DELTA,[key]:[literal]}),error=>error.code==='NATIVE_PATH_UNSUPPORTED');
+    await assert.rejects(access(effect));
+  }
+});
 test('[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits', async t => {
   const f=await setup(t);
   const result=await f.shell('pwd; printf "%s" "$GUARD_CALLER_VALUE"; exit 7',f.profile,EMPTY_DELTA,{env:{GUARD_CALLER_VALUE:'caller-value',API_KEY:f.secret,NODE_OPTIONS:'--bad-option'},timeoutSeconds:5});

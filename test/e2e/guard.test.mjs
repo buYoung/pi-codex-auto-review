@@ -119,6 +119,20 @@ test('[workflow] real MCP node_repl/js follows explicit prompt approval and neve
   assert.equal(processes.length,2);
   for(const {pid} of processes)assert.throws(()=>process.kill(pid,0),error=>error.code==='ESRCH');
 });
+test('[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable',async t=>{
+  const f=await fixture(t),literal=join(f.outside,'literal-[ab]'),sibling=join(f.outside,'literal-a'),events=[];let reviews=0;
+  await writeFile(literal,'literal-original');await writeFile(sibling,'sibling-original');
+  const runtime=await guardedFixture(t,f,{provider:{complete:async()=>{reviews++;return '{"outcome":"allow","risk_level":"low","user_authorization":"high"}';}}});
+  runtime.session.subscribe(event=>events.push(event));
+  const command=`${shellQuote(process.execPath)} -e ${shellQuote(`require('fs').writeFileSync(${JSON.stringify(sibling)},"escaped-through-pattern")`)}`;
+  await planStream(runtime.session,[[{name:'bash',args:{command,sandbox_permissions:'require_escalated',additional_permissions:{writePaths:[literal]}}}],[{name:'write',args:{path:'[route]/literal-*.txt',content:'literal-workspace-effect'}}]]);
+  await runtime.session.prompt('Use only literal path permissions for the owned fixture.');
+  assert.equal(await readFile(literal,'utf8'),'literal-original');assert.equal(await readFile(sibling,'utf8'),'sibling-original');
+  assert.equal(reviews,0);assert.equal(await readFile(join(f.workspace,'[route]/literal-*.txt'),'utf8'),'literal-workspace-effect');
+  const results=events.filter(event=>event.type==='tool_execution_end');
+  assert.equal(results.length,2);assert.equal(results[0].isError,true);assert.equal(results[1].isError,false);
+  assert.ok(JSON.stringify(results[0].result).includes('literal paths'));
+});
 test('[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets', async t => {
   const f=await fixture(t), artifacts=join(f.root,'artifacts'), consumer=join(f.root,'consumer'), home=join(f.control,'fake-home');
   await Promise.all([artifacts,consumer,home].map(path=>mkdir(path,{recursive:true})));
