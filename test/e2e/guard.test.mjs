@@ -274,7 +274,7 @@ try {
   const executed=await exec(process.execPath,[script],{cwd:f.workspace,env:{...env,GUARD_AGENT_DIR:f.agentDir},timeout:60000,maxBuffer:2000000}).catch(error=>{throw new Error(`Packed probe failed after ${Date.now()-started}ms; code=${error.code}; killed=${error.killed}; signal=${error.signal}; stderr=${error.stderr??''}`,{cause:error});});
   assert.match(executed.stdout,/"factoryLoaded":true/);assert.match(executed.stdout,/"officialMcp":true/);assert.equal(await readFile(join(f.workspace,'packed.txt'),'utf8'),'packed-effect');
   await symlink(join(repository,'node_modules/@earendil-works'),join(consumer,'package/node_modules/@earendil-works'));
-  const help=await exec(process.execPath,[join(consumer,'package/dist/cli.js'),'--help'],{cwd:f.workspace,env,timeout:10000});assert.match(help.stdout,/사용법/);
+  const help=await exec(process.execPath,[join(consumer,'package/dist/cli.js'),'--help'],{cwd:f.workspace,env,timeout:10000});assert.match(help.stdout,/^Usage: pi-codex-auto-review /);assert.doesNotMatch(help.stdout,/[가-힣]/);
 });
 test('[cleanup] nonempty owned audit population is scanned and native resources settle before disposal', async t => {
   const population=await readFile(auditPopulationPath,'utf8');

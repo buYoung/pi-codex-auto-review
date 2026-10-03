@@ -87,6 +87,41 @@ test('[tools] the original network command is reviewed once before Pi runs it wi
   assert.equal(await readFile(join(f.workspace,'count.txt'),'utf8'),'before');assert.equal(requests,1);assert.equal(reviews.length,1);
   const action=reviews[0].untrustedAction;assert.equal(action.args.command,command);assert.equal(action.args.networkDestination,undefined);
 });
+for(const form of ['config-file','schemeless','config-with-allowed-url']){
+  test(`[tools] network URL form ${form} cannot bypass automatic or human review`,async t=>{
+    let requests=0;
+    const server=createServer((_request,response)=>{requests++;response.end('owned');});
+    server.listen(0,'127.0.0.1');await once(server,'listening');
+    t.after(()=>new Promise(resolve=>server.close(resolve)));
+    const url=`http://127.0.0.1:${server.address().port}/owned`;
+    for(const reviewer of ['auto_review','user']){
+      const f=await fixture(t);let shouldAllow=true,reviews=0,prompts=0;
+      const runtime=await guardedFixture(t,f,{profile:{...f.profile,allowedDomains:form==='config-with-allowed-url'?['127.0.0.1']:[]},settings:{approvalsReviewer:reviewer},provider:{complete:async()=>{
+        reviews++;
+        return JSON.stringify({outcome:shouldAllow?'allow':'deny',risk_level:'low',user_authorization:'high',rationale:'Owned network routing fixture'});
+      }}});
+      await runtime.session.bindExtensions({mode:'rpc',uiContext:{
+        select:async(_title,choices)=>{prompts++;return choices.find(choice=>choice===(shouldAllow?'Allow once':'Deny'));},
+        notify(){},setStatus(){},setWidget(){},
+      }});
+      if(form!=='schemeless')await writeFile(join(f.workspace,'request.conf'),`url = "${url}"\n`);
+      const argumentsByForm={'config-file':'--config request.conf','schemeless':url.slice('http://'.length),'config-with-allowed-url':`--config request.conf ${url}`};
+      const command=`curl --disable --fail --silent --max-time 5 ${argumentsByForm[form]}`;
+      const expectedRequests=form==='config-with-allowed-url'?2:1;
+      const effects=[];runtime.session.subscribe(event=>{if(event.type==='tool_execution_end')effects.push(event);});
+      const before=requests;
+      await planStream(runtime.session,[[{name:'bash',args:{command}}]]);
+      await runtime.session.prompt('Allow only this owned HTTP fixture request.');
+      assert.equal(requests,before+expectedRequests,`The permitted control must reach the owned server: ${JSON.stringify(effects)}`);
+      shouldAllow=false;
+      await planStream(runtime.session,[[{name:'bash',args:{command}}]]);
+      await runtime.session.prompt('Run the denial control against the same owned HTTP service.');
+      assert.equal(requests,before+expectedRequests,'A denied request must never reach the owned server.');
+      assert.equal(reviews,reviewer==='auto_review'?2:0);
+      assert.equal(prompts,reviewer==='user'?2:0);
+    }
+  });
+}
 test('[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence', async t => {
   const f=await fixture(t), requests=[];
   const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{requests.push(JSON.parse(request.data));return '{"outcome":"deny","rationale":"Synthetic policy denial"}';}}});
@@ -249,7 +284,7 @@ test('[final-input] authorization changed during a pending review cannot reach n
 test('[tools] real Pi approve command changes the approval route without sending a retry prompt',async t=>{
   const f=await fixture(t),target=join(f.outside,'sentinel.txt');let reviews=0,dialogs=0,mode='Ask for approval';
   const runtime=await guardedFixture(t,f,{provider:{complete:async()=>{reviews++;return '{"outcome":"allow","risk_level":"low","user_authorization":"high"}';}}});
-  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(title,choices)=>{if(title.startsWith('실행 승인 방식'))return mode;dialogs++;return choices[0];},notify:()=>{},setStatus:()=>{},setWidget:()=>{}}});
+  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(title,choices)=>{if(title.startsWith('Approval mode'))return choices.find(choice=>choice.startsWith(`${mode} — `));dialogs++;return choices[0];},notify:()=>{},setStatus:()=>{},setWidget:()=>{}}});
   await runtime.session.prompt('/approve');
   await planStream(runtime.session,[[{name:'write',args:{path:target,content:'user-approved'}}]]);await runtime.session.prompt('Modify only the owned sentinel.');
   assert.equal(reviews,0);assert.equal(dialogs,1);assert.equal(await readFile(target,'utf8'),'user-approved');

@@ -186,6 +186,10 @@ export class PolicyEngine {
       }
       if (analysis.isSupported && ['curl', 'wget'].includes(executable)) {
         const urls = item.argv.slice(1).filter(arg => /^https?:\/\//.test(arg));
+        // A destination hidden in a config file or a schemeless URL still needs review.
+        const hasIndirectDestination = item.argv.slice(1).some(arg => executable === 'curl'
+          ? /^(?:--config(?:=|$)|-K)/.test(arg) : /^(?:--input-file(?:=|$)|-i)/.test(arg));
+        if (!urls.length || hasIndirectDestination) shouldAsk = true;
         for (const text of urls) {
           const domain = normalizeHost(new URL(text).hostname);
           if (profile.deniedDomains.some(pattern => matchesDomain(domain, pattern))) return decision(action, 'deny', 'Network domain denied', EMPTY_DELTA, true);

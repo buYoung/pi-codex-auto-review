@@ -165,7 +165,7 @@ test('[review-routing] a timed-out review and its late allow reply cannot trigge
   const { replay } = await runScenario(t, f, {
     options: { settings: { reviewTimeoutMs: 50 } },
     configure: runtime => runtime.session.bindExtensions({ mode: 'rpc', uiContext: {
-      select: async () => { prompts++; return '한 번 허용'; },
+      select: async () => { prompts++; return 'Allow once'; },
       notify: () => {}, setStatus: () => {}, setWidget: () => {},
     } }),
     calls: [{ name: 'write', args: { path: target, content: 'late change' } }],

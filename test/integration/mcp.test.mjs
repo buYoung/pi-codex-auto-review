@@ -111,7 +111,7 @@ test('[external-tools] explicit human-input flag uses a fresh human dialog witho
   const f=await fixture(t);let effects=0,prompts=0;
   const transport=new FixtureMcpTransport([tool('confirm',{_meta:{codex_requires_user_input:true}})],async()=>{effects++;return mcpText('human-confirmed');});
   const runtime=await guardedFixture(t,f,{mcp:mcpFixture('owned',transport),provider:{complete:()=>assert.fail('Required human input reached model')}});
-  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(_title,choices)=>{assert.deepEqual(choices,['한 번 허용','거부']);prompts++;return prompts===1?choices[0]:choices[1];},notify(){},setStatus(){},setWidget(){}}});
+  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(_title,choices)=>{assert.deepEqual(choices,['Allow once','Deny']);prompts++;return prompts===1?choices[0]:choices[1];},notify(){},setStatus(){},setWidget(){}}});
   await invoke(runtime,'mcp__owned__confirm');await invoke(runtime,'mcp__owned__confirm');
   assert.equal(prompts,2);assert.equal(effects,1);
 });

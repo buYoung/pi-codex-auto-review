@@ -6,10 +6,10 @@ pi-codex-auto-review를 Pi 확장으로 등록하는 방법과 CLI·SDK·정책 
 
 npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 배포 대상은 macOS ARM64와 Linux x64이며, 패키지에 두 플랫폼의 규칙 엔진을 포함하므로 설치할 때 Rust가 필요하지 않습니다.
 
-현재 소스의 샌드박스 제거와 `/approve`·`/approve-model` 메뉴 변경은 아직 새 npm 버전으로 게시되지 않았습니다. 아래 `0.1.2` 설치는 이전 실행 구조를 설치합니다. 변경된 동작은 소스 빌드 후 로컬 등록으로 확인합니다.
+`0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 버전입니다. 이 문서에서 설명하는 영문 도움말과 `/scoped-models` 연동은 그 이후의 소스 개선이며 `0.1.3`에는 포함되지 않습니다. 후속 변경은 소스 빌드 후 로컬 등록으로 확인합니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.2
+pi install npm:pi-codex-auto-review@0.1.3
 pi list
 pi remove npm:pi-codex-auto-review
 ```
@@ -108,7 +108,11 @@ try {
 
 `--policy` 또는 SDK의 `settings`·`settingsPath`로 지정합니다.
 
-일반 Pi 설치에서는 `<agentDir>/guard/settings.json`을 사용합니다. `/approve`에서 **Approve for me** 또는 **Ask for approval**을 선택하고, `/approve-model`에서 등록된 모델을 검색해 보조 모델을 선택합니다. **현재 Pi 모델 사용**은 `reviewModel: null`에 해당합니다. 주 모델은 바뀌지 않으며 Esc로 취소하면 저장하지 않습니다. 명시한 `settingsPath`가 있으면 메뉴도 그 파일에 저장합니다.
+일반 Pi 설치에서는 `<agentDir>/guard/settings.json`을 사용합니다. `/approve`에서 **Approve for me** 또는 **Ask for approval**을 선택합니다. 화면에는 [Codex의 공식 승인 선택 화면](https://learn.chatgpt.com/docs/security-administration)과 같은 영문 설명을 표시하며, 좁은 터미널에서도 선택한 설명을 줄바꿈해 보여 줍니다. 명령 설명·선택 화면·상태·승인 대화상자의 고정 문구는 영어입니다.
+
+`/approve-model`은 Pi의 현재 `/scoped-models` 범위에서 사용 가능한 모델만 표시합니다. 범위를 지정하지 않았다면 Pi와 동일하게 전체 사용 가능 모델을 표시합니다. 범위의 모델이 모두 사용할 수 없더라도 전체 목록으로 임의 확대하지 않습니다. 선택창이 열린 동안 범위에서 빠진 모델은 저장하지 않으며 기존 설정을 유지합니다.
+
+**Use current Pi model**은 `reviewModel: null`에 해당하고, 보조 모델 대신 현재 주 모델을 검토에 사용합니다. 보조 모델을 선택해도 주 모델은 바뀌지 않습니다. Esc로 취소하면 저장하지 않으며, 명시한 `settingsPath`가 있으면 메뉴도 그 파일에 저장합니다.
 
 ```json
 {
@@ -152,6 +156,7 @@ try {
 - 복합 명령에는 가장 강한 규칙을 적용합니다.
 - Codex의 네트워크 규칙 변환처럼 프로토콜 표시는 호스트 허용·거부 목록으로 합쳐지며, 별도 프로토콜별 권한으로 분리하지 않습니다.
 - 해석하지 못하는 셸 구문은 신뢰한 전체 명령 규칙이 허용하지 않으면 검토합니다.
+- `curl`·`wget`의 목적지가 명시적인 HTTP URL로 드러나지 않거나 별도 설정 파일에 있으면 검토합니다. 스킴을 생략하거나 설정 파일로 URL을 전달해 일반 승인 검토가 생략되지 않도록 합니다.
 - 신뢰한 `allow` 규칙은 일치하는 명령의 권한을 넓힐 수 있으므로 필요한 명령에만 지정합니다.
 
 ## 동작 상세

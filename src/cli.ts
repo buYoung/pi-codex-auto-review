@@ -11,18 +11,18 @@ export async function main(argv: string[]): Promise<void> {
   const prompts: string[] = [], trustedExtensionPaths: string[] = [];
   for (let i=0;i<argv.length;i++) {
     const item=argv[i]!;
-    if (item === '--help' || item === '-h') {console.log('사용법: pi-codex-auto-review [--cwd 경로] [--agent-dir 경로] [--policy 파일] [--trust-project] [--extension 경로 ...] [--provider 공급자 --model 모델] [--mode tui|print|json|rpc] [프롬프트]\n--extension(-e)은 반복할 수 있으며, 해당 코드 디렉터리를 신뢰하고 모델 쓰기에서 보호합니다. 경로는 명령을 실행한 디렉터리를 기준으로 해석합니다.');return;}
+    if (item === '--help' || item === '-h') {console.log('Usage: pi-codex-auto-review [--cwd path] [--agent-dir path] [--policy file] [--trust-project] [--extension path ...] [--provider provider --model model] [--mode tui|print|json|rpc] [prompt]\n--extension (-e) can be repeated. It trusts each code directory and rejects direct model tool writes to it. Paths are resolved from the invocation directory.');return;}
     if (item === '--') {prompts.push(...argv.slice(i+1));break;}
     if (item === '--trust-project') {isProjectTrusted=true;continue;}
     if (['--mode','--cwd','--agent-dir','--policy','--extension','-e','--provider','--model'].includes(item)) {
-      const value=argv[++i]; if (!value || value.startsWith('--')) throw new Error(`${item}: 값이 필요합니다`);
+      const value=argv[++i]; if (!value || value.startsWith('--')) throw new Error(`${item}: a value is required`);
       if(item==='--mode')mode=value; if(item==='--cwd')cwd=value; if(item==='--agent-dir')agentDir=value;if(item==='--policy')settingsPath=value;
       if(item==='--extension'||item==='-e')trustedExtensionPaths.push(resolve(value));
       if(item==='--provider')provider=value;if(item==='--model')modelId=value;
-    } else if(item==='-p')mode='print'; else if(item.startsWith('-'))throw new Error(`지원하지 않는 옵션: ${item}`); else prompts.push(item);
+    } else if(item==='-p')mode='print'; else if(item.startsWith('-'))throw new Error(`Unsupported option: ${item}`); else prompts.push(item);
   }
-  if (!['tui','print','json','rpc'].includes(mode))throw new Error(`지원하지 않는 실행 모드: ${mode}`);
-  if(Boolean(provider)!==Boolean(modelId))throw new Error('--provider와 --model을 함께 지정해야 합니다');
+  if (!['tui','print','json','rpc'].includes(mode))throw new Error(`Unsupported mode: ${mode}`);
+  if(Boolean(provider)!==Boolean(modelId))throw new Error('--provider and --model must be specified together');
   const runtime=await createGuardedRuntime({cwd:resolve(cwd),agentDir:resolve(agentDir),settingsPath:settingsPath ? resolve(settingsPath) : undefined,isProjectTrusted,trustedExtensionPaths,...(provider&&modelId?{modelSelection:{provider,id:modelId}}:{})});
   try {
     if(mode==='rpc')await runRpcMode(runtime);

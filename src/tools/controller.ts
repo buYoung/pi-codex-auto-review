@@ -98,10 +98,10 @@ export class GuardController {
   }
   private ui(context: ExtensionContext, isOnceOnly = false): ApprovalUI | undefined {
     if (!context.hasUI || (context.mode !== 'tui' && context.mode !== 'rpc')) return undefined;
-    const scopes = { '한 번 허용': 'once', '이 세션에서 허용': 'session', '규칙으로 저장해 허용': 'persistent', '거부': 'deny' } as const;
+    const scopes = { 'Allow once': 'once', 'Allow for this session': 'session', 'Save as an allow rule': 'persistent', 'Deny': 'deny' } as const;
     return { select: async (action, delta, options) => {
-      const text = `도구: ${action.tool}\n작업 디렉터리: ${action.cwd}\n입력: ${canonicalJson(action.args)}\n추가 권한: ${canonicalJson(delta)}`;
-      const selected = await context.ui.select(`실행 승인\n${text}`, isOnceOnly ? ['한 번 허용','거부'] : Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
+      const text = `Tool: ${action.tool}\nWorking directory: ${action.cwd}\nInput: ${canonicalJson(action.args)}\nRequested scope: ${canonicalJson(delta)}`;
+      const selected = await context.ui.select(`Approve this action?\n${text}`, isOnceOnly ? ['Allow once','Deny'] : Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
       if (selected) this.reviewContext.confirm({actionDigest: action.digest, choice: selected});
       return selected ? scopes[selected as keyof typeof scopes] : undefined;
     } };
@@ -115,15 +115,15 @@ export class GuardController {
     const turnIdentity = this.reviewContext.turnIdentity;
     return this.approvals.admit(action, policyDecision, {
       provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new LocalInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context, policyDecision.requiresFreshReview || policyDecision.requiresUserInput), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
-      onReviewStart: () => {this.activeReviews.add(action.digest);if(context.hasUI)context.ui.setStatus('auto-review',`자동 검토 중 (${this.activeReviews.size})`);},
+      onReviewStart: () => {this.activeReviews.add(action.digest);if(context.hasUI)context.ui.setStatus('auto-review',`Auto-review running (${this.activeReviews.size})`);},
       onReviewResult: result => {
         this.activeReviews.delete(action.digest);
         if (turnIdentity !== this.reviewContext.turnIdentity || !context.hasUI) return;
-        const labels = {'approved':'승인','denied':'거부','timed-out':'시간 초과','aborted':'취소','failed':'실패'};
-        context.ui.setStatus('auto-review',this.activeReviews.size ? `자동 검토 중 (${this.activeReviews.size})` : result ? `자동 검토: ${labels[result.status]}` : undefined);
-        if (result && result.status !== 'approved' && result.status !== 'aborted') context.ui.notify(`자동 검토 ${labels[result.status]}: ${redact('assessment' in result ? result.assessment.rationale : result.reason).slice(0,1000)}`,'warning');
+        const labels = {'approved':'approved','denied':'denied','timed-out':'timed out','aborted':'cancelled','failed':'failed'};
+        context.ui.setStatus('auto-review',this.activeReviews.size ? `Auto-review running (${this.activeReviews.size})` : result ? `Auto-review: ${labels[result.status]}` : undefined);
+        if (result && result.status !== 'approved' && result.status !== 'aborted') context.ui.notify(`Auto-review ${labels[result.status]}: ${redact('assessment' in result ? result.assessment.rationale : result.reason).slice(0,1000)}`,'warning');
       },
-      onInterrupt: () => {if(context.hasUI)context.ui.notify('자동 검토의 반복 거부 한도에 도달해 현재 작업을 중단합니다.','warning');context.abort?.();},
+      onInterrupt: () => {if(context.hasUI)context.ui.notify('Auto-review stopped this turn after repeated denials.','warning');context.abort?.();},
     });
   }
   private denied(admission: Admission, retryArguments?: Readonly<Record<string, Json>>): GuardError {
