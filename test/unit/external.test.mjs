@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { requiresMcpApproval, externalPolicy } from '../../dist/tools/external.js';
+import { createAction, createProfile, approvalEligible } from '../../dist/contracts.js';
+import { validateSettings } from '../../dist/policy/index.js';
+
+test('[external-policy] Codex MCP annotation precedence and four approval modes', () => {
+  for (const [annotations,expected] of [[{},true],[{readOnlyHint:true},false],[{readOnlyHint:true,destructiveHint:true},true],[{destructiveHint:false},true],[{destructiveHint:false,openWorldHint:false},false],[{readOnlyHint:false,openWorldHint:false},true]]) {
+    assert.equal(requiresMcpApproval(annotations),expected,JSON.stringify(annotations));
+    assert.equal(requiresMcpApproval(annotations,'prompt'),true);
+    assert.equal(requiresMcpApproval(annotations,'approve'),false);
+    assert.equal(requiresMcpApproval(annotations,'writes'),annotations.readOnlyHint!==true);
+  }
+  const action=createAction({tool:'mcp__owned__read',toolCallId:'owned',args:{},source:'model',cwd:process.cwd(),sessionId:'s',policyRevision:'p'},createProfile({mode:'read-only',readRoots:[process.cwd()],writeRoots:[],denyRead:[],denyWrite:[],allowedDomains:[],deniedDomains:[]}));
+  const identity={kind:'mcp',server:'owned',tool:'read',registration:'r',annotations:{readOnlyHint:true}};
+  assert.equal(externalPolicy(action,identity,validateSettings({})).requiresFreshReview,true);
+  assert.equal(externalPolicy(action,identity,validateSettings({approvalsReviewer:'user'})).kind,'allow');
+  assert.equal(externalPolicy(action,{...identity,requiresUserInput:true},validateSettings({})).requiresUserInput,true);
+  const cua={...identity,kind:'computer-use',annotations:{destructiveHint:true}};
+  assert.equal(externalPolicy(action,cua,validateSettings({approvalsReviewer:'user'})).kind,'allow');
+  assert.equal(externalPolicy(action,{...cua,isSensitiveAction:true},validateSettings({approvalsReviewer:'user'})).kind,'ask');
+  assert.equal(approvalEligible({sandbox:true,rules:true},'mcp_elicitations'),false);
+  assert.equal(approvalEligible({sandbox:false,rules:false,mcp_elicitations:true},'mcp_elicitations'),true);
+});

@@ -1,10 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
+import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions, type McpExtensionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
 import { loadContextFiles } from './context-files.js';
+import { createGuardedMcpExtension, guardedExternalExtension, type ExternalExtension, type McpToolPolicies } from './tools/mcp.js';
 
 export async function assertSupportedPi(): Promise<string> {
   let path = dirname(fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')));
@@ -30,6 +31,9 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   trustedExtensions?: InlineExtension[];
   /** Explicit trusted provider/controller entrypoints; automatic discovery remains disabled. */
   trustedExtensionPaths?: readonly string[];
+  mcp?: McpExtensionOptions | false;
+  mcpToolPolicies?: McpToolPolicies;
+  externalExtensions?: readonly ExternalExtension[];
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
   await assertSupportedPi();
@@ -39,16 +43,21 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
     const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir);
     const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
+      const external = (options.externalExtensions ?? []).map(extension => guardedExternalExtension(extension, () => guard.assertReady()));
+      if (options.mcp !== false) external.unshift(await createGuardedMcpExtension(input.agentDir, () => guard.assertReady(), options.mcp, options.mcpToolPolicies));
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...external,...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,
           agentsFilesOverride:()=>{const controller=guard.assertReady();return {agentsFiles:loadContextFiles({cwd:input.cwd,agentDir:input.agentDir,profile:controller.policy.profile,settings:controller.options.settings,isProjectTrusted:settingsManager.isProjectTrusted()})};}}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();
-      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:options.model,sessionStartEvent:input.sessionStartEvent,tools:['read','bash','edit','write','grep','find','ls','codemode',...(options.settings?.trustedTools ?? [])]});
+      // A fixed SDK `tools` list is a permanent allowlist and discards later MCP registrations.
+      // Local tools still have final execution guards; unknown tools are blocked by the guard hook.
+      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:options.model,sessionStartEvent:input.sessionStartEvent,excludeTools:['powershell']});
       await result.session.bindExtensions({mode:'print'});
       guard.assertReady();
       const session=result.session;
+      session.setActiveToolsByName(session.getAllTools().filter(tool => ['read','bash','edit','write','grep','find','ls','codemode',...(options.settings?.trustedTools ?? [])].includes(tool.name) || guard.assertReady().isExternalTool(tool.name)).filter(tool => ['direct','model-only'].includes(tool.exposure)).map(tool => tool.name));
       const prompt=session.prompt.bind(session);
       session.prompt=async (...args)=>{guard.assertReady();return prompt(...args);};
       const reload=session.reload.bind(session);

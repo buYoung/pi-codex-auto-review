@@ -12,6 +12,7 @@ import { ReviewContextStore, safeEvidence } from '../review/context.js';
 import { NativeInvestigation } from '../review/investigation.js';
 import { matchesDomain } from '../policy/domains.js';
 import { reviewFeedback } from '../review/lifecycle.js';
+import { externalInvocations, externalPolicy, type ExternalToolIdentity } from './external.js';
 
 export class GuardController {
   readonly policy: PolicyEngine;
@@ -24,6 +25,7 @@ export class GuardController {
   readonly reviewContext = new ReviewContextStore();
   private activeReviews = new Set<string>();
   private retryArguments = new Map<string, Readonly<Record<string, Json>>>();
+  private externalTools = new Map<string, {token: string; isEnabled: boolean}>();
   constructor(readonly options: { profile: PermissionProfile; settings: GuardSettings; executor: SandboxExecutor; approvals: ApprovalManager; audit: AuditLog; provider?: ReviewProvider; shellPath?: string }) {
     this.policy = new PolicyEngine(options.settings, options.profile);
     this.approvals = options.approvals;
@@ -67,14 +69,15 @@ export class GuardController {
   completeCall(toolCallId: string): void { this.sources.delete(toolCallId); }
   async close(): Promise<void> {
     this.isReady = false; this.stopped.abort(); this.approvals.reset();
+    this.externalTools.clear();
     await this.options.executor.close(); await this.approvals.settle();
   }
-  private ui(context: ExtensionContext): ApprovalUI | undefined {
+  private ui(context: ExtensionContext, isOnceOnly = false): ApprovalUI | undefined {
     if (!context.hasUI || (context.mode !== 'tui' && context.mode !== 'rpc')) return undefined;
     const scopes = { '한 번 허용': 'once', '이 세션에서 허용': 'session', '규칙으로 저장해 허용': 'persistent', '거부': 'deny' } as const;
     return { select: async (action, delta, options) => {
       const text = `도구: ${action.tool}\n작업 디렉터리: ${action.cwd}\n입력: ${canonicalJson(action.args)}\n추가 권한: ${canonicalJson(delta)}`;
-      const selected = await context.ui.select(`실행 승인\n${text}`, Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
+      const selected = await context.ui.select(`실행 승인\n${text}`, isOnceOnly ? ['한 번 허용','거부'] : Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
       if (selected) this.reviewContext.confirm({actionDigest: action.digest, choice: selected});
       return selected ? scopes[selected as keyof typeof scopes] : undefined;
     } };
@@ -87,7 +90,7 @@ export class GuardController {
     }
     const turnIdentity = this.reviewContext.turnIdentity;
     return this.approvals.admit(action, policyDecision, {
-      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
+      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context, policyDecision.requiresFreshReview || policyDecision.requiresUserInput), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
       onReviewStart: () => {this.activeReviews.add(action.digest);if(context.hasUI)context.ui.setStatus('auto-review',`자동 검토 중 (${this.activeReviews.size})`);},
       onReviewResult: result => {
         this.activeReviews.delete(action.digest);
@@ -108,6 +111,47 @@ export class GuardController {
       return new GuardError(feedback.code, `[${feedback.code}] ${feedback.message}${admission.denialId ? `\nRecent denial: ${admission.denialId}. The user may request /approve for one exact reviewed retry.` : ''}`);
     }
     return new GuardError('PERMISSION_DENIED',admission.reason);
+  }
+  isExternalTool(name: string): boolean { return this.externalTools.get(name)?.isEnabled === true; }
+  wrapExternalTool(definition: ToolDefinition<any, any, any>, identify: () => ExternalToolIdentity): ToolDefinition<any, any, any> {
+    if (TOOL_NAMES.includes(definition.name as never) || definition.name === 'codemode') throw new GuardError('RESERVED_TOOL', 'An external adapter cannot replace guarded local tools');
+    const token = randomUUID(), execute = definition.execute;
+    this.externalTools.set(definition.name, {token, isEnabled:definition.exposure !== 'hidden'});
+    const schema = JSON.parse(JSON.stringify({parameters:definition.parameters, description:definition.description, annotations:definition.annotations ?? {}})) as Json;
+    return {...definition, execute: async (toolCallId, params, callerSignal, onUpdate, context) => {
+      this.assertReady();
+      const lifetime = new AbortController();
+      const signal = AbortSignal.any([lifetime.signal, this.stopped.signal, this.approvals.lifecycle.signal, ...(callerSignal ? [callerSignal] : [])]);
+      signal.throwIfAborted();
+      const args = JSON.parse(canonicalJson(params ?? {})) as Record<string, Json>;
+      const identity = JSON.parse(JSON.stringify(identify())) as ExternalToolIdentity;
+      const identityDigest = digest(identity), cwd = await canonicalPath(context.cwd, context.cwd);
+      const action = createAction({toolCallId, tool:definition.name, args:{arguments:args, externalTool:JSON.parse(JSON.stringify(identity)), schema}, cwd, source:this.sources.get(toolCallId) ?? 'model', sessionId:context.sessionManager.getSessionId(), policyRevision:this.policy.revision}, this.policy.profile);
+      const authorizationVersion = this.reviewContext.scopeVersion, turn = this.reviewContext.turnIdentity;
+      const checkCurrent = async () => {
+        this.assertReady(); signal.throwIfAborted();
+        if (this.externalTools.get(definition.name)?.token !== token || !this.isExternalTool(definition.name) || digest(JSON.parse(JSON.stringify(identify()))) !== identityDigest) throw new GuardError('STALE_EXTERNAL_TOOL', 'External registration changed; a fresh action must be reviewed');
+        if (this.reviewContext.scopeVersion !== authorizationVersion || this.reviewContext.turnIdentity !== turn || this.sessionId !== action.sessionId || this.policy.revision !== action.policyRevision || await canonicalPath(context.cwd, context.cwd) !== cwd) throw new GuardError('STALE_APPROVAL', 'External execution context changed after admission');
+        signal.throwIfAborted();
+      };
+      const approve = async (candidate: GuardAction, candidateIdentity: ExternalToolIdentity) => {
+        await checkCurrent();
+        const admission = await this.requestAdmission(candidate, externalPolicy(candidate, candidateIdentity, this.options.settings), context, signal);
+        if (!admission.isAllowed) throw this.denied(admission, args);
+        await checkCurrent();
+      };
+      try {
+        await approve(action, identity);
+        const result = await externalInvocations.run({toolCallId, identity, arguments:args, signal, checkCurrent, approveNested: async (nestedIdentity, nestedArgs) => {
+          if (nestedIdentity.server !== identity.server || nestedIdentity.registration !== identity.registration) return false;
+          const nested = createAction({toolCallId:`${toolCallId}:elicitation:${randomUUID()}`,tool:definition.name,args:{arguments:nestedArgs, externalTool:JSON.parse(JSON.stringify(nestedIdentity)),originatingActionDigest:action.digest},cwd,source:'nested',sessionId:action.sessionId,policyRevision:action.policyRevision},this.policy.profile);
+          try { await approve(nested,nestedIdentity); return true; } catch { return false; }
+        }}, () => execute.call(definition, toolCallId, args, signal, onUpdate, context));
+        await this.options.audit.record(action,'execution','settled');
+        return result;
+      } catch (error) { await this.options.audit.record(action,'execution','failed'); throw error; }
+      finally { lifetime.abort(); this.completeCall(toolCallId); }
+    }};
   }
   private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = '', retryArguments?: Readonly<Record<string, Json>>): Promise<Json> {
     this.assertReady();

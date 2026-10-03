@@ -45,10 +45,12 @@ export interface PolicyDecision {
   readonly actionDigest: string;
   readonly delta: PermissionDelta;
   readonly isHardDeny: boolean;
-  readonly approvalCategory?: 'sandbox' | 'rules';
+  readonly approvalCategory?: 'sandbox' | 'rules' | 'mcp_elicitations';
+  readonly requiresFreshReview?: boolean;
+  readonly requiresUserInput?: boolean;
   readonly authority?: ExecutionAuthority;
 }
-export type ApprovalPolicy = 'on-request' | 'never' | { readonly sandbox: boolean; readonly rules: boolean };
+export type ApprovalPolicy = 'on-request' | 'never' | { readonly sandbox: boolean; readonly rules: boolean; readonly mcp_elicitations?: boolean };
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 export type UserAuthorization = 'unknown' | 'low' | 'medium' | 'high';
 /** Field names intentionally match the pinned Codex assessment wire format. */
@@ -224,7 +226,7 @@ export function retryIdentity(action: GuardAction, contextId: string): string {
   const semantic = action.args.networkDestination && typeof ignoredOrigin === 'string' ? {...action, args: networkArgs} : action;
   return digest({ action: ruleDigest(semantic), sessionId: action.sessionId, contextId });
 }
-export function approvalEligible(policy: ApprovalPolicy, category: 'sandbox' | 'rules'): boolean {
+export function approvalEligible(policy: ApprovalPolicy, category: 'sandbox' | 'rules' | 'mcp_elicitations'): boolean {
   return policy === 'on-request' || (typeof policy === 'object' && policy[category] === true);
 }
 export function decision(action: GuardAction, kind: DecisionKind, reason: string, delta: PermissionDelta = EMPTY_DELTA, isHardDeny = false): PolicyDecision {

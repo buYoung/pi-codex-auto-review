@@ -64,10 +64,10 @@ export class ApprovalManager {
       reviewContext = immutable({...fields,digest:digest(fields)});
       await this.options.audit.record(action, 'retry', 'consumed');
     }
-    const cached = retry || policy.authority?.kind === 'reviewed-command' ? undefined : this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
+    const cached = retry || policy.requiresFreshReview || policy.requiresUserInput || policy.authority?.kind === 'reviewed-command' ? undefined : this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
     if (cached) { this.lifecycle.record(action,contextId); await this.options.audit.record(action, 'grant', cached.scope); return { isAllowed: true, delta: cached.delta, grant: cached, reason: 'Bound rule authorized the action' }; }
     context.onReviewStart?.();
-    const review = this.options.approvalsReviewer === 'user' ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: reviewContext, settings: context.settings });
+    const review = this.options.approvalsReviewer === 'user' || policy.requiresUserInput ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: reviewContext, settings: context.settings });
     context.onReviewResult?.(review.result);
     if (signal.aborted) return {...deny('Call cancelled'),review:review.result};
     const recorded = this.lifecycle.record(action, contextId, review.result);
@@ -94,6 +94,7 @@ export class ApprovalManager {
         if (!['once', 'session', 'persistent'].includes(choice)) return deny('Invalid approval scope');
         if (choice === 'persistent' && !this.options.persistence) return deny('Persistent rules are unavailable');
         if (policy.authority?.kind === 'reviewed-command' && choice !== 'once') return deny('Full command authority can only be approved for one invocation');
+        if ((policy.requiresFreshReview || policy.requiresUserInput) && choice !== 'once') return deny('This request requires a fresh one-use approval');
         const grant: Grant = immutable({ id: randomUUID(), scope: choice, actionDigest: action.digest, ruleDigest: ruleDigest(action), sessionId: action.sessionId, policyRevision: action.policyRevision, permissionDigest: action.permissionDigest, delta: policy.delta });
         if (choice === 'persistent') {
           const prior = this.grants.filter(item => item.scope === 'persistent');

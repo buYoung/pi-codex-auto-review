@@ -51,7 +51,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
     pi.on('message_end', event => { guard.reviewContext.message(event.message); });
     pi.on('tool_call', event => {
       guard.assertReady(); guard.noteCall(event);
-      if (!['bash','read','edit','write','grep','find','ls','codemode',...settings.trustedTools].includes(event.toolName)) return { block:true, reason:'Unknown tool needs an explicit trusted adapter' };
+      if (!['bash','read','edit','write','grep','find','ls','codemode',...settings.trustedTools].includes(event.toolName) && !guard.isExternalTool(event.toolName)) return { block:true, reason:'Unknown tool needs an explicit trusted adapter' };
     });
     pi.on('tool_result', event => {
       guard.reviewContext.toolResult({tool: event.toolName, content: event.content.filter(item => item.type === 'text').map(item => ({type:'text',text:item.text}))}, event.toolCallId);
