@@ -103,6 +103,20 @@ test('[native-files] a narrow reviewed grant does not expose another name of a h
   recordObservation(t,'deny','an exact-file grant cannot mutate a sibling alias of the same inode');
   recordObservation(t,'allow','a reviewed directory containing every link permits the disclosed shared-inode effect');
 });
+test('[native-files] unsearchable subtrees stay inaccessible while searchable incomplete scans fail closed',async t=>{
+  const f=await setup(t),opaque=join(f.workspace,'opaque'),hidden=join(opaque,'hidden.txt');
+  await mkdir(opaque);await writeFile(hidden,'hidden-marker');await chmod(opaque,0);
+  try{
+    const result=await f.shell('printf ordinary > ordinary.txt; chmod 700 opaque; cat opaque/hidden.txt');
+    assert.equal(await readFile(join(f.workspace,'ordinary.txt'),'utf8'),'ordinary');
+    assert.ok(!result.output.includes('hidden-marker'));assert.equal((await stat(opaque)).mode&0o777,0);
+  }finally{await chmod(opaque,0o700);}
+  await link(join(f.outside,'sentinel.txt'),join(opaque,'alias'));await chmod(opaque,0o111);
+  try{await assert.rejects(f.shell('printf escaped > opaque/alias'),error=>error.code==='HARD_LINK_SCAN_FAILED');assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');}
+  finally{await chmod(opaque,0o700);}
+  recordObservation(t,'allow','ordinary files remain usable beside a natively masked unsearchable subtree');
+  recordObservation(t,'deny','workload cannot reopen masked directory; searchable directories with unverified aliases block launch');
+});
 test('[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not', async t => {
   const serviceFixture=await fixture(t); let requests=0;
   const socketPath=join(serviceFixture.control,'network.sock');

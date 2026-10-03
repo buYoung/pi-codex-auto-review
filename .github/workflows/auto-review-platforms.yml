@@ -52,8 +52,12 @@ jobs:
     name: Windows x64 규칙 및 사전 거부 검증
     runs-on: windows-2025
     timeout-minutes: 30
+    env:
+      CARGO_HOME: 'D:\c'
     steps:
-      - run: git config --global core.autocrlf false
+      - run: |
+          git config --global core.autocrlf false
+          git config --global core.longpaths true
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false

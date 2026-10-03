@@ -66,7 +66,8 @@ assert.ok(result.content);assert.equal(await readFile('packed.txt','utf8'),'pack
 for(const handler of extension.handlers.get('session_shutdown')??[])await handler({type:'session_shutdown'},context);
 console.log(JSON.stringify({factoryLoaded:true,workerEffect:true,hostVersion:'0.99.1'}));
 `);
-  const executed=await exec(process.execPath,[script],{cwd:f.workspace,env:{...env,GUARD_AGENT_DIR:f.agentDir},timeout:20000,maxBuffer:2000000});
+  const started=Date.now();
+  const executed=await exec(process.execPath,[script],{cwd:f.workspace,env:{...env,GUARD_AGENT_DIR:f.agentDir},timeout:20000,maxBuffer:2000000}).catch(error=>{throw new Error(`Packed probe failed after ${Date.now()-started}ms; code=${error.code}; killed=${error.killed}; signal=${error.signal}; stderr=${error.stderr??''}`,{cause:error});});
   assert.match(executed.stdout,/"factoryLoaded":true/);assert.equal(await readFile(join(f.workspace,'packed.txt'),'utf8'),'packed-effect');
   const help=await exec(process.execPath,[join(consumer,'package/dist/cli.js'),'--help'],{cwd:f.workspace,env,timeout:10000});assert.match(help.stdout,/사용법/);
 });
