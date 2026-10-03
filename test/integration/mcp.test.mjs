@@ -126,6 +126,34 @@ test('[external-tools] ordinary MCP elicitation reviews registered arguments ins
   assert.equal(reviews.length,2);assert.equal(reviews[1].untrustedAction.args.arguments.value,'actual-input');
   assert.equal(transport.replies.at(-1).result.action,'accept');
 });
+test('[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval', {timeout:15000}, async t=>{
+  const f=await fixture(t),reviews=[];
+  const deniedTarget=join(f.outside,'sentinel.txt'),allowedTarget=join(f.outside,'allowed.txt');
+  let release;const bothStarted=new Promise(resolve=>{release=resolve;});
+  const transport=new FixtureMcpTransport([tool('action',{annotations:{readOnlyHint:true}})],async(params,connection)=>{
+    if(transport.calls.length===2)release();
+    await bothStarted;
+    const response=await connection.elicit({callId:params._meta.callId,codex_approval_kind:'mcp_tool_call',tool_name:'action',tool_params:params.arguments,codex_strict_auto_review:true});
+    if(response.action==='accept')await writeFile(params.arguments.value==='blocked'?deniedTarget:allowedTarget,params.arguments.value);
+    return mcpText(response.action);
+  });
+  const runtime=await guardedFixture(t,f,{mcp:mcpFixture('owned',transport),provider:{complete:async request=>{
+    const value=JSON.parse(request.data).untrustedAction.args.arguments.value;reviews.push(value);
+    return JSON.stringify({outcome:value==='allowed'?'allow':'deny',risk_level:'low',user_authorization:'high',rationale:'Owned correlation fixture'});
+  }}});
+  await planStream(runtime.session,[]);await runtime.session.prompt('Use only the owned correlation fixture.');
+  const registered=runtime.services.resourceLoader.getExtensions().extensions.map(extension=>extension.tools.get('mcp__owned__action')).find(Boolean);
+  assert.ok(registered,'Pi must register the actual guarded MCP definition');
+  const context=runtime.session.extensionRunner.createContext();
+  await Promise.all([
+    registered.definition.execute('reused-call-id',{value:'blocked'},undefined,undefined,context),
+    registered.definition.execute('reused-call-id',{value:'allowed'},undefined,undefined,context),
+  ]);
+  assert.equal(await readFile(deniedTarget,'utf8'),'unchanged');
+  assert.equal(await readFile(allowedTarget,'utf8'),'allowed');
+  assert.deepEqual(reviews.sort(),['allowed','blocked']);
+  assert.equal(new Set(transport.calls.map(call=>call.params._meta.callId)).size,2);
+});
 test('[external-tools] project MCP startup requires a recorded or explicit project trust decision',async t=>{
   const f=await fixture(t),target=join(f.outside,'sentinel.txt');
   await mkdir(join(f.workspace,'.pi'));

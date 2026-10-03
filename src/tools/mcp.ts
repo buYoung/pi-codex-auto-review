@@ -86,9 +86,11 @@ function guardedTransport(base: Transport, server: string, registration: string,
         if (raw.method === 'tools/call') {
           if (!invocation || invocation.identity.server !== server || invocation.identity.tool !== raw.params?.name) throw new GuardError('UNBOUND_MCP_CALL', 'MCP execution has no matching reviewed invocation');
           await invocation.checkCurrent();
-          active.set(invocation.toolCallId, invocation);
-          pending.set(raw.id, {method:raw.method,callId:invocation.toolCallId});
-          return target.send({...raw,params:{...raw.params,_meta:{...record(raw.params?._meta),callId:invocation.toolCallId}}});
+          // Caller IDs can repeat; nested approvals must identify this exact in-flight invocation.
+          const callId = randomUUID();
+          active.set(callId, invocation);
+          pending.set(raw.id, {method:raw.method,callId});
+          return target.send({...raw,params:{...raw.params,_meta:{...record(raw.params?._meta),callId}}});
         }
         pending.set(raw.id,{method:raw.method});
         if (raw.method === 'tools/list' && !raw.params?.cursor) {
