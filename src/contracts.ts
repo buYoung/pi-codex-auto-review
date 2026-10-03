@@ -43,6 +43,58 @@ export interface PolicyDecision {
   readonly actionDigest: string;
   readonly delta: PermissionDelta;
   readonly isHardDeny: boolean;
+  readonly approvalCategory?: 'sandbox' | 'rules';
+  readonly authority?: ExecutionAuthority;
+}
+export type ApprovalPolicy = 'on-request' | 'never' | { readonly sandbox: boolean; readonly rules: boolean };
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+export type UserAuthorization = 'unknown' | 'low' | 'medium' | 'high';
+/** Field names intentionally match the pinned Codex assessment wire format. */
+export interface ReviewAssessment {
+  readonly risk_level: RiskLevel;
+  readonly user_authorization: UserAuthorization;
+  readonly outcome: 'allow' | 'deny';
+  readonly rationale: string;
+}
+export type ReviewTerminalState = 'approved' | 'denied' | 'timed-out' | 'aborted' | 'failed';
+export interface ReviewContextItem {
+  readonly id: string;
+  readonly source: 'user' | 'developer' | 'agents' | 'user-confirmation' | 'assistant' | 'tool-call' | 'tool-result';
+  readonly trust: 'authorization' | 'evidence';
+  readonly content: Json;
+  readonly isTruncated?: boolean;
+}
+export interface ReviewContext {
+  readonly sessionId: string;
+  readonly contextId: string;
+  readonly turnId: string;
+  readonly items: readonly ReviewContextItem[];
+  readonly digest: string;
+}
+export interface ReviewBinding {
+  readonly actionDigest: string;
+  readonly contextDigest: string;
+  readonly policyDigest: string;
+}
+export type ReviewResult = ReviewBinding & (
+  | { readonly status: 'approved' | 'denied'; readonly assessment: ReviewAssessment }
+  | { readonly status: 'timed-out' | 'aborted' | 'failed'; readonly failure: 'timeout' | 'cancelled' | 'provider' | 'invalid-output' | 'investigation' | 'context'; readonly reason: string }
+);
+export type ExecutionAuthority =
+  | { readonly kind: 'sandbox' | 'scoped-permissions'; readonly actionDigest: string }
+  | { readonly kind: 'command-rule'; readonly actionDigest: string; readonly ruleDigest: string };
+export interface RetryAuthorization {
+  readonly id: string;
+  readonly denialId: string;
+  readonly actionIdentity: string;
+  readonly sessionId: string;
+  readonly contextId: string;
+}
+export interface RecentDenial {
+  readonly id: string;
+  readonly action: GuardAction;
+  readonly contextId: string;
+  readonly assessment: ReviewAssessment;
 }
 export interface Grant {
   readonly id: string;
@@ -154,6 +206,13 @@ export function createAction(input: Omit<GuardAction, 'schemaVersion' | 'digest'
 export function ruleDigest(action: GuardAction): string {
   const { digest: ignoredDigest, toolCallId: ignoredId, sessionId: ignoredSession, ...fields } = action;
   return digest(fields);
+}
+/** A retry gets a new invocation ID, but cannot change session, semantics or context. */
+export function retryIdentity(action: GuardAction, contextId: string): string {
+  return digest({ action: ruleDigest(action), sessionId: action.sessionId, contextId });
+}
+export function approvalEligible(policy: ApprovalPolicy, category: 'sandbox' | 'rules'): boolean {
+  return policy === 'on-request' || (typeof policy === 'object' && policy[category] === true);
 }
 export function decision(action: GuardAction, kind: DecisionKind, reason: string, delta: PermissionDelta = EMPTY_DELTA, isHardDeny = false): PolicyDecision {
   if (!['allow', 'ask', 'deny'].includes(kind) || (isHardDeny && kind !== 'deny')) throw new GuardError('INVALID_DECISION', 'Invalid decision');

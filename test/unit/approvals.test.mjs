@@ -10,6 +10,16 @@ import { fixture, ControlledClock } from '../harness/fixtures.mjs';
 const provider = {complete:async()=>'{"decision":"ask","reason":"confirm"}'};
 const context = choice => ({provider,trustedAuthorization:'',ui:{select:async()=>choice}});
 function manager(options={}) {return new ApprovalManager({reviewTimeoutMs:500,approvalTimeoutMs:500,audit:new AuditLog(),...options});}
+test('[grants] disabled categories never call reviewers or dialogs and user routing skips the provider', async t => {
+  const f = await fixture(t), action = f.action('bash', {command: 'example'}); let reviews = 0, dialogs = 0;
+  const request = {trustedAuthorization: '', provider: {complete: async () => {reviews++; return '{"decision":"allow","reason":"ok"}';}}, ui: {select: async () => {dialogs++; return 'once';}}};
+  for (const approvalPolicy of ['never', {sandbox: false, rules: true}]) {
+    assert.equal((await manager({approvalPolicy}).admit(action, decision(action, 'ask', 'boundary'), request)).isAllowed, false);
+  }
+  assert.equal(reviews, 0); assert.equal(dialogs, 0);
+  assert.equal((await manager({approvalsReviewer: 'user'}).admit(action, decision(action, 'ask', 'boundary'), request)).isAllowed, true);
+  assert.equal(reviews, 0); assert.equal(dialogs, 1);
+});
 test('[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source', async t => {
   const f = await fixture(t), m = manager(), action = f.action('bash',{command:'npm test'});
   const first = await m.admit(action,decision(action,'ask','review'),context('once'));

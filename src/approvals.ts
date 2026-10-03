@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { canonicalJson, immutable, ruleDigest, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision } from './contracts.js';
+import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy } from './contracts.js';
 import { deadlineSignal, withSignal, type Clock } from './signals.js';
 import { reviewAction, type ReviewProvider } from './reviewer.js';
 import { AuditLog } from './audit.js';
@@ -31,7 +31,7 @@ export class ApprovalManager {
   private tail: Promise<unknown> = Promise.resolve();
   private epoch = new AbortController();
   private sessionId?: string;
-  constructor(readonly options: { reviewTimeoutMs: number; approvalTimeoutMs: number; audit: AuditLog; persistence?: GrantPersistence; clock?: Clock }) {}
+  constructor(readonly options: { reviewTimeoutMs: number; approvalTimeoutMs: number; audit: AuditLog; persistence?: GrantPersistence; clock?: Clock; approvalPolicy?: ApprovalPolicy; approvalsReviewer?: 'auto_review' | 'user' }) {}
   async initialize(): Promise<void> { this.grants = await this.options.persistence?.load() ?? []; }
   reset(sessionId?: string): void {
     this.epoch.abort(new GuardError('SESSION_CHANGED', 'Session changed'));
@@ -47,9 +47,10 @@ export class ApprovalManager {
     if (signal.aborted || action.sessionId !== this.sessionId) return deny('Cancelled or stale session');
     if (policy.actionDigest !== action.digest || policy.kind === 'deny' || policy.isHardDeny) { await this.options.audit.record(action, 'policy', 'deny'); return deny(policy.reason); }
     if (policy.kind === 'allow') { await this.options.audit.record(action, 'policy', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: policy.reason }; }
+    if (!approvalEligible(this.options.approvalPolicy ?? 'on-request', policy.approvalCategory ?? 'sandbox')) return deny('Approval policy disables this request category');
     const cached = this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
     if (cached) { await this.options.audit.record(action, 'grant', cached.scope); return { isAllowed: true, delta: cached.delta, grant: cached, reason: 'Bound rule authorized the action' }; }
-    const review = await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock });
+    const review = this.options.approvalsReviewer === 'user' ? { decision: 'ask', reason: 'User review requested' } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock });
     if (signal.aborted) return deny('Call cancelled');
     if (review.decision === 'deny') { await this.options.audit.record(action, 'review', 'deny'); return deny(review.reason); }
     if (review.decision === 'allow') { await this.options.audit.record(action, 'review', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: review.reason }; }

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createAction, createProfile, decision, canonicalJson, digest, validateWorkerFrame } from '../../dist/contracts.js';
+import { createAction, createProfile, decision, canonicalJson, digest, validateWorkerFrame, retryIdentity, approvalEligible } from '../../dist/contracts.js';
+import { validateSettings } from '../../dist/policy/index.js';
 import { validateEvidence, validatePlatformEvidence } from '../../dist/reports.js';
 import { createRun, writeImmutable } from '../../scripts/evidence-store.mjs';
 import { join } from 'node:path';
@@ -66,4 +67,19 @@ test('[public-api] supported installed Pi exposes complete tool contracts and pr
   assert.equal(tool.name, 'bash');
   assert.ok(tool.outputSchema);
   assert.equal(typeof tool.execute, 'function');
+});
+test('[identity] retry semantics survive a new invocation but bind session, policy and context', async t => {
+  const f = await fixture(t), original = f.action('write', {path: 'a', content: 'b'});
+  assert.equal(retryIdentity(original, 'context'), retryIdentity(f.action('write', {path: 'a', content: 'b'}), 'context'));
+  for (const action of [f.action('write', {path: 'a', content: 'changed'}), f.action('write', original.args, {sessionId: 'other'}), f.action('write', original.args, {policyRevision: 'changed'})]) assert.notEqual(retryIdentity(original, 'context'), retryIdentity(action, 'context'));
+  assert.notEqual(retryIdentity(original, 'context'), retryIdentity(original, 'changed'));
+});
+test('[profiles] old settings adapt while new routing and model settings reject malformed values', () => {
+  const legacy = validateSettings({mode: 'read-only', commandRules: [{prefix: ['git', 'status'], decision: 'allow'}], reviewTimeoutMs: 5000});
+  assert.equal(legacy.approvalPolicy, 'on-request'); assert.equal(legacy.approvalsReviewer, 'auto_review'); assert.equal(legacy.reviewTimeoutMs, 5000);
+  assert.equal(approvalEligible('never', 'sandbox'), false);
+  assert.equal(approvalEligible({sandbox: false, rules: true}, 'rules'), true);
+  assert.equal(approvalEligible({sandbox: false, rules: true}, 'sandbox'), false);
+  assert.deepEqual(validateSettings({reviewModel: {provider: 'ollama-cloud', id: 'operator-choice'}}).reviewModel, {provider: 'ollama-cloud', id: 'operator-choice'});
+  for (const value of [{approvalPolicy: {sandbox: true}}, {approvalsReviewer: 'unknown'}, {reviewModel: {provider: 'p', id: ''}}, {reviewPolicy: ''}, {reviewMaxRounds: 0}, {reviewContextChars: Infinity}, {ruleFiles: [4]}, {excludeTmpdir: 'false'}]) assert.throws(() => validateSettings(value));
 });

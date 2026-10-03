@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TOOL_NAMES, type GuardAction, type PermissionDelta, type PermissionProfile, type PolicyDecision } from '../contracts.js';
+import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TOOL_NAMES, type GuardAction, type PermissionDelta, type PermissionProfile, type PolicyDecision, type ApprovalPolicy } from '../contracts.js';
 import { canonicalPath, isWithin, resolveToolPath } from './paths.js';
 import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
@@ -16,8 +16,25 @@ export interface GuardSettings {
   readonly approvalTimeoutMs: number;
   readonly executionTimeoutSeconds: number;
   readonly trustedTools: readonly string[];
+  readonly approvalPolicy: ApprovalPolicy;
+  readonly approvalsReviewer: 'auto_review' | 'user';
+  readonly reviewModel: { readonly provider: string; readonly id: string } | null;
+  /** Replaces only the tenant policy; intrinsic risk, trust and outcome rules remain enforced. */
+  readonly reviewPolicy: string | null;
+  readonly reviewMaxRounds: number;
+  readonly reviewMaxOutputTokens: number;
+  readonly reviewContextChars: number;
+  readonly ruleFiles: readonly string[];
+  readonly writableRoots: readonly string[];
+  readonly excludeSlashTmp: boolean;
+  readonly excludeTmpdir: boolean;
 }
-export const DEFAULT_SETTINGS: GuardSettings = immutable({ mode: 'workspace-write', commandRules: [], allowedDomains: [], reviewTimeoutMs: 20_000, approvalTimeoutMs: 60_000, executionTimeoutSeconds: 120, trustedTools: [] });
+export const DEFAULT_SETTINGS: GuardSettings = immutable({
+  mode: 'workspace-write', commandRules: [], allowedDomains: [], reviewTimeoutMs: 20_000, approvalTimeoutMs: 60_000, executionTimeoutSeconds: 120, trustedTools: [],
+  approvalPolicy: 'on-request', approvalsReviewer: 'auto_review', reviewModel: null, reviewPolicy: null,
+  reviewMaxRounds: 4, reviewMaxOutputTokens: 2048, reviewContextChars: 60000,
+  ruleFiles: [], writableRoots: [], excludeSlashTmp: false, excludeTmpdir: false,
+});
 export function validateSettings(value: unknown): GuardSettings {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new GuardError('INVALID_SETTINGS', 'Settings must be an object');
   const raw = value as Record<string, unknown>;
@@ -27,6 +44,14 @@ export function validateSettings(value: unknown): GuardSettings {
   for (const key of ['reviewTimeoutMs', 'approvalTimeoutMs', 'executionTimeoutSeconds'] as const) if (!Number.isFinite(settings[key]) || settings[key] <= 0) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
   if (!Array.isArray(settings.allowedDomains) || settings.allowedDomains.some(x => typeof x !== 'string' || !/^(\*\.)?[a-z0-9][a-z0-9.-]*$/i.test(x))) throw new GuardError('INVALID_SETTINGS', 'Invalid domains');
   if (!Array.isArray(settings.trustedTools) || settings.trustedTools.some(x => typeof x !== 'string' || !x)) throw new GuardError('INVALID_SETTINGS', 'Invalid trusted tools');
+  const approval = settings.approvalPolicy;
+  if (approval !== 'on-request' && approval !== 'never' && (!approval || typeof approval !== 'object' || Array.isArray(approval) || Object.keys(approval).length !== 2 || typeof approval.sandbox !== 'boolean' || typeof approval.rules !== 'boolean')) throw new GuardError('INVALID_SETTINGS', 'Invalid approval policy');
+  if (!['auto_review', 'user'].includes(settings.approvalsReviewer)) throw new GuardError('INVALID_SETTINGS', 'Invalid approvals reviewer');
+  if (settings.reviewModel !== null && (!settings.reviewModel || typeof settings.reviewModel !== 'object' || Array.isArray(settings.reviewModel) || Object.keys(settings.reviewModel).some(key => !['provider', 'id'].includes(key)) || ![settings.reviewModel.provider, settings.reviewModel.id].every(value => typeof value === 'string' && value.trim().length > 0 && !/[\0\r\n]/.test(value)))) throw new GuardError('INVALID_SETTINGS', 'Invalid review model');
+  if (settings.reviewPolicy !== null && (typeof settings.reviewPolicy !== 'string' || !settings.reviewPolicy.trim() || settings.reviewPolicy.length > 100000)) throw new GuardError('INVALID_SETTINGS', 'Invalid reviewer policy');
+  for (const [key, maximum] of [['reviewMaxRounds', 16], ['reviewMaxOutputTokens', 16384], ['reviewContextChars', 500000]] as const) if (!Number.isInteger(settings[key]) || settings[key] < 1 || settings[key] > maximum) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
+  for (const key of ['ruleFiles', 'writableRoots'] as const) if (!Array.isArray(settings[key]) || settings[key].some(value => typeof value !== 'string' || !value || value.includes('\0'))) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
+  for (const key of ['excludeSlashTmp', 'excludeTmpdir'] as const) if (typeof settings[key] !== 'boolean') throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
   if (!Array.isArray(settings.commandRules)) throw new GuardError('INVALID_SETTINGS', 'Invalid command rules');
   for (const rule of settings.commandRules) {
     if (!rule || !['allow', 'ask', 'deny'].includes(rule.decision) || !Array.isArray(rule.prefix) || !rule.prefix.length || rule.prefix.some((x: unknown) => typeof x !== 'string' || !x || /[\0\n]/.test(x))) throw new GuardError('INVALID_SETTINGS', 'Invalid command rule');

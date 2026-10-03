@@ -6,7 +6,7 @@
 
 ## Child Briefs
 - [x] `docs/briefs/2026-10-03-fix-auto-review-01-evidence.md` — Completed; `docs/handoffs/auto-review/01-evidence.json` records 14 preserved artifacts, passing build, 6 contract cases and 5 E2E cases, and the separately retained sandbox-restricted failed attempt.
-- [ ] `docs/briefs/2026-10-03-feat-auto-review-02-contracts.md` — Define the compatibility contract; exists because all approval consumers need one pinned authority and outcome model.
+- [x] `docs/briefs/2026-10-03-feat-auto-review-02-contracts.md` — Completed; `docs/handoffs/auto-review/02-contracts.json` pins Codex 0.160.0 at `a956835d020762cb2b570053af06f643a11c0ecc`, assigns all gaps, and records passing build plus 18 contract/policy/approval checks.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-03-reviewer.md` — Implement evidence-based review; exists because risk judgments require policy and retained trustworthy context.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-04-permissions.md` — Apply reviewed permissions; exists because an assessment must produce the correct effect at the native execution boundary.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-05-denials.md` — Add denial recovery; exists because review rejection and retry authority have a distinct turn lifecycle.
