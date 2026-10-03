@@ -10,7 +10,7 @@
 - [x] `docs/briefs/2026-10-03-feat-auto-review-03-reviewer.md` — Completed; `docs/handoffs/auto-review/03-reviewer.json` records pinned policy, retained provenance, bounded native investigation, distinct failures, and 25 passing reviewer/approval/Pi integration checks.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-04-permissions.md` — Completed; `docs/handoffs/auto-review/04-permissions.json` records automatic scoped/command authority, rules, attributed live network approval, metadata/domain fixes and 44 passing checks; controller/native mandatory restrictions remain explicit compatibility limits.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-05-denials.md` — Completed; `docs/handoffs/auto-review/05-denials.json` records actual Pi interruption, exact one-use `/approve` re-review, stale-authorization rejection, structured feedback and 35 passing checks.
-- [ ] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — Restore the Docker Cloud environment; exists because the actual installed provider and packaged guard must run together on Linux.
+- [ ] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — 구현 완료, 실행 승인 조건은 미완료. `docs/handoffs/auto-review/06-docker-cloud.json`: Docker ARM64 오프라인 65개와 실제 패키지 시작·재로딩 통과. 필수 Linux x64는 에뮬레이션 seccomp 오류, 실모델은 실행 환경의 키 부재로 차단.
 - [ ] `docs/briefs/2026-10-03-test-auto-review-07-conformance.md` — Verify the joined implementation; exists because individually passing components do not establish end-to-end compatibility.
 
 ## Execution Order
@@ -89,3 +89,9 @@
 
 ## Open Questions
 - None — the user approved the Pi-only parity boundary and explicitly selected `pi-ollama-cloud`; credentials and model values are operator-supplied runtime inputs.
+
+## 실행 중 조정 — 2026-10-03
+
+- Docker에서 재현된 Linux 권한·프록시 결함은 04 담당 범위로 돌려 수정하고 ARM64 네이티브 효과를 재검증했다. 필수 x64 대상을 ARM64로 대체하지 않는다.
+- `.zshrc`를 다시 불러오고 이름으로 export해도 `OLLAMA_API_KEY`가 비어 있어 실모델 요청은 보내지 않았다. 사용자 지정 모델은 `glm-5.3`이다.
+- 06의 외부 전제조건이 충족될 때까지 최종 완료 판정은 보류한다. 07의 검증표·고정 시나리오·보고서 검증기·운영 안내 작성은 확정된 구현 계약을 사용해 진행한다. 실모델 실행과 전체 통과 판정의 선행 조건은 유지한다.

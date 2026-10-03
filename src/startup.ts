@@ -27,16 +27,19 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   model?: CreateAgentSessionOptions['model'];
   sessionManager?: SessionManager;
   trustedExtensions?: InlineExtension[];
+  /** Explicit trusted provider/controller entrypoints; automatic discovery remains disabled. */
+  trustedExtensionPaths?: readonly string[];
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
   await assertSupportedPi();
   const initialCwd = resolve(options.cwd), agentDir = resolve(options.agentDir);
+  const trustedExtensionPaths = (options.trustedExtensionPaths ?? []).map(path => resolve(initialCwd, path));
   const createRuntime = async (input: {cwd:string;agentDir:string;sessionManager:SessionManager;sessionStartEvent?:CreateAgentSessionOptions['sessionStartEvent']}) => {
     const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir);
     const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{extensionFactories:[{name:'pi-guard',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-guard',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();
@@ -47,7 +50,16 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
       const prompt=session.prompt.bind(session);
       session.prompt=async (...args)=>{guard.assertReady();return prompt(...args);};
       const reload=session.reload.bind(session);
-      session.reload=async()=>{await reload();guard.assertReady();};
+      session.reload=async(...args)=>{
+        await reload(...args);
+        const controller=guard.assertReady();
+        // Pi omits session_start after reload when print/SDK mode has no UI or command bindings.
+        if(!controller.isBoundToSession(session.sessionManager.getSessionId())){
+          await args[0]?.beforeSessionStart?.();
+          await session.extensionRunner.emit({type:'session_start',reason:'reload'});
+        }
+        guard.assertReady();
+      };
       const executeBash=session.executeBash.bind(session);
       session.executeBash=async(command,onChunk,options)=>{
         const controller=guard.assertReady();

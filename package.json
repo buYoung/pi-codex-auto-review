@@ -9,8 +9,14 @@
     ".": "./dist/index.js",
     "./startup": "./dist/startup.js"
   },
-  "bin": { "pi-guard": "dist/cli.js" },
-  "pi": { "extensions": ["./dist/index.js"] },
+  "bin": {
+    "pi-guard": "dist/cli.js"
+  },
+  "pi": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
   "scripts": {
     "build": "tsc",
     "test:contracts": "node scripts/run-tests.mjs contracts",
@@ -20,7 +26,8 @@
     "test:native": "node scripts/run-tests.mjs native",
     "test:integration": "node scripts/run-tests.mjs integration",
     "test:e2e": "node scripts/run-tests.mjs e2e",
-    "verify:guard": "node scripts/verify-guard.mjs"
+    "verify:guard": "node scripts/verify-guard.mjs",
+    "verify:docker": "node scripts/verify-docker.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.78"
@@ -30,14 +37,22 @@
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.99.1",
+    "@sinclair/typebox": "0.34.52",
     "@types/node": "24.0.0",
+    "pi-ollama-cloud": "0.12.2",
     "typescript": "6.0.3"
   },
   "overrides": {
     "@earendil-works/pi-ai": "0.99.1",
-    "@earendil-works/pi-agent-core": "0.99.1"
+    "@earendil-works/pi-agent-core": "0.99.1",
+    "@earendil-works/pi-tui": "0.99.1"
   },
-  "engines": { "node": ">=22.19.0" },
-  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "private": true
 }

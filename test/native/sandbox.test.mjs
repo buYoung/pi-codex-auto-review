@@ -72,8 +72,8 @@ test('[native-files] reviewed metadata grant exposes only the named file and com
   const profile=createProfile({...f.profile,readOnlyPaths:[metadata]});
   assert.equal((await f.shell(`cat ${shellQuote(target)}`,profile)).output,'before');
   assert.notEqual((await f.shell(`printf blocked > ${shellQuote(target)}`,profile)).exitCode,0);
-  const granted=await f.shell(`printf approved > ${shellQuote(target)}; printf sibling > ${shellQuote(sibling)}`,profile,{readPaths:[],writePaths:[target],domains:[]});
-  assert.notEqual(granted.exitCode,0);assert.equal(await readFile(target,'utf8'),'approved');assert.equal(await readFile(sibling,'utf8'),'unchanged');
+  const granted=await f.shell(`cat ${shellQuote(sibling)}; printf approved > ${shellQuote(target)}; printf sibling > ${shellQuote(sibling)}`,profile,{readPaths:[],writePaths:[target],domains:[]});
+  assert.match(granted.output,/unchanged/);assert.notEqual(granted.exitCode,0);assert.equal(await readFile(target,'utf8'),'approved');assert.equal(await readFile(sibling,'utf8'),'unchanged');
   const outside=join(f.outside,'sentinel.txt');
   const command=await f.shell(`printf command > ${shellQuote(outside)}; cat ${shellQuote(join(f.control,'protected.txt'))}`,profile,EMPTY_DELTA,{authority:{kind:'reviewed-command',actionDigest:'native-fixture'}});
   assert.equal(await readFile(outside,'utf8'),'command');assert.notEqual(command.exitCode,0);assert.ok(!command.output.includes(f.secret));

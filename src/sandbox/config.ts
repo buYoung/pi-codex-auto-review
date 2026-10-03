@@ -5,6 +5,7 @@ import type { SandboxRuntimeConfig } from '@anthropic-ai/sandbox-runtime';
 import { GuardError, createProfile, type PermissionDelta, type PermissionProfile, type ExecutionAuthority } from '../contracts.js';
 import { canonicalPath, isWithin } from '../policy/paths.js';
 import { matchesDomain } from '../policy/domains.js';
+import { linuxReadPaths } from './linux-read-paths.js';
 
 export function shellQuote(text: string): string { return `'${text.replace(/'/g, "'\\''")}'`; }
 const AMBIENT_ENV = new Set(['PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ', 'TERM']);
@@ -46,7 +47,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
     filesystem: {
       // All user data starts unreadable; runtime/assets and the admitted roots are carve-outs.
       denyRead: ['/', ...profile.denyRead],
-      allowRead: [...systemRead, ...(isCommandAuthority ? ['/'] : profile.readRoots), ...reads, ...writes],
+      allowRead: await linuxReadPaths([...systemRead, ...(isCommandAuthority ? ['/'] : profile.readRoots), ...reads, ...writes], writeRoots),
       allowWrite: writeRoots,
       denyWrite: [...profile.denyWrite, ...profile.denyRead, ...(isCommandAuthority ? [] : baseProtected.filter(root => !lifted.includes(root))), ...dependencyRoots, resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), resolve(packageRoot, 'package-lock.json')],
       allowGitConfig: isCommandAuthority || writes.some(path => /[/\\]\.git(?:[/\\]config)?$/.test(path)),

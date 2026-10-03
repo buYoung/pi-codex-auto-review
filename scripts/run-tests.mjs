@@ -73,6 +73,9 @@ export async function runSuite(name, selectedRun) {
   const status = !isSourceStable ? 'fail' : tests.length && tests.every(t => t.status === 'pass') ? 'pass' : tests.some(t=>t.status==='fail') ? 'fail' : blockedReasons.length ? 'environment-blocked' : 'fail';
   const evidence = {
     schemaVersion: 2, runId: currentRun.runId, artifactPath: `${currentRun.artifactPath}/${name}.json`, startedAt,
+    ...(currentRun.imageDigest ? {imageDigest:currentRun.imageDigest} : {}),
+    ...(currentRun.pluginArtifactDigest ? {pluginArtifactDigest:currentRun.pluginArtifactDigest} : {}),
+    ...(currentRun.provider ? {provider:currentRun.provider} : {}),
     provenance: 'executed', suite: name, status, command: `npm run test:${name}`, testFiles: suite.files,
     coveredBehavior: suite.behavior.filter(b => tests.some(t => t.status === 'pass' && t.name.includes(`[${b}]`))),
     tests, platform: `${process.platform}-${process.arch}`, sourceDigest: source, contractDigest: contract,

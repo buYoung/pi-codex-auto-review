@@ -27,8 +27,9 @@ export function createGuardExtension(options: GuardOptions = {}) {
   const factory: ExtensionFactory = async pi => {
     const cwd = options.cwd ?? process.cwd();
     const settings = options.settingsPath ? await loadSettings(options.settingsPath) : validateSettings(options.settings ?? {});
-    const controlDir = join(options.agentDir ?? process.env.PI_CODING_AGENT_DIR ?? join(homedir(), '.pi', 'agent'), 'guard');
-    const profile = options.profile ?? await defaultProfile(cwd, settings, [controlDir, ...(options.settingsPath ? [resolve(options.settingsPath)] : [])]);
+    const agentDir = options.agentDir ?? process.env.PI_CODING_AGENT_DIR ?? join(homedir(), '.pi', 'agent');
+    const controlDir = join(agentDir, 'guard');
+    const profile = options.profile ?? await defaultProfile(cwd, settings, [agentDir, ...(options.settingsPath ? [resolve(options.settingsPath)] : [])]);
     const audit = new AuditLog(join(controlDir, 'audit.jsonl'));
     const approvals = new ApprovalManager({ reviewTimeoutMs: settings.reviewTimeoutMs, approvalTimeoutMs: settings.approvalTimeoutMs, approvalPolicy: settings.approvalPolicy, approvalsReviewer: settings.approvalsReviewer, audit, persistence: new FileGrantPersistence(join(controlDir, 'grants.json')) });
     controller = new GuardController({ profile, settings, executor: options.executor ?? new NativeExecutor(), approvals, audit, provider: options.provider, shellPath: options.bashOptions?.shellPath });
@@ -77,6 +78,6 @@ export function createGuardExtension(options: GuardOptions = {}) {
       pi.sendUserMessage(`${nested}\nTool: ${retry.denial.action.tool}\nArguments: ${canonicalJson(retry.args)}\nThe user selected denial ${id} for one retry. The controller holds a one-use exact-action marker; automatic review and policy still apply. Do not repeat unrelated earlier side effects.`,{expandPromptTemplates:false});
     }});
   };
-  return { factory, assertReady() { if (!controller) throw new Error('pi-codex-permission extension failed to load'); controller.assertReady(); return controller; } };
+  return { factory, assertReady() { if (!controller) throw new Error('pi-guard extension failed to load'); controller.assertReady(); return controller; } };
 }
 export default createGuardExtension().factory;

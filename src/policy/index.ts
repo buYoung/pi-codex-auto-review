@@ -1,5 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TOOL_NAMES, type GuardAction, type PermissionDelta, type PermissionProfile, type PolicyDecision, type ApprovalPolicy } from '../contracts.js';
@@ -107,7 +107,8 @@ export class PolicyEngine {
     const canRead = profile.readRoots.some(p => isWithin(target, p));
     const canWrite = !isWrite || profile.writeRoots.some(p => isWithin(target, p)) && !(profile.readOnlyPaths ?? []).some(p => isWithin(target, p));
     if (canRead && canWrite) return decision(action, 'allow', 'Within current filesystem permissions');
-    return decision(action, 'ask', 'Filesystem permission required', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [target], domains: [] });
+    const writePath = isWrite && !canWrite ? await this.creationWriteScope(target) : target;
+    return decision(action, 'ask', writePath === target ? 'Filesystem permission required' : 'Linux file creation requires the existing parent directory in this invocation; review this full write scope', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [writePath], domains: [] });
   }
   private async shellDecision(action: GuardAction): Promise<PolicyDecision> {
     const profile = await this.resolvedProfile(action.cwd);
@@ -177,5 +178,18 @@ export class PolicyEngine {
     for (const key of ['readRoots', 'writeRoots', 'denyRead', 'denyWrite'] as const) result[key] = await Promise.all(this.profile[key].map(path => canonicalPath(path, cwd)));
     if (this.profile.readOnlyPaths) result.readOnlyPaths = await Promise.all(this.profile.readOnlyPaths.map(path => canonicalPath(path, cwd)));
     return result;
+  }
+  private async creationWriteScope(target: string): Promise<string> {
+    if (process.platform !== 'linux') return target;
+    let candidate = target;
+    for (;;) {
+      try { await stat(candidate); return candidate; }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        const parent = dirname(candidate);
+        if (parent === candidate) throw error;
+        candidate = parent;
+      }
+    }
   }
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile, access } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile, access, mkdir } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import * as pi from '@earendil-works/pi-coding-agent';
 import { createGuardExtension } from '../../dist/index.js';
 import { createGuardedRuntime } from '../../dist/startup.js';
@@ -131,11 +131,13 @@ test('[tools] TUI/RPC approvals cover one complete edit action and print/JSON de
     assert.equal(await readFile(target,'utf8'),'approved-rpc');
   }
 });
-test('[tools] approved outside write covers its mkdir helper without widening sibling permissions',async t=>{
+test('[tools] outside creation reviews its actual native scope and cannot approve a later sibling',async t=>{
   const f=await fixture(t),target=join(f.outside,'new.txt'),runtime=await guardedFixture(t,f,{provider:{complete:async()=>'{"decision":"ask","reason":"confirm"}'}});let prompts=0;
-  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(_title,choices)=>{prompts++;return choices[0];},notify:()=>{},setStatus:()=>{},setWidget:()=>{}}});
+  await runtime.session.bindExtensions({mode:'rpc',uiContext:{select:async(title,choices)=>{prompts++;assert.ok(title.includes(process.platform==='linux'?f.outside:target));return prompts===1?choices[0]:choices.at(-1);},notify:()=>{},setStatus:()=>{},setWidget:()=>{}}});
   await planStream(runtime.session,[[{name:'write',args:{path:target,content:'approved outside'}}]]);await runtime.session.prompt('Write this owned outside target.');
   assert.equal(await readFile(target,'utf8'),'approved outside');assert.equal(prompts,1);assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
+  await planStream(runtime.session,[[{name:'write',args:{path:join(f.outside,'sentinel.txt'),content:'later'}}]]);await runtime.session.prompt('Check a separate request.');
+  assert.equal(prompts,2);assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
 });
 test('[startup] public guarded startup rejects discarded factories, missing backend and unknown tools', async t => {
   const f=await fixture(t), modelRuntime=await offlineModelRuntime(f), executor={qualify:async()=>{throw new Error('backend unavailable');},close:async()=>{},execute:async()=>{throw new Error('must not run');}};
@@ -143,6 +145,25 @@ test('[startup] public guarded startup rejects discarded factories, missing back
   const broken=()=>{throw new Error('factory discarded');}; await assert.rejects(guardedFixture(t,f,{trustedExtensions:[broken]}),/failed to load/);
   let called=false;const unknown=api=>api.registerTool({name:'unknown',label:'unknown',description:'unknown',parameters:pi.createReadToolDefinition(f.workspace).parameters,annotations:{readOnlyHint:true},execute:async()=>{called=true;return{content:[{type:'text',text:'bad'}]};}});
   const runtime=await guardedFixture(t,f,{trustedExtensions:[unknown]});await planStream(runtime.session,[[{name:'unknown',args:{path:'a'}}]]);await runtime.session.prompt('Check unknown.');assert.equal(called,false);
+});
+test('[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery',async t=>{
+  const f=await fixture(t),previousAgentDir=process.env.PI_CODING_AGENT_DIR,previousWebTools=process.env.PI_OLLAMA_WEB_TOOLS;
+  process.env.PI_CODING_AGENT_DIR=f.agentDir;process.env.PI_OLLAMA_WEB_TOOLS='0';
+  t.after(()=>{if(previousAgentDir===undefined)delete process.env.PI_CODING_AGENT_DIR;else process.env.PI_CODING_AGENT_DIR=previousAgentDir;if(previousWebTools===undefined)delete process.env.PI_OLLAMA_WEB_TOOLS;else process.env.PI_OLLAMA_WEB_TOOLS=previousWebTools;});
+  await mkdir(join(f.agentDir,'extensions'),{recursive:true});await writeFile(join(f.agentDir,'extensions','must-not-load.ts'),'throw new Error(\"Automatic discovery must remain disabled\");');
+  const runtime=await guardedFixture(t,f,{trustedExtensionPaths:[resolve('node_modules/pi-ollama-cloud/index.ts')]});
+  assert.ok(runtime.session.modelRuntime.getModel('ollama-cloud','glm-5.3'));assert.ok(!runtime.session.getAllTools().some(tool=>tool.name.startsWith('ollama_web_')));
+  let reloadHookCalls=0;await runtime.session.reload({beforeSessionStart:async()=>{reloadHookCalls++;}});assert.equal(reloadHookCalls,1);assert.ok(runtime.session.modelRuntime.getModel('ollama-cloud','glm-5.3'));assert.ok(!runtime.session.getAllTools().some(tool=>tool.name.startsWith('ollama_web_')));
+  assert.equal((await runtime.session.executeBash('printf explicit-provider')).output,'explicit-provider');
+});
+test('[startup] default permissions protect the complete explicitly selected agent credential directory',async t=>{
+  const f=await fixture(t),authPath=join(f.agentDir,'auth.json'),tools=[];await writeFile(authPath,'owned-auth-fixture');
+  const extension=createGuardExtension({cwd:f.workspace,agentDir:f.agentDir,provider:{complete:()=>assert.fail('Controller credentials reached review')}});
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{}});t.after(()=>extension.assertReady().close());
+  const sessionManager=pi.SessionManager.inMemory(f.workspace),context={cwd:f.workspace,sessionManager,mode:'print',hasUI:false};
+  extension.assertReady().reset(sessionManager.getSessionId(),sessionManager);
+  await assert.rejects(tools.find(tool=>tool.name==='read').execute('auth-read',{path:authPath},undefined,undefined,context),/Protected path/);
+  assert.equal(await readFile(authPath,'utf8'),'owned-auth-fixture');
 });
 test('[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results', async t => {
   const f=await fixture(t), runtime=await guardedFixture(t,f), events=[];runtime.session.subscribe(e=>events.push(e));

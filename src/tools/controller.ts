@@ -35,6 +35,7 @@ export class GuardController {
     this.isReady = true;
   }
   assertReady(): void { if (!this.isReady || this.stopped.signal.aborted) throw new GuardError('GUARD_NOT_READY', 'Guard is not ready for execution'); }
+  isBoundToSession(sessionId: string): boolean { return this.sessionId === sessionId && !this.stopped.signal.aborted; }
   reset(sessionId: string, manager?: ExtensionContext['sessionManager']): void {
     this.stopped.abort(new GuardError('SESSION_CHANGED', 'Session changed'));
     this.stopped = new AbortController();

@@ -47,6 +47,12 @@ async function run({ commandId, config, job }: { commandId: string; config: Sand
   } : undefined, false);
   cancellation.signal.throwIfAborted();
   if (!SandboxManager.isSandboxingEnabled() || !await SandboxManager.waitForNetworkInitialization()) throw new GuardError('BACKEND_UNAVAILABLE', 'Native filesystem/network sandbox is unavailable');
+  if (process.platform === 'linux') {
+    // SRT emits bridge mounts before filesystem masks. Restore only this
+    // invocation's proxy sockets when a restrictive read profile masks /tmp.
+    const sockets = [SandboxManager.getLinuxHttpSocketPath(), SandboxManager.getLinuxSocksSocketPath()].filter((path): path is string => !!path);
+    SandboxManager.updateConfig({...config, filesystem: {...config.filesystem, allowRead: [...(config.filesystem.allowRead ?? []), ...sockets]}});
+  }
   const command = `${shellQuote(process.execPath)} ${shellQuote(fileURLToPath(new URL('./worker.js', import.meta.url)))}`;
   const wrapped = await SandboxManager.wrapWithSandboxArgv(command, '/bin/bash', undefined, cancellation.signal, job.cwd, { commandId });
   if (!wrapped.argv.length || !wrapped.argv.some(arg => arg.includes('sandbox-exec') || arg.includes('bwrap'))) throw new GuardError('BACKEND_UNAVAILABLE', 'Runtime did not return a native isolation command');
