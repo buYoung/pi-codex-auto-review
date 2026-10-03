@@ -73,16 +73,23 @@ export async function loadSettings(path: string): Promise<GuardSettings> {
   try { return validateSettings(JSON.parse(await readFile(path, 'utf8'))); }
   catch (error) { throw new GuardError('INVALID_SETTINGS', 'Permission settings could not be loaded', { cause: error }); }
 }
-export async function defaultProfile(cwd: string, settings: GuardSettings, controlPaths: readonly string[] = []): Promise<PermissionProfile> {
+export async function defaultProfile(cwd: string, settings: GuardSettings, controlPaths: readonly string[] = [], trustedExtensionPaths: readonly string[] = []): Promise<PermissionProfile> {
   const workspace = await canonicalPath(cwd, cwd), home = homedir();
   const hardRead = [join(home, '.ssh'), join(home, '.aws'), join(home, '.codex'), join(home, '.pi', 'agent'), ...controlPaths, ...settings.ruleFiles];
   const hardWrite = [...hardRead, join(workspace, '.pi', 'guard'), fileURLToPath(new URL('../', import.meta.url))];
   const roots = [...new Set(await Promise.all([workspace, ...settings.writableRoots, ...(!settings.excludeSlashTmp ? ['/tmp'] : []), ...(!settings.excludeTmpdir ? [tmpdir()] : [])].map(path => canonicalPath(path, cwd))))];
   const readOnlyPaths: string[] = [];
+  for (const input of trustedExtensionPaths) {
+    const path = await canonicalPath(input, cwd);
+    // A trusted module can import sibling modules; protect its containing code directory.
+    hardWrite.push((await stat(path)).isDirectory() ? path : dirname(path));
+  }
   for (const root of roots) {
     const git = join(root, '.git'); readOnlyPaths.push(await canonicalPath(git, cwd));
     try { if ((await stat(git)).isFile()) { const pointer = /^gitdir:\s*(.+)\s*$/m.exec(await readFile(git, 'utf8')); if (pointer) readOnlyPaths.push(await canonicalPath(resolve(root, pointer[1]!), cwd)); } } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
     for (const name of ['.agents', '.codex']) { const path = join(root, name); try { if ((await stat(path)).isDirectory()) readOnlyPaths.push(await canonicalPath(path, cwd)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; } }
+    readOnlyPaths.push(await canonicalPath(join(root, '.pi'), cwd));
+    hardWrite.push(...['mcp.json', 'settings.json', 'extensions', 'guard'].map(name => join(root, '.pi', name)));
   }
   return createProfile({ mode: settings.mode, readRoots: ['/'], writeRoots: settings.mode === 'workspace-write' ? roots : [], denyRead: await Promise.all(hardRead.map(p => canonicalPath(p, cwd))), denyWrite: await Promise.all(hardWrite.map(p => canonicalPath(p, cwd))), readOnlyPaths, allowedDomains: [...settings.allowedDomains], deniedDomains: [] });
 }

@@ -23,7 +23,7 @@ export function guardedExternalExtension(input: ExternalExtension, controller: (
 }
 
 interface CatalogEntry { readonly identity: ExternalToolIdentity; readonly label: string; readonly namespace: string }
-export type McpToolPolicies = Readonly<Record<string, Partial<Pick<ExternalToolIdentity, 'approvalMode' | 'kind'>>>>;
+export type McpToolPolicies = Readonly<Record<string, Partial<Pick<ExternalToolIdentity, 'approvalMode'>>>>;
 function record(value: unknown): Record<string, any> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {}; }
 function optionalText(value: unknown): string | undefined { return typeof value === 'string' && value.length ? value : undefined; }
 
@@ -38,7 +38,7 @@ function guardedTransport(base: Transport, server: string, registration: string,
       if (typeof tool.name !== 'string' || !tool.name) throw new GuardError('INVALID_MCP_CATALOG', 'MCP tool has no identity');
       const override = policies[`${server}/${tool.name}`];
       const identity: ExternalToolIdentity = {
-        kind:override?.kind ?? (server === 'node_repl' && tool.name === 'js' ? 'computer-use' : 'mcp'),
+        kind:'mcp',
         server, tool:tool.name, registration:`${registration}:${generation}:${digest(JSON.parse(JSON.stringify(tool)))}`,
         ...(optionalText(meta.connector_id) ? {connectorId:meta.connector_id} : {}),
         ...(optionalText(meta.account) ? {account:meta.account} : {}),
@@ -59,10 +59,8 @@ function guardedTransport(base: Transport, server: string, registration: string,
     const schema = record(params.requestedSchema);
     const isApprovalForm = params.mode !== 'url' && schema.type === 'object' && Object.keys(record(schema.properties)).length === 0 && (!Array.isArray(schema.required) || schema.required.length === 0);
     if (invocation && !invocation.signal.aborted && isApprovalForm && meta.codex_approval_kind === 'mcp_tool_call' && typeof meta.tool_name === 'string' && meta.tool_params && typeof meta.tool_params === 'object' && !Array.isArray(meta.tool_params)) {
-      const isComputerUse = invocation.identity.kind === 'computer-use';
       const isMatchingOuter = meta.tool_name === invocation.identity.tool && (meta.connector_id ?? undefined) === invocation.identity.connectorId;
-      // Only a live Computer Use invocation can name a different nested action/connector.
-      if (isComputerUse || isMatchingOuter) {
+      if (isMatchingOuter) {
         const nested: ExternalToolIdentity = {
           ...invocation.identity, tool:meta.tool_name,
           ...(typeof meta.connector_id === 'string' ? {connectorId:meta.connector_id} : {}),
@@ -72,7 +70,7 @@ function guardedTransport(base: Transport, server: string, registration: string,
         };
         try {
           await invocation.checkCurrent();
-          isAllowed = await invocation.approveNested(nested, JSON.parse(canonicalJson(isComputerUse ? meta.tool_params : invocation.arguments)));
+          isAllowed = await invocation.approveNested(nested, JSON.parse(canonicalJson(invocation.arguments)));
           await invocation.checkCurrent();
           isAllowed &&= active.get(callId!) === invocation && !invocation.signal.aborted;
         } catch { isAllowed = false; }
@@ -139,12 +137,32 @@ export async function createGuardedMcpExtension(agentDir: string, controller: ()
     registrations.set(entry.name,registration);
     return guardedTransport((options.createTransport ?? runtime.createDefaultTransport)(entry,cwd,provider),entry.name,registration,catalog,policies);
   };
-  const factory = createMcpExtension({
+  const mcpFactory = createMcpExtension({
     ...options, createTransport:transportFactory,
     loadConfig:options.loadConfig ?? (context => config.loadMcpConfig({agentDir,cwd:context.cwd,projectTrusted:context.isProjectTrusted()})),
     credentials:options.credentials ?? new runtime.McpOAuthCredentialStore(new auth.FileAuthStorageBackend(join(agentDir,'mcp-auth.json')),agentDir),
     logPath:options.logPath ?? join(agentDir,'mcp.log'),
   });
+  const factory: ExtensionFactory = api => {
+    let hasStarted = false;
+    let shutdown: ((...args: any[]) => unknown) | undefined;
+    return mcpFactory(new Proxy(api, {get(target, key, receiver) {
+      if (key === 'on') return (event: string, handler: (...args: any[]) => unknown) => {
+        if (event === 'session_shutdown') {
+          shutdown = handler;
+          return target.on('session_shutdown', async (...args) => { hasStarted = false; await handler(...args); });
+        }
+        if (event === 'session_start') return target.on('session_start', async (event, context) => {
+          // Pi rebinds modes with another session_start, without a preceding shutdown.
+          if (hasStarted) await shutdown?.({type:'session_shutdown'}, context);
+          hasStarted = true;
+          await handler(event, context);
+        });
+        return Reflect.apply(target.on, target, [event, handler]);
+      };
+      return Reflect.get(target, key, receiver);
+    }}));
+  };
   return guardedExternalExtension({extension:{name:'guarded-mcp',factory},identifyTool:definition => {
     const entry = [...catalog.values()].find(item => item.label === definition.label && item.namespace === definition.namespace?.name);
     if (entry) return entry.identity;

@@ -4,7 +4,7 @@ import { decision, immutable, type GuardAction, type Json, type PolicyDecision }
 import type { GuardSettings } from '../policy/index.js';
 
 export interface ExternalToolIdentity {
-  readonly kind: 'mcp' | 'computer-use' | 'extension';
+  readonly kind: 'mcp' | 'extension';
   readonly server: string;
   readonly tool: string;
   readonly registration: string;
@@ -27,8 +27,7 @@ export function requiresMcpApproval(annotations: ToolAnnotations = {}, mode: Ext
 }
 export function externalPolicy(action: GuardAction, identity: ExternalToolIdentity, settings: GuardSettings): PolicyDecision {
   const isFresh = identity.requiresStrictReview === true || identity.isSensitiveAction === true || identity.requiresUserInput === true;
-  const isOrdinaryComputerUse = identity.kind === 'computer-use' && settings.approvalsReviewer === 'user' && !isFresh;
-  const shouldReview = isFresh || !isOrdinaryComputerUse && requiresMcpApproval(identity.annotations, identity.approvalMode);
+  const shouldReview = isFresh || requiresMcpApproval(identity.annotations, identity.approvalMode);
   return immutable({...decision(action, shouldReview ? 'ask' : 'allow', shouldReview ? 'Review the exact registered external action' : 'Registered external tool approval policy permits this action'), approvalCategory:'mcp_elicitations', requiresFreshReview:isFresh, requiresUserInput:identity.requiresUserInput === true});
 }
 export interface ExternalInvocation {

@@ -4,7 +4,7 @@ export const suites = {
   reviewer: { files: ['test/unit/reviewer.test.mjs'], kind: 'simulated-provider-ui', behavior: ['review', 'deadlines', 'cancellation'] },
   approvals: { files: ['test/unit/approvals.test.mjs'], kind: 'simulated-provider-ui', behavior: ['grants', 'queue', 'persistence', 'audit'] },
   native: { files: ['test/native/sandbox.test.mjs'], kind: 'native-os', behavior: ['native-launch', 'native-files', 'native-network', 'native-lifecycle', 'native-isolation'] },
-  integration: { files: ['test/integration/pi-tools.test.mjs', 'test/integration/mcp.test.mjs'], kind: 'simulated-provider-ui', behavior: ['tools', 'final-input', 'user-bash', 'startup', 'nested', 'options', 'context-files', 'external-tools', 'computer-use'] },
+  integration: { files: ['test/integration/pi-tools.test.mjs', 'test/integration/mcp.test.mjs'], kind: 'simulated-provider-ui', behavior: ['tools', 'final-input', 'user-bash', 'startup', 'nested', 'options', 'context-files', 'external-tools'] },
   e2e: { files: ['test/e2e/guard.test.mjs'], kind: 'workflow', behavior: ['workflow', 'package', 'cleanup'] },
   conformance: { files: ['test/conformance/auto-review.test.mjs', 'test/conformance/protection.test.mjs'], kind: 'simulated-provider-ui', behavior: ['reference', 'joined', 'creation', 'failures', 'evidence-join', 'scenario-harness', 'boundary-matrix', 'review-routing', 'scoped-grants', 'review-cancellation'] },
 };

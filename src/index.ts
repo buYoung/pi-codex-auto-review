@@ -1,6 +1,6 @@
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { createBashToolDefinition, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition, createGrepToolDefinition, createFindToolDefinition, createLsToolDefinition, type ExtensionFactory, type BashToolOptions, type ReadToolOptions } from '@earendil-works/pi-coding-agent';
+import { createBashToolDefinition, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition, createGrepToolDefinition, createFindToolDefinition, createLsToolDefinition, type ExtensionFactory, type BashToolOptions, type ReadToolOptions, type McpExtensionOptions } from '@earendil-works/pi-coding-agent';
 import { defaultProfile, loadSettings, validateSettings, type GuardSettings } from './policy/index.js';
 import { ApprovalManager, FileGrantPersistence } from './approvals.js';
 import { AuditLog } from './audit.js';
@@ -9,8 +9,9 @@ import { GuardController } from './tools/controller.js';
 import type { PermissionProfile } from './contracts.js';
 import type { ReviewProvider } from './reviewer.js';
 import { AUTHORIZATION_ENTRY, safeEvidence } from './review/context.js';
-import { canonicalJson, GuardError } from './contracts.js';
+import { canonicalJson, createProfile, GuardError } from './contracts.js';
 import { redact } from './audit.js';
+import { createGuardedMcpExtension, type McpToolPolicies } from './tools/mcp.js';
 export interface GuardOptions {
   cwd?: string;
   agentDir?: string;
@@ -21,6 +22,10 @@ export interface GuardOptions {
   provider?: ReviewProvider;
   bashOptions?: Omit<BashToolOptions,'operations'>;
   readOptions?: Omit<ReadToolOptions,'operations'>;
+  /** Trusted code directories are protected against model writes, including imported siblings. */
+  trustedExtensionPaths?: readonly string[];
+  mcp?: McpExtensionOptions | false;
+  mcpToolPolicies?: McpToolPolicies;
 }
 export function createGuardExtension(options: GuardOptions = {}) {
   let controller: GuardController | undefined;
@@ -29,7 +34,12 @@ export function createGuardExtension(options: GuardOptions = {}) {
     const settings = options.settingsPath ? await loadSettings(options.settingsPath) : validateSettings(options.settings ?? {});
     const agentDir = options.agentDir ?? process.env.PI_CODING_AGENT_DIR ?? join(homedir(), '.pi', 'agent');
     const controlDir = join(agentDir, 'guard');
-    const profile = options.profile ?? await defaultProfile(cwd, settings, [agentDir, ...(options.settingsPath ? [resolve(options.settingsPath)] : [])]);
+    const baseline = await defaultProfile(cwd, settings, [agentDir, ...(options.settingsPath ? [resolve(options.settingsPath)] : [])], options.trustedExtensionPaths);
+    const profile = options.profile ? createProfile({...options.profile,
+      denyRead:[...new Set([...options.profile.denyRead,...baseline.denyRead])],
+      denyWrite:[...new Set([...options.profile.denyWrite,...baseline.denyWrite])],
+      readOnlyPaths:[...new Set([...(options.profile.readOnlyPaths ?? []),...(baseline.readOnlyPaths ?? [])])],
+    }) : baseline;
     const audit = new AuditLog(join(controlDir, 'audit.jsonl'));
     const approvals = new ApprovalManager({ reviewTimeoutMs: settings.reviewTimeoutMs, approvalTimeoutMs: settings.approvalTimeoutMs, approvalPolicy: settings.approvalPolicy, approvalsReviewer: settings.approvalsReviewer, audit, persistence: new FileGrantPersistence(join(controlDir, 'grants.json')) });
     controller = new GuardController({ profile, settings, executor: options.executor ?? new NativeExecutor(), approvals, audit, provider: options.provider, shellPath: options.bashOptions?.shellPath });
@@ -77,6 +87,12 @@ export function createGuardExtension(options: GuardOptions = {}) {
       const nested=retry.denial.action.source==='nested'?'Invoke only this exact tool through codemode to preserve the original nested source.':'Retry only this exact tool action.';
       pi.sendUserMessage(`${nested}\nTool: ${retry.denial.action.tool}\nArguments: ${canonicalJson(retry.args)}\nThe user selected denial ${id} for one retry. The controller holds a one-use exact-action marker; automatic review and policy still apply. Do not repeat unrelated earlier side effects.`,{expandPromptTemplates:false});
     }});
+    if (options.mcp !== false) {
+      try {
+        const mcp = await createGuardedMcpExtension(agentDir, () => guard, options.mcp, options.mcpToolPolicies);
+        await (typeof mcp === 'function' ? mcp : mcp.factory)(pi);
+      } catch (error) { await guard.close(); controller = undefined; throw error; }
+    }
   };
   return { factory, assertReady() { if (!controller) throw new Error('pi-codex-auto-review extension failed to load'); controller.assertReady(); return controller; } };
 }

@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, ProjectTrustStore, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions, type McpExtensionOptions } from '@earendil-works/pi-coding-agent';
+import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, ProjectTrustStore, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
 import { loadContextFiles } from './context-files.js';
-import { createGuardedMcpExtension, guardedExternalExtension, type ExternalExtension, type McpToolPolicies } from './tools/mcp.js';
+import { guardedExternalExtension, type ExternalExtension } from './tools/mcp.js';
 
 export async function assertSupportedPi(): Promise<string> {
   let path = dirname(fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')));
@@ -31,10 +31,6 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   model?: CreateAgentSessionOptions['model'];
   sessionManager?: SessionManager;
   trustedExtensions?: InlineExtension[];
-  /** Explicit trusted provider/controller entrypoints; automatic discovery remains disabled. */
-  trustedExtensionPaths?: readonly string[];
-  mcp?: McpExtensionOptions | false;
-  mcpToolPolicies?: McpToolPolicies;
   externalExtensions?: readonly ExternalExtension[];
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
@@ -51,10 +47,9 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
       const storedTrust=new ProjectTrustStore(input.agentDir).get(input.cwd);
       settingsManager.setProjectTrusted(explicitTrust ?? storedTrust ?? settingsManager.getDefaultProjectTrust()==='always');
     }
-    const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
+    const guard = createGuardExtension({...options,trustedExtensionPaths,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
       const external = (options.externalExtensions ?? []).map(extension => guardedExternalExtension(extension, () => guard.assertReady()));
-      if (options.mcp !== false) external.unshift(await createGuardedMcpExtension(input.agentDir, () => guard.assertReady(), options.mcp, options.mcpToolPolicies));
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
         resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...external,...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,
           agentsFilesOverride:()=>{const controller=guard.assertReady();return {agentsFiles:loadContextFiles({cwd:input.cwd,agentDir:input.agentDir,profile:controller.policy.profile,settings:controller.options.settings,isProjectTrusted:settingsManager.isProjectTrusted()})};}}});

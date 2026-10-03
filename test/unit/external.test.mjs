@@ -18,9 +18,9 @@ test('[external-policy] Codex MCP annotation precedence and four approval modes'
   assert.equal(externalPolicy(action,{...identity,approvalMode:'approve'},validateSettings({})).kind,'allow');
   assert.equal(externalPolicy(action,identity,validateSettings({approvalsReviewer:'user'})).kind,'allow');
   assert.equal(externalPolicy(action,{...identity,requiresUserInput:true},validateSettings({})).requiresUserInput,true);
-  const cua={...identity,kind:'computer-use',annotations:{destructiveHint:true}};
-  assert.equal(externalPolicy(action,cua,validateSettings({approvalsReviewer:'user'})).kind,'allow');
-  assert.equal(externalPolicy(action,{...cua,isSensitiveAction:true},validateSettings({approvalsReviewer:'user'})).kind,'ask');
+  const repl={...identity,server:'node_repl',tool:'js',annotations:{destructiveHint:true},approvalMode:'prompt'};
+  assert.equal(externalPolicy(action,repl,validateSettings({approvalsReviewer:'user'})).kind,'ask');
+  assert.equal(externalPolicy(action,{...repl,isSensitiveAction:true},validateSettings({approvalsReviewer:'user'})).kind,'ask');
   assert.equal(approvalEligible({sandbox:true,rules:true},'mcp_elicitations'),false);
   assert.equal(approvalEligible({sandbox:false,rules:false,mcp_elicitations:true},'mcp_elicitations'),true);
 });
