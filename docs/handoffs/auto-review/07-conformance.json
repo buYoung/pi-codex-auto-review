@@ -1,9 +1,9 @@
 {
   "schemaVersion": 2,
-  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/auto-review-conformance.json",
-  "state": "complete",
-  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/auto-review-conformance.json",
+  "state": "environment-blocked",
+  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
   "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -18,11 +18,11 @@
   "platformResults": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/platform.json",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/platform.json",
       "platform": "darwin-arm64",
       "status": "pass",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -33,9 +33,9 @@
       "results": {
         "contracts": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/contracts.json",
-          "startedAt": "2026-10-03T06:43:14.685Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/contracts.json",
+          "startedAt": "2026-10-03T09:42:58.672Z",
           "provenance": "executed",
           "suite": "contracts",
           "status": "pass",
@@ -99,7 +99,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -109,13 +109,13 @@
           },
           "evidenceKind": "unit-doubles",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:43:15.682Z"
+          "recordedAt": "2026-10-03T09:42:59.789Z"
         },
         "policy": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
-          "startedAt": "2026-10-03T06:43:15.696Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
+          "startedAt": "2026-10-03T09:42:59.801Z",
           "provenance": "executed",
           "suite": "policy",
           "status": "pass",
@@ -201,7 +201,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -211,13 +211,13 @@
           },
           "evidenceKind": "unit-doubles",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:43:16.630Z"
+          "recordedAt": "2026-10-03T09:43:00.597Z"
         },
         "reviewer": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
-          "startedAt": "2026-10-03T06:43:16.644Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
+          "startedAt": "2026-10-03T09:43:00.611Z",
           "provenance": "executed",
           "suite": "reviewer",
           "status": "pass",
@@ -261,7 +261,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -271,13 +271,13 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:43:16.778Z"
+          "recordedAt": "2026-10-03T09:43:00.756Z"
         },
         "approvals": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
-          "startedAt": "2026-10-03T06:43:16.792Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
+          "startedAt": "2026-10-03T09:43:00.770Z",
           "provenance": "executed",
           "suite": "approvals",
           "status": "pass",
@@ -298,6 +298,10 @@
             },
             {
               "name": "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials",
+              "status": "pass"
+            },
+            {
+              "name": "[cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn",
               "status": "pass"
             },
             {
@@ -334,7 +338,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -344,13 +348,13 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:43:16.954Z"
+          "recordedAt": "2026-10-03T09:43:00.982Z"
         },
         "native": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
-          "startedAt": "2026-10-03T06:43:16.971Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
+          "startedAt": "2026-10-03T09:43:01.003Z",
           "provenance": "executed",
           "suite": "native",
           "status": "pass",
@@ -366,6 +370,14 @@
             "native-isolation"
           ],
           "tests": [
+            {
+              "name": "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns",
+              "status": "pass"
+            },
+            {
+              "name": "[native-files] missing metadata write protections remain traversable without permitting creation",
+              "status": "pass"
+            },
             {
               "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
               "status": "pass"
@@ -480,7 +492,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -816,13 +828,13 @@
             }
           ],
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:43:58.081Z"
+          "recordedAt": "2026-10-03T09:43:37.766Z"
         },
         "integration": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
-          "startedAt": "2026-10-03T06:43:58.093Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
+          "startedAt": "2026-10-03T09:43:37.776Z",
           "provenance": "executed",
           "suite": "integration",
           "status": "pass",
@@ -839,8 +851,7 @@
             "nested",
             "options",
             "context-files",
-            "external-tools",
-            "computer-use"
+            "external-tools"
           ],
           "tests": [
             {
@@ -904,6 +915,10 @@
               "status": "pass"
             },
             {
+              "name": "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected",
+              "status": "pass"
+            },
+            {
               "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
               "status": "pass"
             },
@@ -944,15 +959,15 @@
               "status": "pass"
             },
             {
-              "name": "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
+              "name": "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
               "status": "pass"
             },
             {
-              "name": "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
+              "name": "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
               "status": "pass"
             },
             {
-              "name": "[computer-use] a nested request cannot downgrade the originating strict review requirement",
+              "name": "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
               "status": "pass"
             },
             {
@@ -972,12 +987,16 @@
               "status": "pass"
             },
             {
+              "name": "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
+              "status": "pass"
+            },
+            {
               "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
               "status": "pass"
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -987,13 +1006,13 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:44:46.670Z"
+          "recordedAt": "2026-10-03T09:48:32.380Z"
         },
         "e2e": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/e2e.json",
-          "startedAt": "2026-10-03T06:44:46.692Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+          "startedAt": "2026-10-03T09:48:32.396Z",
           "provenance": "executed",
           "suite": "e2e",
           "status": "pass",
@@ -1020,6 +1039,46 @@
               "status": "pass"
             },
             {
+              "name": "[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] real CLI loads an explicit provider and selects the same model for execution and review",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective",
+              "status": "pass"
+            },
+            {
               "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
               "status": "pass"
             },
@@ -1029,7 +1088,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1039,13 +1098,13 @@
           },
           "evidenceKind": "workflow",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:45:11.756Z"
+          "recordedAt": "2026-10-03T09:51:14.840Z"
         },
         "conformance": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
-          "startedAt": "2026-10-03T06:45:11.774Z",
+          "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
+          "startedAt": "2026-10-03T09:51:14.854Z",
           "provenance": "executed",
           "suite": "conformance",
           "status": "pass",
@@ -1197,7 +1256,7 @@
             }
           ],
           "platform": "darwin-arm64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1207,24 +1266,29 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:46:19.806Z"
+          "recordedAt": "2026-10-03T09:56:10.859Z"
         }
       },
-      "recordedAt": "2026-10-03T06:46:19.815Z"
+      "recordedAt": "2026-10-03T09:56:10.872Z"
+    },
+    {
+      "platform": "linux-x64",
+      "status": "environment-blocked",
+      "reason": "No complete executed linux-x64 run matches this source and contract; run all suites on that platform and retain its run directory."
     },
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/docker-offline.json",
+      "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/docker-offline.json",
       "status": "pass",
       "mode": "offline",
-      "platform": "linux-x64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "platform": "linux-arm64",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "provenance": "executed",
       "command": "node test/docker/bootstrap.mjs offline",
       "identity": {
-        "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+        "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
         "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
         "packages": {
           "@earendil-works/pi-coding-agent": "0.99.1",
@@ -1234,13 +1298,13 @@
         "plugin": {
           "name": "pi-codex-auto-review",
           "version": "1.0.0",
-          "sha256": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
-          "integrity": "sha512-oPjd5/HAeWxmOgq2Ur4kvu0BOt5I6ohuREpFCJFqGCU/PbdfKKv9I4FG/OVQF8EAQLQiYb6PRpVbnLNqv3Hkjg=="
+          "sha256": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
+          "integrity": "sha512-z064LWQCdrteqmC24jkpqw04UBOP1kt4Pr2Hd3Wg0GFH0/rlRe/HN738/OA0eofBvmYOKhMOcnIQaY0Y9Iyumg=="
         },
         "installation": "npm ci with locked provider; npm pack artifact extracted into an isolated consumer sharing the locked dependencies"
       },
-      "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-      "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+      "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+      "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
       "provider": {
         "package": "pi-ollama-cloud",
         "version": "0.12.2",
@@ -1254,10 +1318,10 @@
         "@anthropic-ai/sandbox-runtime": "0.0.78"
       },
       "nativeCapabilities": {
-        "platform": "linux-x64",
-        "processArchitecture": "x64",
+        "platform": "linux-arm64",
+        "processArchitecture": "arm64",
         "kernelArchitecture": "arm64",
-        "reportedMachine": "x86_64",
+        "reportedMachine": "aarch64",
         "seccompHelperArchitecture": "arm64",
         "bwrap": "bubblewrap 0.8.0",
         "fd": "fd 10.3.0",
@@ -1266,7 +1330,7 @@
         "preflight": {
           "permittedEffect": true,
           "deniedEffect": true,
-          "platform": "linux-x64",
+          "platform": "linux-arm64",
           "processReaping": {
             "initProcess": "docker-init",
             "orphanReaped": true
@@ -1277,325 +1341,325 @@
             "kind": "allow",
             "effect": "shell output/cwd/caller environment and nonzero status",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "owned Unix socket control works outside the sandbox and the workload starts inside it",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
-            "effect": "Unix socket creation denied by native enforcement; workload=x64, helper=arm64",
+            "effect": "Unix socket creation denied by native enforcement; workload=arm64, helper=arm64",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "workspace write/read and read-only read",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "pre-existing hard links wholly contained in admitted roots remain usable",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "pre-existing protected-read and outside-write aliases rejected before launch; runtime source link did not change outside inode",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "an exact-file grant cannot mutate a sibling alias of the same inode",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "a reviewed directory containing every link permits the disclosed shared-inode effect",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "ordinary files remain usable beside a natively masked unsearchable subtree",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "workload cannot reopen masked directory; searchable directories with unverified aliases block launch",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "one authorized proxy request reached owned Unix socket service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "domain-denied and direct requests did not reach owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "HTTPS CONNECT reached the owned TLS service using an explicitly trusted synthetic certificate",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "unapproved destination and untrusted certificate did not produce an HTTP service effect",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "SOCKS5 TCP through the native proxy and owned host UDP control reached their listeners",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "denied SOCKS5 destination and direct sandbox UDP produced no additional listener effects",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "owned IPv6 host control, canonical IPv6 proxy grant and exact dynamic review reached the service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "explicit IPv6 deny and direct IPv6 egress did not reach the service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "explicitly disclosed runtime directory grant reached the named owned target",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "runtime convenience directory did not override read-only or broaden an exact-file grant",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "exact metadata file and one reviewed command changed their owned targets",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "metadata sibling, later unapproved write and absolute protected credential read remained blocked",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "broker-authorized dynamic destination reached owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "denied and subsequent invocation destinations did not reach service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "one exact elevated target changed",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "append applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "append left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "truncate applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "truncate left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "unlink applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "unlink left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "rename applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "rename left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "copy applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "copy left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "chmod applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "chmod left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "hard-link applied to the owned workspace control",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "hard-link left outside content, existence and mode unchanged",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "wildcard child control reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "wildcard-child: expected destination effect observed",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "wildcard child control reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "wildcard-apex: expected destination effect observed",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "wildcard child control reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "suffix-spoof: expected destination effect observed",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "wildcard child control reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "explicit-deny-wins: expected destination effect observed",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "initial allowed HTTP request and redirect source reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "redirect target on a denied host never reached the owned service",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "allow",
             "effect": "ordinary explicit environment value reached the descendant interpreter",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           },
           {
             "kind": "deny",
             "effect": "synthetic credential and loader values were absent from descendant output",
             "isObserved": true,
-            "platform": "linux-x64"
+            "platform": "linux-arm64"
           }
         ]
       },
@@ -1620,11 +1684,11 @@
       "results": {
         "contracts": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/contracts.json",
-          "startedAt": "2026-10-03T06:23:51.155Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/contracts.json",
+          "startedAt": "2026-10-03T09:41:01.264Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -1693,8 +1757,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1704,15 +1768,15 @@
           },
           "evidenceKind": "unit-doubles",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:23:53.726Z"
+          "recordedAt": "2026-10-03T09:41:01.970Z"
         },
         "policy": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
-          "startedAt": "2026-10-03T06:23:53.778Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
+          "startedAt": "2026-10-03T09:41:02.004Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -1803,8 +1867,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1814,15 +1878,15 @@
           },
           "evidenceKind": "unit-doubles",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:23:58.441Z"
+          "recordedAt": "2026-10-03T09:41:02.738Z"
         },
         "reviewer": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
-          "startedAt": "2026-10-03T06:23:58.507Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
+          "startedAt": "2026-10-03T09:41:02.775Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -1871,8 +1935,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1882,15 +1946,15 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:23:59.334Z"
+          "recordedAt": "2026-10-03T09:41:02.912Z"
         },
         "approvals": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/approvals.json",
-          "startedAt": "2026-10-03T06:23:59.388Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/approvals.json",
+          "startedAt": "2026-10-03T09:41:02.940Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -1917,6 +1981,10 @@
             },
             {
               "name": "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials",
+              "status": "pass"
+            },
+            {
+              "name": "[cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn",
               "status": "pass"
             },
             {
@@ -1952,8 +2020,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -1963,15 +2031,15 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:24:00.276Z"
+          "recordedAt": "2026-10-03T09:41:03.100Z"
         },
         "native": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
-          "startedAt": "2026-10-03T06:24:00.334Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
+          "startedAt": "2026-10-03T09:41:03.136Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -1993,6 +2061,14 @@
             "native-isolation"
           ],
           "tests": [
+            {
+              "name": "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns",
+              "status": "pass"
+            },
+            {
+              "name": "[native-files] missing metadata write protections remain traversable without permitting creation",
+              "status": "pass"
+            },
             {
               "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
               "status": "pass"
@@ -2106,8 +2182,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -2121,337 +2197,337 @@
               "kind": "allow",
               "effect": "shell output/cwd/caller environment and nonzero status",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "owned Unix socket control works outside the sandbox and the workload starts inside it",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
-              "effect": "Unix socket creation denied by native enforcement; workload=x64, helper=arm64",
+              "effect": "Unix socket creation denied by native enforcement; workload=arm64, helper=arm64",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "workspace write/read and read-only read",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "outside sentinel unchanged under shell/file/descendant/symlink and read-only paths; protected read blocked",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "pre-existing hard links wholly contained in admitted roots remain usable",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "pre-existing protected-read and outside-write aliases rejected before launch; runtime source link did not change outside inode",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "an exact-file grant cannot mutate a sibling alias of the same inode",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "a reviewed directory containing every link permits the disclosed shared-inode effect",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "ordinary files remain usable beside a natively masked unsearchable subtree",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "workload cannot reopen masked directory; searchable directories with unverified aliases block launch",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "one authorized proxy request reached owned Unix socket service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "domain-denied and direct requests did not reach owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "HTTPS CONNECT reached the owned TLS service using an explicitly trusted synthetic certificate",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "unapproved destination and untrusted certificate did not produce an HTTP service effect",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "SOCKS5 TCP through the native proxy and owned host UDP control reached their listeners",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "denied SOCKS5 destination and direct sandbox UDP produced no additional listener effects",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "owned IPv6 host control, canonical IPv6 proxy grant and exact dynamic review reached the service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "explicit IPv6 deny and direct IPv6 egress did not reach the service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "explicitly disclosed runtime directory grant reached the named owned target",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "runtime convenience directory did not override read-only or broaden an exact-file grant",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "exact metadata file and one reviewed command changed their owned targets",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "metadata sibling, later unapproved write and absolute protected credential read remained blocked",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "broker-authorized dynamic destination reached owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "denied and subsequent invocation destinations did not reach service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "one exact elevated target changed",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "concurrent/subsequent siblings, hard-deny delta and invalid IPC left target unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "append applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "append left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "truncate applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "truncate left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "unlink applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "unlink left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "rename applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "rename left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "copy applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "copy left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "chmod applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "chmod left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "hard-link applied to the owned workspace control",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "hard-link left outside content, existence and mode unchanged",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "wildcard child control reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "wildcard-child: expected destination effect observed",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "wildcard child control reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "wildcard-apex: expected destination effect observed",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "wildcard child control reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "suffix-spoof: expected destination effect observed",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "wildcard child control reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "explicit-deny-wins: expected destination effect observed",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "initial allowed HTTP request and redirect source reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "redirect target on a denied host never reached the owned service",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "allow",
               "effect": "ordinary explicit environment value reached the descendant interpreter",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             },
             {
               "kind": "deny",
               "effect": "synthetic credential and loader values were absent from descendant output",
               "isObserved": true,
-              "platform": "linux-x64"
+              "platform": "linux-arm64"
             }
           ],
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:26:56.138Z"
+          "recordedAt": "2026-10-03T09:41:22.805Z"
         },
         "integration": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
-          "startedAt": "2026-10-03T06:26:56.194Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
+          "startedAt": "2026-10-03T09:41:22.829Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -2474,8 +2550,7 @@
             "nested",
             "options",
             "context-files",
-            "external-tools",
-            "computer-use"
+            "external-tools"
           ],
           "tests": [
             {
@@ -2539,6 +2614,10 @@
               "status": "pass"
             },
             {
+              "name": "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected",
+              "status": "pass"
+            },
+            {
               "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
               "status": "pass"
             },
@@ -2579,15 +2658,15 @@
               "status": "pass"
             },
             {
-              "name": "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
+              "name": "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
               "status": "pass"
             },
             {
-              "name": "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
+              "name": "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
               "status": "pass"
             },
             {
-              "name": "[computer-use] a nested request cannot downgrade the originating strict review requirement",
+              "name": "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
               "status": "pass"
             },
             {
@@ -2607,12 +2686,16 @@
               "status": "pass"
             },
             {
+              "name": "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
+              "status": "pass"
+            },
+            {
               "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -2622,15 +2705,15 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:28:58.545Z"
+          "recordedAt": "2026-10-03T09:41:39.532Z"
         },
         "e2e": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/e2e.json",
-          "startedAt": "2026-10-03T06:28:58.623Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+          "startedAt": "2026-10-03T09:41:39.557Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -2663,6 +2746,46 @@
               "status": "pass"
             },
             {
+              "name": "[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] real CLI loads an explicit provider and selects the same model for execution and review",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses",
+              "status": "pass"
+            },
+            {
+              "name": "[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective",
+              "status": "pass"
+            },
+            {
               "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
               "status": "pass"
             },
@@ -2671,8 +2794,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -2682,15 +2805,15 @@
           },
           "evidenceKind": "workflow",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:29:27.287Z"
+          "recordedAt": "2026-10-03T09:41:52.019Z"
         },
         "conformance": {
           "schemaVersion": 2,
-          "runId": "2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405",
-          "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
-          "startedAt": "2026-10-03T06:29:27.345Z",
-          "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-          "pluginArtifactDigest": "029118480d183632954357e9d0502db13483f260e0c7e716a82f792250697ea3",
+          "runId": "2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283",
+          "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
+          "startedAt": "2026-10-03T09:41:52.043Z",
+          "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
+          "pluginArtifactDigest": "5ab3969ce85597f6b0dc9647c8e8bb92c96d9eb00a4b7a98ca1d1374da42280d",
           "provider": {
             "package": "pi-ollama-cloud",
             "version": "0.12.2",
@@ -2847,8 +2970,8 @@
               "status": "pass"
             }
           ],
-          "platform": "linux-x64",
-          "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+          "platform": "linux-arm64",
+          "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
           "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
           "runtimeVersions": {
             "node": "v24.14.0",
@@ -2858,11 +2981,11 @@
           },
           "evidenceKind": "simulated-provider-ui",
           "blockedReasons": [],
-          "recordedAt": "2026-10-03T06:31:17.629Z"
+          "recordedAt": "2026-10-03T09:42:04.756Z"
         }
       },
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:31:17.698Z"
+      "recordedAt": "2026-10-03T09:42:04.764Z"
     }
   ],
   "testFiles": [
@@ -2914,7 +3037,6 @@
     "options",
     "context-files",
     "external-tools",
-    "computer-use",
     "workflow",
     "package",
     "cleanup",
@@ -2942,9 +3064,9 @@
   "results": {
     "contracts": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/contracts.json",
-      "startedAt": "2026-10-03T06:43:14.685Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/contracts.json",
+      "startedAt": "2026-10-03T09:42:58.672Z",
       "provenance": "executed",
       "suite": "contracts",
       "status": "pass",
@@ -3008,7 +3130,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3018,13 +3140,13 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:15.682Z"
+      "recordedAt": "2026-10-03T09:42:59.789Z"
     },
     "policy": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T06:43:15.696Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T09:42:59.801Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
@@ -3110,7 +3232,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3120,13 +3242,13 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:16.630Z"
+      "recordedAt": "2026-10-03T09:43:00.597Z"
     },
     "reviewer": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
-      "startedAt": "2026-10-03T06:43:16.644Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
+      "startedAt": "2026-10-03T09:43:00.611Z",
       "provenance": "executed",
       "suite": "reviewer",
       "status": "pass",
@@ -3170,7 +3292,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3180,13 +3302,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:16.778Z"
+      "recordedAt": "2026-10-03T09:43:00.756Z"
     },
     "approvals": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
-      "startedAt": "2026-10-03T06:43:16.792Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
+      "startedAt": "2026-10-03T09:43:00.770Z",
       "provenance": "executed",
       "suite": "approvals",
       "status": "pass",
@@ -3207,6 +3329,10 @@
         },
         {
           "name": "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials",
+          "status": "pass"
+        },
+        {
+          "name": "[cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn",
           "status": "pass"
         },
         {
@@ -3243,7 +3369,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3253,13 +3379,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:16.954Z"
+      "recordedAt": "2026-10-03T09:43:00.982Z"
     },
     "native": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T06:43:16.971Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T09:43:01.003Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -3275,6 +3401,14 @@
         "native-isolation"
       ],
       "tests": [
+        {
+          "name": "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] missing metadata write protections remain traversable without permitting creation",
+          "status": "pass"
+        },
         {
           "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
           "status": "pass"
@@ -3389,7 +3523,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3725,13 +3859,13 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:58.081Z"
+      "recordedAt": "2026-10-03T09:43:37.766Z"
     },
     "integration": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T06:43:58.093Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T09:43:37.776Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
@@ -3748,8 +3882,7 @@
         "nested",
         "options",
         "context-files",
-        "external-tools",
-        "computer-use"
+        "external-tools"
       ],
       "tests": [
         {
@@ -3813,6 +3946,10 @@
           "status": "pass"
         },
         {
+          "name": "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected",
+          "status": "pass"
+        },
+        {
           "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
           "status": "pass"
         },
@@ -3853,15 +3990,15 @@
           "status": "pass"
         },
         {
-          "name": "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
+          "name": "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
           "status": "pass"
         },
         {
-          "name": "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
+          "name": "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
           "status": "pass"
         },
         {
-          "name": "[computer-use] a nested request cannot downgrade the originating strict review requirement",
+          "name": "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
           "status": "pass"
         },
         {
@@ -3881,12 +4018,16 @@
           "status": "pass"
         },
         {
+          "name": "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
+          "status": "pass"
+        },
+        {
           "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
           "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3896,13 +4037,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:44:46.670Z"
+      "recordedAt": "2026-10-03T09:48:32.380Z"
     },
     "e2e": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/e2e.json",
-      "startedAt": "2026-10-03T06:44:46.692Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+      "startedAt": "2026-10-03T09:48:32.396Z",
       "provenance": "executed",
       "suite": "e2e",
       "status": "pass",
@@ -3929,6 +4070,46 @@
           "status": "pass"
         },
         {
+          "name": "[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] real CLI loads an explicit provider and selects the same model for execution and review",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses",
+          "status": "pass"
+        },
+        {
+          "name": "[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective",
+          "status": "pass"
+        },
+        {
           "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
           "status": "pass"
         },
@@ -3938,7 +4119,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -3948,13 +4129,13 @@
       },
       "evidenceKind": "workflow",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:45:11.756Z"
+      "recordedAt": "2026-10-03T09:51:14.840Z"
     },
     "conformance": {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
-      "startedAt": "2026-10-03T06:45:11.774Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
+      "startedAt": "2026-10-03T09:51:14.854Z",
       "provenance": "executed",
       "suite": "conformance",
       "status": "pass",
@@ -4106,7 +4287,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -4116,7 +4297,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:46:19.806Z"
+      "recordedAt": "2026-10-03T09:56:10.859Z"
     }
   },
   "reference": {
@@ -4150,7 +4331,7 @@
             {
               "suite": "integration",
               "pattern": "structured automatic approval",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call"
@@ -4159,7 +4340,7 @@
             {
               "suite": "conformance",
               "pattern": "[joined]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects"
@@ -4173,7 +4354,24 @@
             {
               "suite": "integration",
               "pattern": "structured automatic approval",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[joined]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "integration",
+              "pattern": "structured automatic approval",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call"
@@ -4182,7 +4380,7 @@
             {
               "suite": "conformance",
               "pattern": "[joined]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects"
@@ -4216,7 +4414,7 @@
             {
               "suite": "conformance",
               "pattern": "[reference]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible"
@@ -4225,7 +4423,7 @@
             {
               "suite": "reviewer",
               "pattern": "pinned short/full",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] pinned short/full assessments and policy retain risk thresholds and distinct failures"
@@ -4239,7 +4437,24 @@
             {
               "suite": "conformance",
               "pattern": "[reference]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "reviewer",
+              "pattern": "pinned short/full",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "conformance",
+              "pattern": "[reference]",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible"
@@ -4248,7 +4463,7 @@
             {
               "suite": "reviewer",
               "pattern": "pinned short/full",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] pinned short/full assessments and policy retain risk thresholds and distinct failures"
@@ -4281,7 +4496,7 @@
             {
               "suite": "reviewer",
               "pattern": "retained authorization",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking"
@@ -4290,7 +4505,7 @@
             {
               "suite": "integration",
               "pattern": "actual Pi follow-up",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence"
@@ -4304,7 +4519,24 @@
             {
               "suite": "reviewer",
               "pattern": "retained authorization",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "actual Pi follow-up",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "reviewer",
+              "pattern": "retained authorization",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking"
@@ -4313,7 +4545,7 @@
             {
               "suite": "integration",
               "pattern": "actual Pi follow-up",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence"
@@ -4346,7 +4578,7 @@
             {
               "suite": "integration",
               "pattern": "native reviewer investigation",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected"
@@ -4355,7 +4587,7 @@
             {
               "suite": "reviewer",
               "pattern": "registered model override",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] registered model override, bounded read-only tools and final values reach the provider"
@@ -4369,7 +4601,24 @@
             {
               "suite": "integration",
               "pattern": "native reviewer investigation",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "reviewer",
+              "pattern": "registered model override",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "integration",
+              "pattern": "native reviewer investigation",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected"
@@ -4378,7 +4627,7 @@
             {
               "suite": "reviewer",
               "pattern": "registered model override",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] registered model override, bounded read-only tools and final values reach the provider"
@@ -4407,7 +4656,7 @@
             {
               "suite": "reviewer",
               "pattern": "registered model override",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] registered model override, bounded read-only tools and final values reach the provider"
@@ -4421,7 +4670,18 @@
             {
               "suite": "reviewer",
               "pattern": "registered model override",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "reviewer",
+              "pattern": "registered model override",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[review] registered model override, bounded read-only tools and final values reach the provider"
@@ -4458,7 +4718,7 @@
             {
               "suite": "policy",
               "pattern": "ordinary commands",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant"
@@ -4467,7 +4727,7 @@
             {
               "suite": "approvals",
               "pattern": "disabled categories",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] disabled categories never call reviewers or dialogs and user routing skips the provider"
@@ -4476,7 +4736,7 @@
             {
               "suite": "conformance",
               "pattern": "[joined]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects"
@@ -4490,7 +4750,30 @@
             {
               "suite": "policy",
               "pattern": "ordinary commands",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "approvals",
+              "pattern": "disabled categories",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[joined]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "ordinary commands",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant"
@@ -4499,7 +4782,7 @@
             {
               "suite": "approvals",
               "pattern": "disabled categories",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/approvals.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] disabled categories never call reviewers or dialogs and user routing skips the provider"
@@ -4508,7 +4791,7 @@
             {
               "suite": "conformance",
               "pattern": "[joined]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects"
@@ -4554,7 +4837,7 @@
             {
               "suite": "policy",
               "pattern": "literal Codex",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers"
@@ -4563,7 +4846,7 @@
             {
               "suite": "policy",
               "pattern": "Codex Starlark",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] Codex Starlark functions, comprehensions, f-strings and tuple examples reach actual matching"
@@ -4572,7 +4855,7 @@
             {
               "suite": "policy",
               "pattern": "host executable",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] host executable constraints reject aliases and preserve exact-path precedence"
@@ -4581,7 +4864,7 @@
             {
               "suite": "policy",
               "pattern": "all network_rule",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] all network_rule protocols and overlay ordering reach policy and native config"
@@ -4590,7 +4873,7 @@
             {
               "suite": "integration",
               "pattern": "explicit full-command",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined"
@@ -4604,7 +4887,42 @@
             {
               "suite": "policy",
               "pattern": "literal Codex",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "policy",
+              "pattern": "Codex Starlark",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "policy",
+              "pattern": "host executable",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "policy",
+              "pattern": "all network_rule",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "explicit full-command",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "literal Codex",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers"
@@ -4613,7 +4931,7 @@
             {
               "suite": "policy",
               "pattern": "Codex Starlark",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] Codex Starlark functions, comprehensions, f-strings and tuple examples reach actual matching"
@@ -4622,7 +4940,7 @@
             {
               "suite": "policy",
               "pattern": "host executable",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] host executable constraints reject aliases and preserve exact-path precedence"
@@ -4631,7 +4949,7 @@
             {
               "suite": "policy",
               "pattern": "all network_rule",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[rules] all network_rule protocols and overlay ordering reach policy and native config"
@@ -4640,7 +4958,7 @@
             {
               "suite": "integration",
               "pattern": "explicit full-command",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined"
@@ -4673,7 +4991,7 @@
             {
               "suite": "policy",
               "pattern": "[context-files]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[context-files] nearest project root, override precedence and configured fallback follow Codex discovery",
@@ -4684,7 +5002,7 @@
             {
               "suite": "integration",
               "pattern": "discovered instructions",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[context-files] discovered instructions reach Pi and review with provenance and refresh on reload"
@@ -4698,7 +5016,24 @@
             {
               "suite": "policy",
               "pattern": "[context-files]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "discovered instructions",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "[context-files]",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[context-files] nearest project root, override precedence and configured fallback follow Codex discovery",
@@ -4709,7 +5044,7 @@
             {
               "suite": "integration",
               "pattern": "discovered instructions",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[context-files] discovered instructions reach Pi and review with provenance and refresh on reload"
@@ -4720,12 +5055,12 @@
       ]
     },
     {
-      "id": "MCP-and-computer-use",
+      "id": "Pi-official-MCP",
       "references": [
         "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/mcp_tool_call.rs",
         "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/session/mcp.rs"
       ],
-      "expected": "Registered external actions and live-origin nested approvals preserve strict automatic, human-only, stale and cancelled routing",
+      "expected": "Official Pi MCP actions preserve strict automatic, human-only, stale and cancelled routing without Computer Use name exceptions",
       "proofs": [
         {
           "suite": "policy",
@@ -4736,8 +5071,12 @@
           "pattern": "[external-tools]"
         },
         {
-          "suite": "integration",
-          "pattern": "[computer-use]"
+          "suite": "e2e",
+          "pattern": "real MCP node_repl"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "npm tarball"
         }
       ],
       "platforms": [
@@ -4747,7 +5086,7 @@
             {
               "suite": "policy",
               "pattern": "[external-policy]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[external-policy] Codex MCP annotation precedence and four approval modes"
@@ -4756,29 +5095,40 @@
             {
               "suite": "integration",
               "pattern": "[external-tools]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals",
                 "[external-tools] MCP denial, required human input and granular policy prevent effects",
                 "[external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes",
                 "[external-tools] user reviewer honors read hints and requires UI for destructive tools",
+                "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
+                "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
+                "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
                 "[external-tools] changed registration and cancellation during review cannot execute a registered adapter",
                 "[external-tools] real MCP stdio server runs only an approved exact call and preserves structured results",
                 "[external-tools] explicit human-input flag uses a fresh human dialog without automatic inference",
                 "[external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload",
+                "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
                 "[external-tools] project MCP startup requires a recorded or explicit project trust decision"
               ]
             },
             {
-              "suite": "integration",
-              "pattern": "[computer-use]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "suite": "e2e",
+              "pattern": "real MCP node_repl",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
               "status": "pass",
               "tests": [
-                "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
-                "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
-                "[computer-use] a nested request cannot downgrade the originating strict review requirement"
+                "[workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "npm tarball",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets"
               ]
             }
           ]
@@ -4789,7 +5139,36 @@
             {
               "suite": "policy",
               "pattern": "[external-policy]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "[external-tools]",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "real MCP node_repl",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "npm tarball",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "[external-policy]",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[external-policy] Codex MCP annotation precedence and four approval modes"
@@ -4798,29 +5177,315 @@
             {
               "suite": "integration",
               "pattern": "[external-tools]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals",
                 "[external-tools] MCP denial, required human input and granular policy prevent effects",
                 "[external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes",
                 "[external-tools] user reviewer honors read hints and requires UI for destructive tools",
+                "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
+                "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
+                "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
                 "[external-tools] changed registration and cancellation during review cannot execute a registered adapter",
                 "[external-tools] real MCP stdio server runs only an approved exact call and preserves structured results",
                 "[external-tools] explicit human-input flag uses a fresh human dialog without automatic inference",
                 "[external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload",
+                "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
                 "[external-tools] project MCP startup requires a recorded or explicit project trust decision"
               ]
             },
             {
-              "suite": "integration",
-              "pattern": "[computer-use]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "suite": "e2e",
+              "pattern": "real MCP node_repl",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
               "status": "pass",
               "tests": [
-                "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
-                "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
-                "[computer-use] a nested request cannot downgrade the originating strict review requirement"
+                "[workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "npm tarball",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Pi-controller-integrity",
+      "references": [
+        "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/prompts/templates/guardian/policy_template.md"
+      ],
+      "expected": "Model actions cannot rewrite Pi execution settings or trusted extension modules before reload; explicit host changes remain effective",
+      "proofs": [
+        {
+          "suite": "e2e",
+          "pattern": "trusted project MCP"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "trusted extension entrypoint"
+        }
+      ],
+      "platforms": [
+        {
+          "platform": "darwin-arm64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "trusted project MCP",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted extension entrypoint",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload"
+              ]
+            }
+          ]
+        },
+        {
+          "platform": "linux-x64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "trusted project MCP",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted extension entrypoint",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "trusted project MCP",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted extension entrypoint",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "literal-native-permission-boundaries",
+      "references": [
+        "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/prompts/templates/guardian/policy_template.md"
+      ],
+      "expected": "Literal filenames cannot become broader native patterns; unsupported permission roots fail closed while ordinary workspace filenames remain usable",
+      "proofs": [
+        {
+          "suite": "native",
+          "pattern": "SDK permission roots"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "literal metacharacters"
+        }
+      ],
+      "platforms": [
+        {
+          "platform": "darwin-arm64",
+          "proofs": [
+            {
+              "suite": "native",
+              "pattern": "SDK permission roots",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
+              "status": "pass",
+              "tests": [
+                "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "literal metacharacters",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable"
+              ]
+            }
+          ]
+        },
+        {
+          "platform": "linux-x64",
+          "proofs": [
+            {
+              "suite": "native",
+              "pattern": "SDK permission roots",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "literal metacharacters",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "native",
+              "pattern": "SDK permission roots",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
+              "status": "pass",
+              "tests": [
+                "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "literal metacharacters",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] literal metacharacters never widen a reviewed grant while names inside the workspace remain usable"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "review-failure-and-user-lifetimes",
+      "references": [
+        "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/protocol/src/approvals.rs",
+        "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/guardian/review.rs"
+      ],
+      "expected": "Malformed enums never execute, quoted rationale stays valid and redacted, and a stopped model turn does not cancel a later direct user command",
+      "proofs": [
+        {
+          "suite": "e2e",
+          "pattern": "malformed risk enums"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "quoted review rationale"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "denial circuit"
+        }
+      ],
+      "platforms": [
+        {
+          "platform": "darwin-arm64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "malformed risk enums",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "quoted review rationale",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "denial circuit",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime"
+              ]
+            }
+          ]
+        },
+        {
+          "platform": "linux-x64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "malformed risk enums",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "quoted review rationale",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "denial circuit",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "e2e",
+              "pattern": "malformed risk enums",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "quoted review rationale",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] quoted review rationale is redacted without breaking approved execution or JSON audit"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "denial circuit",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime"
               ]
             }
           ]
@@ -4850,7 +5515,7 @@
             {
               "suite": "native",
               "pattern": "pre-existing hard-link",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] pre-existing hard-link aliases cannot read protected data or modify an outside inode"
@@ -4859,7 +5524,7 @@
             {
               "suite": "native",
               "pattern": "narrow reviewed grant does not expose",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] a narrow reviewed grant does not expose another name of a hard-linked inode"
@@ -4873,7 +5538,24 @@
             {
               "suite": "native",
               "pattern": "pre-existing hard-link",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "narrow reviewed grant does not expose",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "native",
+              "pattern": "pre-existing hard-link",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] pre-existing hard-link aliases cannot read protected data or modify an outside inode"
@@ -4882,7 +5564,7 @@
             {
               "suite": "native",
               "pattern": "narrow reviewed grant does not expose",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] a narrow reviewed grant does not expose another name of a hard-linked inode"
@@ -4919,7 +5601,7 @@
             {
               "suite": "native",
               "pattern": "HTTPS CONNECT",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] HTTPS CONNECT preserves certificate validation and gates the exact destination"
@@ -4928,7 +5610,7 @@
             {
               "suite": "native",
               "pattern": "SOCKS5 TCP",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] SOCKS5 TCP obeys allow and deny rules and direct UDP cannot reach an owned listener"
@@ -4937,7 +5619,7 @@
             {
               "suite": "native",
               "pattern": "IPv6 proxy",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] IPv6 proxy grants and dynamic review work while direct and denied IPv6 stay isolated"
@@ -4951,7 +5633,30 @@
             {
               "suite": "native",
               "pattern": "HTTPS CONNECT",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "SOCKS5 TCP",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "IPv6 proxy",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "native",
+              "pattern": "HTTPS CONNECT",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] HTTPS CONNECT preserves certificate validation and gates the exact destination"
@@ -4960,7 +5665,7 @@
             {
               "suite": "native",
               "pattern": "SOCKS5 TCP",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] SOCKS5 TCP obeys allow and deny rules and direct UDP cannot reach an owned listener"
@@ -4969,7 +5674,7 @@
             {
               "suite": "native",
               "pattern": "IPv6 proxy",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] IPv6 proxy grants and dynamic review work while direct and denied IPv6 stay isolated"
@@ -4999,6 +5704,14 @@
           "pattern": "backend convenience write paths"
         },
         {
+          "suite": "native",
+          "pattern": "missing metadata write protections"
+        },
+        {
+          "suite": "integration",
+          "pattern": "caller metadata permissions"
+        },
+        {
           "suite": "integration",
           "pattern": "complete explicitly selected agent credential directory"
         },
@@ -5014,7 +5727,7 @@
             {
               "suite": "policy",
               "pattern": "default readable roots",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary"
@@ -5023,7 +5736,7 @@
             {
               "suite": "native",
               "pattern": "reviewed metadata grant",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies"
@@ -5032,16 +5745,34 @@
             {
               "suite": "native",
               "pattern": "backend convenience write paths",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] backend convenience write paths cannot override a read-only profile or borrow a narrow grant"
               ]
             },
             {
+              "suite": "native",
+              "pattern": "missing metadata write protections",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
+              "status": "pass",
+              "tests": [
+                "[native-files] missing metadata write protections remain traversable without permitting creation"
+              ]
+            },
+            {
+              "suite": "integration",
+              "pattern": "caller metadata permissions",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
+              "status": "pass",
+              "tests": [
+                "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected"
+              ]
+            },
+            {
               "suite": "integration",
               "pattern": "complete explicitly selected agent credential directory",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[startup] default permissions protect the complete explicitly selected agent credential directory"
@@ -5050,7 +5781,7 @@
             {
               "suite": "conformance",
               "pattern": "[creation]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[creation] reviewed shell creation exposes the actual Linux parent scope and leaves sibling and later effects unchanged"
@@ -5064,7 +5795,54 @@
             {
               "suite": "policy",
               "pattern": "default readable roots",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "reviewed metadata grant",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "backend convenience write paths",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "missing metadata write protections",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "caller metadata permissions",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "complete explicitly selected agent credential directory",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[creation]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "default readable roots",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary"
@@ -5073,7 +5851,7 @@
             {
               "suite": "native",
               "pattern": "reviewed metadata grant",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies"
@@ -5082,16 +5860,34 @@
             {
               "suite": "native",
               "pattern": "backend convenience write paths",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] backend convenience write paths cannot override a read-only profile or borrow a narrow grant"
               ]
             },
             {
+              "suite": "native",
+              "pattern": "missing metadata write protections",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
+              "status": "pass",
+              "tests": [
+                "[native-files] missing metadata write protections remain traversable without permitting creation"
+              ]
+            },
+            {
+              "suite": "integration",
+              "pattern": "caller metadata permissions",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
+              "status": "pass",
+              "tests": [
+                "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected"
+              ]
+            },
+            {
               "suite": "integration",
               "pattern": "complete explicitly selected agent credential directory",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[startup] default permissions protect the complete explicitly selected agent credential directory"
@@ -5100,7 +5896,7 @@
             {
               "suite": "conformance",
               "pattern": "[creation]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[creation] reviewed shell creation exposes the actual Linux parent scope and leaves sibling and later effects unchanged"
@@ -5133,7 +5929,7 @@
             {
               "suite": "integration",
               "pattern": "runtime network review",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] runtime network review sees original command and exact destination without replaying earlier effects"
@@ -5142,7 +5938,7 @@
             {
               "suite": "native",
               "pattern": "live broker approval",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] live broker approval is attributed and never shared with another invocation"
@@ -5156,7 +5952,24 @@
             {
               "suite": "integration",
               "pattern": "runtime network review",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "live broker approval",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "integration",
+              "pattern": "runtime network review",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] runtime network review sees original command and exact destination without replaying earlier effects"
@@ -5165,7 +5978,7 @@
             {
               "suite": "native",
               "pattern": "live broker approval",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] live broker approval is attributed and never shared with another invocation"
@@ -5203,7 +6016,7 @@
             {
               "suite": "reviewer",
               "pattern": "configured milliseconds",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[deadlines] configured milliseconds reach the final provider signal and expire at the boundary"
@@ -5212,7 +6025,7 @@
             {
               "suite": "reviewer",
               "pattern": "caller cancellation",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[cancellation] caller cancellation reaches the final provider even when it ignores the signal"
@@ -5221,7 +6034,7 @@
             {
               "suite": "conformance",
               "pattern": "[failures]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation"
@@ -5235,7 +6048,30 @@
             {
               "suite": "reviewer",
               "pattern": "configured milliseconds",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "reviewer",
+              "pattern": "caller cancellation",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[failures]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "reviewer",
+              "pattern": "configured milliseconds",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[deadlines] configured milliseconds reach the final provider signal and expire at the boundary"
@@ -5244,7 +6080,7 @@
             {
               "suite": "reviewer",
               "pattern": "caller cancellation",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/reviewer.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/reviewer.json",
               "status": "pass",
               "tests": [
                 "[cancellation] caller cancellation reaches the final provider even when it ignores the signal"
@@ -5253,7 +6089,7 @@
             {
               "suite": "conformance",
               "pattern": "[failures]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation"
@@ -5286,7 +6122,7 @@
             {
               "suite": "approvals",
               "pattern": "denial breaker",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials"
@@ -5295,7 +6131,7 @@
             {
               "suite": "integration",
               "pattern": "three denied reviews",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] three denied reviews interrupt the actual Pi turn before a fourth action"
@@ -5309,7 +6145,24 @@
             {
               "suite": "approvals",
               "pattern": "denial breaker",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/approvals.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "three denied reviews",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "approvals",
+              "pattern": "denial breaker",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials"
@@ -5318,7 +6171,7 @@
             {
               "suite": "integration",
               "pattern": "three denied reviews",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] three denied reviews interrupt the actual Pi turn before a fourth action"
@@ -5355,7 +6208,7 @@
             {
               "suite": "approvals",
               "pattern": "exact one-use retry",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize"
@@ -5364,7 +6217,7 @@
             {
               "suite": "integration",
               "pattern": "real Pi approve",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution"
@@ -5373,7 +6226,7 @@
             {
               "suite": "integration",
               "pattern": "authorization changed",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[final-input] authorization changed during a pending review cannot reach native execution"
@@ -5387,7 +6240,30 @@
             {
               "suite": "approvals",
               "pattern": "exact one-use retry",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/approvals.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "real Pi approve",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "integration",
+              "pattern": "authorization changed",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "approvals",
+              "pattern": "exact one-use retry",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize"
@@ -5396,7 +6272,7 @@
             {
               "suite": "integration",
               "pattern": "real Pi approve",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution"
@@ -5405,7 +6281,7 @@
             {
               "suite": "integration",
               "pattern": "authorization changed",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[final-input] authorization changed during a pending review cannot reach native execution"
@@ -5438,7 +6314,7 @@
             {
               "suite": "approvals",
               "pattern": "structured review metadata",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[audit] structured review metadata is bounded and redacted without retaining requests"
@@ -5447,7 +6323,7 @@
             {
               "suite": "conformance",
               "pattern": "[failures]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation"
@@ -5461,7 +6337,24 @@
             {
               "suite": "approvals",
               "pattern": "structured review metadata",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/approvals.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[failures]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "approvals",
+              "pattern": "structured review metadata",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/approvals.json",
               "status": "pass",
               "tests": [
                 "[audit] structured review metadata is bounded and redacted without retaining requests"
@@ -5470,7 +6363,7 @@
             {
               "suite": "conformance",
               "pattern": "[failures]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation"
@@ -5503,7 +6396,7 @@
             {
               "suite": "policy",
               "pattern": "wildcard domains",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[shell] wildcard domains agree with native rules and explicit elevation is action scoped"
@@ -5512,7 +6405,7 @@
             {
               "suite": "native",
               "pattern": "allowed proxy control",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not"
@@ -5526,7 +6419,24 @@
             {
               "suite": "policy",
               "pattern": "wildcard domains",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "allowed proxy control",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "wildcard domains",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[shell] wildcard domains agree with native rules and explicit elevation is action scoped"
@@ -5535,7 +6445,7 @@
             {
               "suite": "native",
               "pattern": "allowed proxy control",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not"
@@ -5568,7 +6478,7 @@
             {
               "suite": "policy",
               "pattern": "write-protected metadata",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[paths] write-protected metadata remains readable and scoped elevation differs from absolute denial"
@@ -5577,7 +6487,7 @@
             {
               "suite": "native",
               "pattern": "reviewed metadata grant",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies"
@@ -5591,7 +6501,24 @@
             {
               "suite": "policy",
               "pattern": "write-protected metadata",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/policy.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "native",
+              "pattern": "reviewed metadata grant",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "policy",
+              "pattern": "write-protected metadata",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/policy.json",
               "status": "pass",
               "tests": [
                 "[paths] write-protected metadata remains readable and scoped elevation differs from absolute denial"
@@ -5600,7 +6527,7 @@
             {
               "suite": "native",
               "pattern": "reviewed metadata grant",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/native.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/native.json",
               "status": "pass",
               "tests": [
                 "[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies"
@@ -5615,11 +6542,23 @@
       "references": [
         "https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/ext/guardian-reviewer/src/model.rs"
       ],
-      "expected": "Installed provider and packed guard survive reload; real calls are qualified separately",
+      "expected": "Installed provider and packed guard survive reload; the real CLI selects the provider/model for both execution and review",
       "proofs": [
         {
           "suite": "integration",
           "pattern": "explicit installed cloud provider"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "real CLI"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "live CLI observer"
+        },
+        {
+          "suite": "e2e",
+          "pattern": "trusted Pi skills"
         }
       ],
       "platforms": [
@@ -5629,10 +6568,37 @@
             {
               "suite": "integration",
               "pattern": "explicit installed cloud provider",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "real CLI",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] real CLI loads an explicit provider and selects the same model for execution and review"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "live CLI observer",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted Pi skills",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective"
               ]
             }
           ]
@@ -5643,10 +6609,66 @@
             {
               "suite": "integration",
               "pattern": "explicit installed cloud provider",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/integration.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "real CLI",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "live CLI observer",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted Pi skills",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "integration",
+              "pattern": "explicit installed cloud provider",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/integration.json",
               "status": "pass",
               "tests": [
                 "[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "real CLI",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] real CLI loads an explicit provider and selects the same model for execution and review"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "live CLI observer",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses"
+              ]
+            },
+            {
+              "suite": "e2e",
+              "pattern": "trusted Pi skills",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/e2e.json",
+              "status": "pass",
+              "tests": [
+                "[workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective"
               ]
             }
           ]
@@ -5676,7 +6698,7 @@
             {
               "suite": "contracts",
               "pattern": "incomplete, stale",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/contracts.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/contracts.json",
               "status": "pass",
               "tests": [
                 "[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass"
@@ -5685,7 +6707,7 @@
             {
               "suite": "conformance",
               "pattern": "[evidence-join]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify"
@@ -5699,7 +6721,24 @@
             {
               "suite": "contracts",
               "pattern": "incomplete, stale",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/contracts.json",
+              "status": "not-qualified",
+              "tests": []
+            },
+            {
+              "suite": "conformance",
+              "pattern": "[evidence-join]",
+              "status": "not-qualified",
+              "tests": []
+            }
+          ]
+        },
+        {
+          "platform": "linux-arm64",
+          "proofs": [
+            {
+              "suite": "contracts",
+              "pattern": "incomplete, stale",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/contracts.json",
               "status": "pass",
               "tests": [
                 "[evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass"
@@ -5708,7 +6747,7 @@
             {
               "suite": "conformance",
               "pattern": "[evidence-join]",
-              "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/conformance.json",
+              "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/conformance.json",
               "status": "pass",
               "tests": [
                 "[evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify"
@@ -5719,113 +6758,69 @@
       ]
     }
   ],
-  "liveRun": ".reports/pi-guard/runs/2026-10-03T06-32-27-145Z-5169a037-6357-45c0-9f03-996757f19cf6/linux-x64/docker-conformance.json",
+  "liveRun": null,
   "nativeX64Qualification": {
-    "status": "pass",
-    "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-12-17-612Z-efa3ab82-5fdd-4f8f-bd8d-303f6fac6884/linux-x64/platform.json",
-    "host": {
-      "platform": "linux",
-      "arch": "x64",
-      "machine": "x86_64",
-      "release": "6.17.0-1022-azure",
-      "runnerOS": "Linux",
-      "runnerArch": "X64"
-    }
+    "status": "environment-blocked",
+    "artifactPath": null,
+    "host": null
   },
   "windowsQualification": {
-    "schemaVersion": 2,
-    "status": "pass",
+    "status": "not-run",
     "qualification": "portable-engine-and-fail-closed",
-    "nativeIsolation": "unsupported",
-    "nativeConfinementPassed": false,
-    "runId": "2026-10-03T06-12-39-546Z-ac2812a9-4da1-4a99-ae03-b2111ce864e4",
-    "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-12-39-546Z-ac2812a9-4da1-4a99-ae03-b2111ce864e4/win32-x64/windows.json",
-    "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
-    "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
-    "host": {
-      "platform": "win32",
-      "arch": "x64",
-      "machine": "x86_64",
-      "release": "10.0.26100"
-    },
-    "controls": {
-      "hostWrite": true,
-      "unsupportedExecutionRejected": true,
-      "noWorkloadEffect": true,
-      "startupRejected": true,
-      "noToolRegistration": true
-    },
-    "portableTests": {
-      "status": "pass",
-      "command": "node --test test/unit/execpolicy.test.mjs test/unit/external.test.mjs",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-12-39-546Z-ac2812a9-4da1-4a99-ae03-b2111ce864e4/win32-x64/portable-tests.log"
-    },
-    "recordedAt": "2026-10-03T06:12:39.997Z"
+    "nativeConfinementPassed": false
   },
   "liveQualification": {
-    "status": "pass",
+    "status": "environment-blocked",
     "requiredPlatform": "linux-x64",
     "model": "glm-5.3",
     "qualifiedObservations": [
       {
-        "platform": "linux-x64",
-        "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-32-27-145Z-5169a037-6357-45c0-9f03-996757f19cf6/linux-x64/docker-conformance.json",
-        "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e"
+        "platform": "linux-arm64",
+        "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-41-561Z-911a8569-75ec-4c01-84a9-1ff19d6237dd/linux-arm64/docker-conformance.json",
+        "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04"
       }
     ],
     "rejections": []
   },
   "dockerRuns": [
     {
-      "platform": "linux-x64",
+      "platform": "linux-arm64",
       "mode": "conformance",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-32-27-145Z-5169a037-6357-45c0-9f03-996757f19cf6/linux-x64/docker-conformance.json",
-      "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-41-561Z-911a8569-75ec-4c01-84a9-1ff19d6237dd/linux-arm64/docker-conformance.json",
+      "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
       "blockedReasons": []
     },
     {
-      "platform": "linux/amd64",
+      "platform": "linux/arm64",
       "mode": "conformance",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-32-24-360Z-21205096-5249-4a88-9a4e-651a30e8a457/linux-x64/docker-orchestration.json",
-      "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-38-984Z-7f31e655-b928-4126-ab92-de9d31236e33/linux-arm64/docker-orchestration.json",
+      "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
       "blockedReasons": []
     },
     {
-      "platform": "linux-x64",
+      "platform": "linux-arm64",
       "mode": "offline",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/docker-offline.json",
-      "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/docker-offline.json",
+      "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
       "blockedReasons": []
     },
     {
-      "platform": "linux/amd64",
+      "platform": "linux/arm64",
       "mode": "offline",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-30-995Z-a7250fd4-0665-433d-82d1-0ad183b72be1/linux-x64/docker-orchestration.json",
-      "imageDigest": "sha256:9aaa29b67404a49add9eb0db289508f1f777ebad72c460bb949bd3b9099f0c0e",
-      "blockedReasons": []
-    },
-    {
-      "platform": "linux-x64",
-      "mode": "offline",
-      "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-17-00-188Z-49e6b02a-6604-43fe-9723-eca43b52f703/linux-x64/docker-offline.json",
-      "imageDigest": "sha256:c6e7335ccc5d2dcf8aad1375011b2851e6692d4b15f137eb7ee01876a92c1d39",
-      "blockedReasons": []
-    },
-    {
-      "platform": "linux/amd64",
-      "mode": "offline",
-      "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-13-57-288Z-11bf3d9a-b35f-4d73-8a14-eb03f2703c73/linux-x64/docker-orchestration.json",
-      "imageDigest": "sha256:c6e7335ccc5d2dcf8aad1375011b2851e6692d4b15f137eb7ee01876a92c1d39",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-39-35-384Z-338218da-f927-48b8-8ed0-68408384e2cc/linux-arm64/docker-orchestration.json",
+      "imageDigest": "sha256:2c86c0baf5645f77f407c15b1725bb625ac98f3d74e7cd1cb24b473472007e04",
       "blockedReasons": []
     }
   ],
-  "blockedReasons": [],
+  "blockedReasons": [
+    "No complete executed linux-x64 run matches this source and contract; run all suites on that platform and retain its run directory.",
+    "No same-source, same-image GLM5.3 live conformance run qualifies on required linux-x64; real model calls and all four effects are mandatory.",
+    "No same-source complete native Linux x64 host run qualifies."
+  ],
   "packageProof": [
     {
       "name": "[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets",
@@ -5837,24 +6832,28 @@
     "status": "pass",
     "auditProof": {
       "status": "pass",
-      "artifact": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/owned-audits.jsonl",
-      "recordCount": 217
+      "artifact": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/owned-audits.jsonl",
+      "recordCount": 260
     }
   },
-  "legacyArchive": ".reports/pi-guard/archives/legacy-6a01ff3c-058e-4d79-9924-2b147d7da82b",
-  "recordedAt": "2026-10-03T06:46:19.919Z",
-  "status": "complete",
+  "legacyArchive": ".reports/pi-guard/archives/legacy-579bd152-11dc-4956-97fc-267d7d053003",
+  "recordedAt": "2026-10-03T09:56:11.023Z",
+  "status": "environment-blocked",
   "implementationStatus": "implemented",
   "platformRuns": [
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/platform.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/platform.json"
     },
     {
       "platform": "linux-x64",
+      "status": "environment-blocked"
+    },
+    {
+      "platform": "linux-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/docker-offline.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-40-58-789Z-f606dc04-f234-4c6d-a298-089542756283/linux-arm64/docker-offline.json"
     }
   ],
   "packagePins": {
@@ -5874,12 +6873,16 @@
   "limitations": [
     "Public Codex approval-policy compatibility does not establish proprietary reviewer-model, enterprise-service or hosted-connector equivalence.",
     "Windows qualification covers the original rules engine, approval policy and fail-closed unsupported startup; native Windows confinement is not supported.",
-    "MCP/Computer Use adapters handle empty approval forms. Nonempty forms and URL authentication requests require an additional human-input integration and are declined.",
+    "Pi MCP adapters handle empty approval forms; Computer Use classification is not part of this implementation. Nonempty forms and URL authentication requests require an additional human-input integration and are declined.",
     "External executors remain trusted host integrations; account identity is bound only when the registered provider supplies it.",
     "Controller and credential absolute denies remain mandatory. The rules engine is the pinned upstream Codex Starlark implementation.",
     "Linux creation and runtime default scratch/log paths may require enclosing-directory authority, shown in the reviewed delta. Unsupported partial SDK scopes fail closed.",
     "Hard-link qualification assumes no concurrent unsandboxed host actor changes inode topology; it is not a hostile-host defense.",
     "The npm dependency remediation uses an unmerged pinned node-forge fix and a lock-only Pi SDK archive. Separately installed Pi hosts are not automatically patched."
   ],
-  "unresolved": []
+  "unresolved": [
+    "No complete executed linux-x64 run matches this source and contract; run all suites on that platform and retain its run directory.",
+    "No same-source, same-image GLM5.3 live conformance run qualifies on required linux-x64; real model calls and all four effects are mandatory.",
+    "No same-source complete native Linux x64 host run qualifies."
+  ]
 }

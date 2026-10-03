@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
   "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -16,10 +16,10 @@
     "src/tools/controller.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "f2d59c45646da2a3fef91c88c652fe8d4b63a57dfec53b63b63691799130ad0a",
-    "src/startup.ts": "39cd2baa4b203680a171f5376340564e71b0c0aa53a07f313964c676f19be8b3",
-    "src/cli.ts": "454d9ba421d269c1d5616d13aa2c62874128547c52e6b9f42dbce4208c142ba5",
-    "src/tools/controller.ts": "4afb60a793f21f7367f62bfa6cc17373bd8211c43358c9bda541445caeb3aa25"
+    "src/index.ts": "c3ef6c1d0fe88b4a4bfb9bac7a9e956dbbe3014cf6d8b45f22b748376cdebc4c",
+    "src/startup.ts": "3fe698450fe42c2c293eec6cce4030425336804772b009c40b9e40cb917b0c59",
+    "src/cli.ts": "68c6b5590b2f539347fd7071f8d532f718f33c893b9442ca8f8a23f3e1b28747",
+    "src/tools/controller.ts": "86b185b541f7a44851b433d82c7fbc571720ee03a76d96f68b4c34c9226e534c"
   },
   "testFiles": [
     "test/integration/pi-tools.test.mjs",
@@ -33,15 +33,14 @@
     "nested",
     "options",
     "context-files",
-    "external-tools",
-    "computer-use"
+    "external-tools"
   ],
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T06:43:58.093Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T09:43:37.776Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
@@ -58,8 +57,7 @@
         "nested",
         "options",
         "context-files",
-        "external-tools",
-        "computer-use"
+        "external-tools"
       ],
       "tests": [
         {
@@ -123,6 +121,10 @@
           "status": "pass"
         },
         {
+          "name": "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected",
+          "status": "pass"
+        },
+        {
           "name": "[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results",
           "status": "pass"
         },
@@ -163,15 +165,15 @@
           "status": "pass"
         },
         {
-          "name": "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
+          "name": "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
           "status": "pass"
         },
         {
-          "name": "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
+          "name": "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
           "status": "pass"
         },
         {
-          "name": "[computer-use] a nested request cannot downgrade the originating strict review requirement",
+          "name": "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
           "status": "pass"
         },
         {
@@ -191,12 +193,16 @@
           "status": "pass"
         },
         {
+          "name": "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
+          "status": "pass"
+        },
+        {
           "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
           "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -206,7 +212,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:44:46.670Z"
+      "recordedAt": "2026-10-03T09:48:32.380Z"
     }
   ],
   "buildProof": {
@@ -214,7 +220,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T06:43:14.670Z"
+    "recordedAt": "2026-10-03T09:42:58.655Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -241,7 +247,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-03T06:46:19.909Z",
-  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-03T09:56:11.007Z",
+  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/05-integration.json"
 }

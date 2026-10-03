@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
   "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -17,7 +17,7 @@
     "src/policy/domains.ts"
   ],
   "moduleHashes": {
-    "src/policy/index.ts": "2049dfbd5baac915632738bd585edf1fab96686d3e17808c7a51ad2aaae245c0",
+    "src/policy/index.ts": "cd4b0b1d2187293cefdfc09273e0514237626496aa5fdab462e0fb1b076dab57",
     "src/policy/paths.ts": "6dd55f0f848857b287ab6e7a15c8776c544744df74bdb2d1edf5d845860bc868",
     "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7",
     "src/policy/rules.ts": "2586150308fb7e95f5ba56ef2a8acee0be5d384b5c7b77a8f68786beab6bfd7b",
@@ -40,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T06:43:15.696Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T09:42:59.801Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
@@ -128,7 +128,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -138,7 +138,7 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:16.630Z"
+      "recordedAt": "2026-10-03T09:43:00.597Z"
     }
   ],
   "buildProof": {
@@ -146,7 +146,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T06:43:14.670Z"
+    "recordedAt": "2026-10-03T09:42:58.655Z"
   },
   "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters run inside the base sandbox unless an explicit boundary grant or rule prompts review.",
   "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
@@ -158,7 +158,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-03T06:46:19.904Z",
-  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/02-policy.json"
+  "recordedAt": "2026-10-03T09:56:11.000Z",
+  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/02-policy.json"
 }

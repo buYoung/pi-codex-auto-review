@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
   "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -19,7 +19,7 @@
     "src/sandbox/worker.ts"
   ],
   "moduleHashes": {
-    "src/sandbox/config.ts": "1db31b753b24aa6a816387df32175ea03ba82e7e1e60313f9f5f12f4584c4056",
+    "src/sandbox/config.ts": "14e76db34d2da784db65ee238453f24ee17cab6cecda459897bfa428df4800a7",
     "src/sandbox/seccomp.ts": "0523e1c5c5e479d7809dcb1cea6c83c370b4002dbb7aa4cff610122041d6f2a2",
     "src/sandbox/linux-read-paths.ts": "f113ad9bd0a2e84e1f3f068a410849fc9bfebe318d8af708d811cf7340a1baf4",
     "src/sandbox/runtime-write-paths.ts": "6961fd18c927fecef463d8b4490a2c2cc9031c5bfd0e893cf8046ab421278f1b",
@@ -40,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T06:43:16.971Z",
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T09:43:01.003Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -58,6 +58,14 @@
         "native-isolation"
       ],
       "tests": [
+        {
+          "name": "[native-files] SDK permission roots cannot turn literal metacharacters into allow or deny patterns",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] missing metadata write protections remain traversable without permitting creation",
+          "status": "pass"
+        },
         {
           "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
           "status": "pass"
@@ -172,7 +180,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
       "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -508,7 +516,7 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T06:43:58.081Z"
+      "recordedAt": "2026-10-03T09:43:37.766Z"
     }
   ],
   "buildProof": {
@@ -516,7 +524,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T06:43:14.670Z"
+    "recordedAt": "2026-10-03T09:42:58.655Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -539,11 +547,11 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/native.json"
     }
   ],
   "qualification": "Only this run is described here; final aggregate validates every required architecture",
-  "recordedAt": "2026-10-03T06:46:19.908Z",
-  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/04-sandbox.json"
+  "recordedAt": "2026-10-03T09:56:11.004Z",
+  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/04-sandbox.json"
 }
