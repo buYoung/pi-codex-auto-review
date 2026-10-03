@@ -36,7 +36,7 @@ export const scenarioMatrix = [
   row('UI-and-audit-feedback',[guardian('feedback')],'Bounded redacted review metadata and terminal feedback reflect actual results',[['approvals','structured review metadata'],['conformance','[failures]']]),
   row('wildcard-domain-mismatch',[guardian('routing')],'Wildcard host grants match both policy and real proxy, while direct/denied requests do not reach the service',[['policy','wildcard domains'],['native','allowed proxy control']]),
   row('shell-read-denyWrite-defect',[ref('prompts/templates/guardian/policy_template.md')],'Read-only metadata is readable and only the reviewed target becomes writable',[['policy','write-protected metadata'],['native','reviewed metadata grant']]),
-  row('Docker-recovery-and-provider',[guardian('model')],'Installed provider and packed guard survive reload; real calls are qualified separately',[['integration','explicit installed cloud provider']]),
+  row('Docker-recovery-and-provider',[guardian('model')],'Installed provider and packed guard survive reload; the real CLI selects the provider/model for both execution and review',[['integration','explicit installed cloud provider'],['e2e','real CLI'],['e2e','trusted Pi skills']]),
   row('cross-platform-conformance',[guardian('routing')],'Same-source required platforms and same-image live evidence are required; stale, simulated and wrong-architecture data cannot qualify',[['contracts','incomplete, stale'],['conformance','[evidence-join]']]),
 ];
 
@@ -70,6 +70,12 @@ export function validateLiveEvidence(report, offline, identity) {
     if(item.id==='protected-path-denied')assert.ok(item.deniedToolEvents>0);
     if(item.id==='reviewer-policy-denied'){assert.ok(item.deniedReviews>0);assert.ok(item.feedbackCodes.includes('AUTO_REVIEW_DENIED'));}
   }
+  const cli=live.cli;
+  assert.equal(cli?.status,'pass');assert.equal(cli.entrypoint,'packed-cli');
+  assert.equal(cli.provider,'ollama-cloud');assert.equal(cli.model,identity.model);
+  assert.equal(cli.effectObserved,true);assert.equal(cli.credentialScanPassed,true);
+  assert.ok(Number.isInteger(cli.calls?.main)&&Number.isInteger(cli.calls?.reviewer)&&cli.calls.main>0&&cli.calls.reviewer>0&&cli.calls.main+cli.calls.reviewer<=24);
+  assert.ok(cli.approvedReviews>0&&cli.auditRecords>0&&cli.elapsedMs>=0&&cli.elapsedMs<=180000);
   return report;
 }
 

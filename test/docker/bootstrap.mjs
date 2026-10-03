@@ -39,7 +39,7 @@ try{
   tests.push({name:'[provider-loading] exact installed cloud provider and packaged guard survive reload',status:'pass'});
   if(!isLive){assert.equal(networkRequests,0);for(const name of Object.keys(suites))results[name]=await runSuite(name,run);}
   else live=mode==='live'?await liveSmoke(model):await (await import('./live-review.mjs')).liveConformance(model);
-  if(live?.status&&live.status!=='pass')throw new Error(`${live.status==='environment-blocked'?'ENVIRONMENT_BLOCKED: ':''}Live conformance scenario did not pass; see retained live.cases`);
+  if(live?.status&&live.status!=='pass')throw new Error(`${live.status==='environment-blocked'?'ENVIRONMENT_BLOCKED: ':''}Live conformance scenario did not pass; see retained live.cases and live.cli`);
   if(isLive)tests.push({name:'[live-provider] real main-agent and reviewer complete bounded owned workflow',status:'pass'});
 }catch(error){
   const safe=String(error?.message??error).split(process.env.OLLAMA_API_KEY||'\0').join('[REDACTED]').slice(0,2000);

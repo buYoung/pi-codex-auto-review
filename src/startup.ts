@@ -29,12 +29,15 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   /** Explicit trust for the initially selected project; later cwd changes use their own trust record. */
   isProjectTrusted?: boolean;
   model?: CreateAgentSessionOptions['model'];
+  /** Resolve an explicitly selected model after trusted provider extensions have registered. */
+  modelSelection?: {readonly provider: string; readonly id: string};
   sessionManager?: SessionManager;
   trustedExtensions?: InlineExtension[];
   externalExtensions?: readonly ExternalExtension[];
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
   await assertSupportedPi();
+  if (options.model && options.modelSelection) throw new GuardError('CONFLICTING_MODEL_SELECTION','Provide either a model object or a provider/model selection');
   if (options.isProjectTrusted !== undefined && typeof options.isProjectTrusted !== 'boolean') throw new GuardError('INVALID_PROJECT_TRUST','Project trust must be an explicit boolean');
   const initialCwd = resolve(options.cwd), agentDir = resolve(options.agentDir);
   const trustedExtensionPaths = (options.trustedExtensionPaths ?? []).map(path => resolve(initialCwd, path));
@@ -51,14 +54,16 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
     try {
       const external = (options.externalExtensions ?? []).map(extension => guardedExternalExtension(extension, () => guard.assertReady()));
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...external,...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...external,...(options.trustedExtensions ?? [])],noExtensions:true,noContextFiles:true,
           agentsFilesOverride:()=>{const controller=guard.assertReady();return {agentsFiles:loadContextFiles({cwd:input.cwd,agentDir:input.agentDir,profile:controller.policy.profile,settings:controller.options.settings,isProjectTrusted:settingsManager.isProjectTrusted()})};}}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();
+      const selectedModel = options.modelSelection ? services.modelRuntime.getModel(options.modelSelection.provider, options.modelSelection.id) : options.model;
+      if (options.modelSelection && !selectedModel) throw new GuardError('MODEL_UNAVAILABLE',`Registered model not found: ${options.modelSelection.provider}/${options.modelSelection.id}`);
       // A fixed SDK `tools` list is a permanent allowlist and discards later MCP registrations.
       // Local tools still have final execution guards; unknown tools are blocked by the guard hook.
-      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:options.model,sessionStartEvent:input.sessionStartEvent,excludeTools:['powershell']});
+      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:selectedModel,sessionStartEvent:input.sessionStartEvent,excludeTools:['powershell']});
       await result.session.bindExtensions({mode:'print'});
       guard.assertReady();
       const session=result.session;

@@ -84,12 +84,14 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
   }]));
   const offline={schemaVersion:2,runId:'owned-synthetic',artifactPath:'owned/platform.json',status:'pass',platform,...identity,results,imageDigest:`sha256:${'c'.repeat(64)}`,pluginArtifactDigest:'d'.repeat(64)};
   const report={...offline,mode:'conformance',provenance:'executed',provider:{id:'ollama-cloud',package:'pi-ollama-cloud',version:'0.12.2',model:identity.model},startup:{guardLoaded:true,providerLoaded:true,reloadPassed:true,webToolsAbsent:true,usagePolling:false},networkRequests:9,nativeCapabilities:{weakerNestedSandbox:false,weakerNetworkIsolation:false,preflight:{permittedEffect:true,deniedEffect:true}},
-    live:{status:'pass',evidenceKind:'live-provider',limits:{maxCallsPerCase:24,deadlineMsPerCase:180000},cases:liveCaseIds.map(id=>({id,status:'pass',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:['authorized-outside','reviewer-policy-denied'].includes(id)?1:0},elapsedMs:3000,auditRecords:2,approvedReviews:1,deniedReviews:1,deniedToolEvents:1,feedbackCodes:['AUTO_REVIEW_DENIED']}))}};
+    live:{status:'pass',evidenceKind:'live-provider',limits:{maxCallsPerCase:24,deadlineMsPerCase:180000},cases:liveCaseIds.map(id=>({id,status:'pass',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:['authorized-outside','reviewer-policy-denied'].includes(id)?1:0},elapsedMs:3000,auditRecords:2,approvedReviews:1,deniedReviews:1,deniedToolEvents:1,feedbackCodes:['AUTO_REVIEW_DENIED']})),cli:{status:'pass',entrypoint:'packed-cli',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:1},elapsedMs:3000,auditRecords:2,approvedReviews:1}}};
   assert.equal(validateLiveEvidence(report,offline,identity),report);
   for(const mutate of [
     r=>r.sourceDigest='stale',r=>r.platform='linux-arm64',r=>r.provenance='simulated',r=>r.imageDigest=`sha256:${'e'.repeat(64)}`,
     r=>r.live.evidenceKind='simulated-provider-ui',r=>r.live.cases.pop(),r=>r.live.cases[1].calls.reviewer=0,
     r=>r.live.cases[3].deniedReviews=0,r=>r.live.cases[2].effectObserved=false,r=>r.live.cases[0].credentialScanPassed=false,
     r=>r.live.cases[0].status='environment-blocked',r=>r.live.cases[1].calls.main=25,r=>r.nativeCapabilities.weakerNestedSandbox=true,
+    r=>delete r.live.cli,r=>r.live.cli.entrypoint='sdk',r=>r.live.cli.calls.reviewer=0,r=>r.live.cli.calls.reviewer=0.5,
+    r=>r.live.cli.effectObserved=false,r=>r.live.cli.credentialScanPassed=false,r=>r.live.cli.model='other-model',
   ]){const invalid=structuredClone(report);mutate(invalid);assert.throws(()=>validateLiveEvidence(invalid,offline,identity));}
 });
