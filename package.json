@@ -1,7 +1,7 @@
 {
-  "name": "pi-guard",
+  "name": "pi-codex-auto-review",
   "version": "1.0.0",
-  "description": "Pi permission extension with request-bound approvals and native OS isolation",
+  "description": "Codex의 ‘Approve for me’에서 영감을 받은 Pi용 자동 실행 승인 검토 확장. 규칙과 Pi의 현재 모델로 도구 실행을 검토하고, 필요한 경우 사용자 승인을 요청합니다.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
     "./startup": "./dist/startup.js"
   },
   "bin": {
-    "pi-guard": "dist/cli.js"
+    "pi-codex-auto-review": "dist/cli.js"
   },
   "pi": {
     "extensions": [

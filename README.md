@@ -1,4 +1,6 @@
-# Pi 권한 플러그인
+# pi-codex-auto-review
+
+Codex의 ‘Approve for me’에서 영감을 받은 Pi용 자동 실행 승인 검토 확장입니다. 규칙과 Pi의 현재 모델로 도구 실행을 검토하고, 필요한 경우 사용자 승인을 요청합니다.
 
 Codex 공개 소스 [`rust-v0.160.0`](https://github.com/openai/codex/tree/a956835d020762cb2b570053af06f643a11c0ecc)의 실행 승인 동작을 참고한 독립 구현입니다. Pi 0.99.1의 공개 API와 운영체제 샌드박스를 연결합니다. 일반 실행은 Docker에 의존하지 않으며, Docker는 재현 가능한 검증 환경에 사용합니다.
 
@@ -15,10 +17,10 @@ node dist/cli.js --mode print "프로젝트를 분석해줘"
 node dist/cli.js --mode rpc
 ```
 
-보호 실행은 `pi-guard` 진입점이나 `pi-guard/startup`의 `createGuardedRuntime()`을 사용합니다. 도구와 샌드박스 준비 상태를 검사하고, 재로딩과 직접 사용자 쉘 호출에도 같은 검사를 적용합니다. 일반 Pi에 확장만 등록하는 경우 Pi 자체가 확장 로딩 실패를 무시할 수 있으므로 보호 시작을 보장하지 않습니다.
+보호 실행은 `pi-codex-auto-review` 진입점이나 `pi-codex-auto-review/startup`의 `createGuardedRuntime()`을 사용합니다. 도구와 샌드박스 준비 상태를 검사하고, 재로딩과 직접 사용자 쉘 호출에도 같은 검사를 적용합니다. 일반 Pi에 확장만 등록하는 경우 Pi 자체가 확장 로딩 실패를 무시할 수 있으므로 보호 시작을 보장하지 않습니다.
 
 ```ts
-import { createGuardedRuntime } from 'pi-guard/startup';
+import { createGuardedRuntime } from 'pi-codex-auto-review/startup';
 
 const runtime = await createGuardedRuntime({
   cwd: process.cwd(),

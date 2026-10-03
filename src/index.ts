@@ -78,6 +78,6 @@ export function createGuardExtension(options: GuardOptions = {}) {
       pi.sendUserMessage(`${nested}\nTool: ${retry.denial.action.tool}\nArguments: ${canonicalJson(retry.args)}\nThe user selected denial ${id} for one retry. The controller holds a one-use exact-action marker; automatic review and policy still apply. Do not repeat unrelated earlier side effects.`,{expandPromptTemplates:false});
     }});
   };
-  return { factory, assertReady() { if (!controller) throw new Error('pi-guard extension failed to load'); controller.assertReady(); return controller; } };
+  return { factory, assertReady() { if (!controller) throw new Error('pi-codex-auto-review extension failed to load'); controller.assertReady(); return controller; } };
 }
 export default createGuardExtension().factory;

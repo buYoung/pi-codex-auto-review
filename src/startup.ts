@@ -39,7 +39,7 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
     const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-guard',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();

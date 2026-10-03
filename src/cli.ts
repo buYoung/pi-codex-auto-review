@@ -9,7 +9,7 @@ export async function main(argv: string[]): Promise<void> {
   const prompts: string[] = [];
   for (let i=0;i<argv.length;i++) {
     const item=argv[i]!;
-    if (item === '--help' || item === '-h') {console.log('사용법: pi-guard [--cwd 경로] [--agent-dir 경로] [--policy 파일] [--mode tui|print|json|rpc] [프롬프트]');return;}
+    if (item === '--help' || item === '-h') {console.log('사용법: pi-codex-auto-review [--cwd 경로] [--agent-dir 경로] [--policy 파일] [--mode tui|print|json|rpc] [프롬프트]');return;}
     if (['--mode','--cwd','--agent-dir','--policy'].includes(item)) {
       const value=argv[++i]; if (!value) throw new Error(`${item}: 값이 필요합니다`);
       if(item==='--mode')mode=value; if(item==='--cwd')cwd=value; if(item==='--agent-dir')agentDir=value;if(item==='--policy')settingsPath=value;
@@ -21,4 +21,4 @@ export async function main(argv: string[]): Promise<void> {
   else if(mode==='tui')await new InteractiveMode(runtime,{initialMessage:prompts.join(' ') || undefined}).run();
   else process.exitCode=await runPrintMode(runtime,{mode:mode==='json'?'json':'text',initialMessage:prompts.join(' ') || undefined});
 }
-if (import.meta.url === new URL(`file://${process.argv[1]}`).href) main(process.argv.slice(2)).catch(error=>{console.error(`pi-guard: ${(error as Error).message}`);process.exitCode=1;});
+if (import.meta.url === new URL(`file://${process.argv[1]}`).href) main(process.argv.slice(2)).catch(error=>{console.error(`pi-codex-auto-review: ${(error as Error).message}`);process.exitCode=1;});
