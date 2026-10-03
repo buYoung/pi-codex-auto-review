@@ -63,7 +63,8 @@ test('[grants] exact one-use retry reaches review again while changed inputs and
   assert.equal((await invoke(f.action('write',action.args))).isAllowed,false);
   assert.equal(requests.filter(request=>request.context.items.some(item=>item.source==='user-confirmation')).length,1);
   const critical=m.lifecycle.record(action,reviewContext.contextId,{status:'denied',actionDigest:action.digest,contextDigest:reviewContext.digest,policyDigest:'policy',assessment:{risk_level:'critical',user_authorization:'high',outcome:'deny',rationale:'Critical effect'}});
-  assert.throws(()=>m.lifecycle.authorizeRetry(critical.denialId,current),/Critical-risk/);
+  assert.equal(m.lifecycle.authorizeRetry(critical.denialId,current).assessment.risk_level,'critical');
+  assert.ok(m.lifecycle.consumeRetry(action,reviewContext.contextId),'An earlier critical label must not prevent a fresh assessment');
   m.reset('new-session');assert.equal(m.lifecycle.recentDenials.length,0);
 });
 test('[queue] concurrent denials interrupt once and cancel a still-running review before it can authorize',async t=>{

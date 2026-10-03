@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
+  "sourceDigest": "aa492ce02281e88ea2ffc896e6229b0458919f9b74d31aa96a140bbe095cae6f",
   "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -39,9 +39,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T23:35:59.021Z",
+      "runId": "2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T23:48:32.777Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
@@ -127,7 +127,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
+      "sourceDigest": "aa492ce02281e88ea2ffc896e6229b0458919f9b74d31aa96a140bbe095cae6f",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -136,7 +136,7 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:35:59.452Z"
+      "recordedAt": "2026-10-03T23:48:33.217Z"
     }
   ],
   "buildProof": {
@@ -144,7 +144,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T23:35:58.356Z"
+    "recordedAt": "2026-10-03T23:48:32.048Z"
   },
   "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters require review unless a trusted command rule authorizes them.",
   "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
@@ -156,7 +156,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-03T23:36:10.372Z",
-  "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/02-policy.json"
+  "recordedAt": "2026-10-03T23:48:43.428Z",
+  "runId": "2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/02-policy.json"
 }

@@ -263,3 +263,45 @@ test('[approval-settings] the actual Pi retry command preserves its one-use mark
   assert.ok(requests[1].context.items.some(item=>item.content?.type==='exact-action-retry-approval'));
   assert.ok(!requests[1].context.items.some(item=>item.source==='user'&&String(item.content).includes('controller holds a one-use')));
 });
+test('[approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution',async t=>{
+  let hasCorrectedRisk=true;
+  const requests=[],f=await setup(t,{provider:{complete:async request=>{
+    const data=JSON.parse(request.data),hasRetry=data.context.items.some(item=>item.content?.type==='exact-action-retry-approval');
+    requests.push(data);
+    return JSON.stringify({outcome:hasRetry?'allow':'deny',risk_level:hasRetry&&hasCorrectedRisk?'high':'critical',user_authorization:hasRetry?'high':'unknown',rationale:'Reassess the exact target using the new authorization.'});
+  }}});
+  f.api.sendUserMessage=()=>{};
+  f.context.ui.select=async(_title,choices)=>choices[0];
+  const tool=f.tools.get('write'),args={path:join(f.outside,'sentinel.txt'),content:'approved after reassessment'};
+  await assert.rejects(tool.execute('initial-critical',args,undefined,undefined,f.context),error=>error.code==='AUTO_REVIEW_DENIED');
+  assert.equal(f.extension.assertReady().approvals.lifecycle.recentDenials[0].assessment.risk_level,'critical');
+  await f.commands.get('approve').handler('retry',f.context);
+  await tool.execute('risk-corrected',args,undefined,undefined,f.context);
+  assert.equal(await readFile(args.path,'utf8'),'approved after reassessment');
+  hasCorrectedRisk=false;
+  const next={...args,content:'must remain blocked'};
+  await assert.rejects(tool.execute('another-critical',next,undefined,undefined,f.context),error=>error.code==='AUTO_REVIEW_DENIED');
+  await f.commands.get('approve').handler('retry',f.context);
+  await assert.rejects(tool.execute('still-critical',next,undefined,undefined,f.context),error=>error.code==='AUTO_REVIEW_DENIED');
+  assert.equal(await readFile(args.path,'utf8'),'approved after reassessment');
+  assert.equal(requests.length,4);
+});
+test('[approval-settings] a genuine later user prompt authorizes fresh Pi review after a critical denial without a retry command',async t=>{
+  const f=await fixture(t),requests=[],target=join(f.outside,'sentinel.txt');
+  const approval=`I saw the warning. It was misclassified: this is one owned local fixture, with no credential access or destructive side effects. I explicitly approve writing exactly confirmed-by-user to ${target}.`;
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{
+    const data=JSON.parse(request.data);requests.push(data);
+    const confirmed=data.context.items.findIndex(item=>item.source==='user'&&item.trust==='authorization'&&item.content===approval);
+    if(confirmed>=0){
+      assert.ok(data.context.items.slice(0,confirmed).some(item=>item.trust==='evidence'&&JSON.stringify(item.content).includes('AUTO_REVIEW_DENIED')));
+      assert.ok(!data.context.items.some(item=>item.content?.type==='exact-action-retry-approval'));
+    }
+    return JSON.stringify({outcome:confirmed>=0?'allow':'deny',risk_level:confirmed>=0?'high':'critical',user_authorization:confirmed>=0?'high':'unknown',rationale:confirmed>=0?'New facts and exact user approval resolve the prior concern.':'Concrete risk was not authorized.'});
+  }}});
+  const step=[[{name:'write',args:{path:target,content:'confirmed-by-user'}}]];
+  await planStream(runtime.session,step);await runtime.session.prompt('Inspect the task. Do not overwrite the outside file.');
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  await planStream(runtime.session,step);await runtime.session.prompt(approval);
+  assert.equal(await readFile(target,'utf8'),'confirmed-by-user');
+  assert.equal(requests.length,2);
+});

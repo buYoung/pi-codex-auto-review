@@ -36,7 +36,8 @@ export class ReviewLifecycle {
   authorizeRetry(id: string, current: {sessionId: string; contextId: string; cwd: string; policyRevision: string; permissionDigest: string}): RecentDenial {
     const denial = this.history.find(item => item.id === id);
     if (!denial || denial.contextId !== current.contextId || denial.action.sessionId !== current.sessionId || denial.action.cwd !== current.cwd || denial.action.policyRevision !== current.policyRevision || denial.action.permissionDigest !== current.permissionDigest) throw new GuardError('STALE_RETRY', 'The denied action no longer belongs to the current context');
-    if (denial.assessment.risk_level === 'critical') throw new GuardError('RETRY_FORBIDDEN', 'Critical-risk denials cannot be overridden');
+    // Like Codex's denied-action approval, authorize a fresh assessment, never an
+    // execution override. New facts may correct an earlier critical classification.
     const identity = retryIdentity(denial.action, current.contextId);
     this.retries.set(identity, immutable({id: randomUUID(), denialId: denial.id, actionIdentity: identity, sessionId: current.sessionId, contextId: current.contextId}));
     if (this.retries.size > 10) this.retries.delete(this.retries.keys().next().value!);

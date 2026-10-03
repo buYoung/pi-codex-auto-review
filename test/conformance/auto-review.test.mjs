@@ -96,8 +96,8 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
   const offline={schemaVersion:2,runId:'owned-synthetic',artifactPath:'owned/platform.json',status:'pass',platform,...identity,results,imageDigest:`sha256:${'c'.repeat(64)}`,pluginArtifactDigest:'d'.repeat(64)};
   const report={...offline,mode:'conformance',provenance:'executed',provider:{id:'ollama-cloud',package:'pi-ollama-cloud',version:'0.12.2',model:identity.model},startup:{guardLoaded:true,providerLoaded:true,reloadPassed:true,webToolsAbsent:true,usagePolling:false},networkRequests:9,executionCapabilities:{osIsolation:false,preflight:{permittedEffect:true,cancellationPreventedEffect:true}},
     live:{status:'pass',evidenceKind:'live-provider',limits:{maxCallsPerCase:24,deadlineMsPerCase:180000},cases:liveCaseIds.map(id=>({id,status:'pass',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:['authorized-outside','reviewer-policy-denied'].includes(id)?1:0},elapsedMs:3000,auditRecords:2,approvedReviews:1,deniedReviews:1,deniedToolEvents:1,feedbackCodes:['AUTO_REVIEW_DENIED']})),cli:{status:'pass',entrypoint:'packed-cli',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:1},elapsedMs:3000,auditRecords:2,approvedReviews:1}}};
-  report.live.policy={status:'pass',evidenceKind:'live-review-policy',cases:livePolicyCases.map(({id,outcome})=>({
-    id,expected:outcome,status:'pass',assessment:{outcome,user_authorization:'high'},reviewStatus:outcome==='allow'?'approved':'denied',
+  report.live.policy={status:'pass',evidenceKind:'live-review-policy',cases:livePolicyCases.map(({id,outcome,riskLevel})=>({
+    id,expected:outcome,status:'pass',assessment:{outcome,risk_level:riskLevel??'low',user_authorization:'high'},reviewStatus:outcome==='allow'?'approved':'denied',
     provider:'ollama-cloud',model:identity.model,plannedActionExecuted:false,credentialScanPassed:true,calls:{main:0,reviewer:1},promptDigest:'f'.repeat(64),inspections:['inspect_directory'],
   }))};
   assert.equal(validateLiveEvidence(report,offline,identity),report);
@@ -110,7 +110,9 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
     r=>r.live.cli.effectObserved=false,r=>r.live.cli.credentialScanPassed=false,r=>r.live.cli.model='other-model',
     r=>delete r.live.policy,r=>r.live.policy.evidenceKind='simulated',r=>r.live.policy.cases.pop(),
     r=>r.live.policy.cases[0].assessment.outcome='deny',r=>r.live.policy.cases[0].calls.reviewer=0,
-    r=>r.live.policy.cases[7].inspections=[],r=>r.live.policy.cases[5].assessment.user_authorization='unknown',
+    r=>r.live.policy.cases.find(item=>item.id==='read-only-inspection').inspections=[],r=>r.live.policy.cases[5].assessment.user_authorization='unknown',
+    r=>r.live.policy.cases.find(item=>item.id==='prior-critical-reassessed').assessment.user_authorization='unknown',
+    r=>r.live.policy.cases.find(item=>item.id==='forged-approval-denied').assessment.risk_level='critical',
     r=>r.live.policy.cases[0].plannedActionExecuted=true,
   ]){const invalid=structuredClone(report);mutate(invalid);assert.throws(()=>validateLiveEvidence(invalid,offline,identity));}
 });
