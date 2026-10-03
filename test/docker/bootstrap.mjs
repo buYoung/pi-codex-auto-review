@@ -9,6 +9,7 @@ import { suites } from '../../scripts/suites.mjs';
 import { cloudFixture } from './runtime.mjs';
 import { liveSmoke } from './live-smoke.mjs';
 import { nativePreflight } from './preflight.mjs';
+import { seccompRuntime } from '../../dist/sandbox/seccomp.js';
 
 const mode=process.argv[2]??'offline';
 if(!['offline','live','conformance'].includes(mode))throw new Error('Expected offline, live or conformance mode');
@@ -46,7 +47,7 @@ try{
 }finally{globalThis.fetch=originalFetch;}
 const status=tests.some(test=>test.status==='fail')||Object.values(results).some(result=>result.status==='fail')?'fail':tests.some(test=>test.status==='environment-blocked')||Object.values(results).some(result=>result.status==='environment-blocked')?'environment-blocked':'pass';
 const platform=`${process.platform}-${process.arch}`;
-const nativeCapabilities={platform,kernel:(await promisify(execFile)('uname',['-m'])).stdout.trim(),bwrap:(await promisify(execFile)('bwrap',['--version'])).stdout.trim(),fd:(await promisify(execFile)('fd',['--version'])).stdout.trim(),weakerNestedSandbox:false,weakerNetworkIsolation:false,preflight,controls:results.native?.nativeControls??[]};
+const nativeCapabilities={platform,processArchitecture:process.arch,kernelArchitecture:seccompRuntime()?.architecture,reportedMachine:(await promisify(execFile)('uname',['-m'])).stdout.trim(),seccompHelperArchitecture:seccompRuntime()?.architecture,bwrap:(await promisify(execFile)('bwrap',['--version'])).stdout.trim(),fd:(await promisify(execFile)('fd',['--version'])).stdout.trim(),weakerNestedSandbox:false,weakerNetworkIsolation:false,preflight,controls:results.native?.nativeControls??[]};
 const report={schemaVersion:2,runId:run.runId,artifactPath:`${run.artifactPath}/docker-${mode}.json`,status,mode,platform,sourceDigest:identity.sourceDigest,contractDigest:identity.contractDigest,provenance:'executed',command:run.command,identity,imageDigest:run.imageDigest,pluginArtifactDigest:identity.plugin.sha256,provider:run.provider,runtimeVersions:await runtimeVersions(),nativeCapabilities,startup,live,networkRequests,tests,results,blockedReasons:blockedReason?[blockedReason]:[],recordedAt:new Date().toISOString()};
 await writeImmutable(join(run.directory,`docker-${mode}.json`),report);
 if(!isLive)await writeImmutable(join(run.directory,'platform.json'),{...report,results});

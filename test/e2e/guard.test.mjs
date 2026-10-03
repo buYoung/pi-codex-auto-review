@@ -40,7 +40,7 @@ test('[workflow] protected SDK direct shell and failed reload cannot activate a 
 test('[package] npm tarball loads the default factory through public Pi APIs and executes bundled worker assets', async t => {
   const f=await fixture(t), artifacts=join(f.root,'artifacts'), consumer=join(f.root,'consumer'), home=join(f.control,'fake-home');
   await Promise.all([artifacts,consumer,home].map(path=>mkdir(path,{recursive:true})));
-  const env={...workloadEnvironment(),PI_CODING_AGENT_DIR:f.agentDir,NPM_CONFIG_CACHE:join(f.control,'npm-cache'),NPM_CONFIG_USERCONFIG:join(f.control,'empty.npmrc'),NPM_CONFIG_GLOBALCONFIG:join(f.control,'global.npmrc')};
+  const env={...workloadEnvironment(),...(process.env.PI_GUARD_KERNEL_ARCH?{PI_GUARD_KERNEL_ARCH:process.env.PI_GUARD_KERNEL_ARCH}:{}),PI_CODING_AGENT_DIR:f.agentDir,NPM_CONFIG_CACHE:join(f.control,'npm-cache'),NPM_CONFIG_USERCONFIG:join(f.control,'empty.npmrc'),NPM_CONFIG_GLOBALCONFIG:join(f.control,'global.npmrc')};
   const packed=JSON.parse((await exec('npm',['pack','--ignore-scripts','--json','--pack-destination',artifacts],{cwd:repository,env,timeout:20000,maxBuffer:2_000_000})).stdout)[0];
   assert.ok(packed.files.some(file=>file.path==='dist/sandbox/worker.js'));assert.ok(packed.files.some(file=>file.path==='dist/sandbox/broker.js'));
   assert.ok(!packed.files.some(file=>/^(src|test|tmp|node_modules)\//.test(file.path)));

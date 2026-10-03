@@ -55,6 +55,7 @@ async function run({ commandId, config, job }: { commandId: string; config: Sand
   }
   const command = `${shellQuote(process.execPath)} ${shellQuote(fileURLToPath(new URL('./worker.js', import.meta.url)))}`;
   const wrapped = await SandboxManager.wrapWithSandboxArgv(command, '/bin/bash', undefined, cancellation.signal, job.cwd, { commandId });
+  cancellation.signal.throwIfAborted();
   if (!wrapped.argv.length || !wrapped.argv.some(arg => arg.includes('sandbox-exec') || arg.includes('bwrap'))) throw new GuardError('BACKEND_UNAVAILABLE', 'Runtime did not return a native isolation command');
   await new Promise<void>((resolve, reject) => {
     let buffer = '', stderr = '', hasTerminal = false, parseError: Error | undefined;

@@ -14,7 +14,7 @@ if(!['offline','live','conformance'].includes(options.mode)||!['linux/amd64','li
 const source=await sourceDigest(),contract=await contractDigest(),platform=options.platform==='linux/amd64'?'linux-x64':'linux-arm64';
 const run=await createRun({platform,sourceDigest:source,contractDigest:contract,provenance:'orchestration',mode:options.mode,command:`npm run verify:docker -- --mode ${options.mode} --platform ${options.platform}${options.model?` --model ${options.model}`:''}`});
 const ownedName=`pi-auto-review-${randomUUID()}`,context=join(run.directory,'build-context');
-let containerId,imageDigest=options.image,dockerHostArchitecture,containerResult,errorMessage,isInterrupted=false,isExecutionTimedOut=false,isContainerRemoved=false;
+let containerId,imageDigest=options.image,dockerHostArchitecture,kernelArchitecture,containerResult,errorMessage,isInterrupted=false,isExecutionTimedOut=false,isContainerRemoved=false;
 const children=new Set();
 const safe=value=>String(value).split(process.env.OLLAMA_API_KEY||'\0').join('[REDACTED]');
 async function docker(args,{log,timeoutMs=600000,isLive=false,allowFailure=false}={}){
@@ -35,6 +35,8 @@ function interrupt(){isInterrupted=true;for(const child of children)child.kill('
 process.on('SIGINT',interrupt);process.on('SIGTERM',interrupt);
 try{
   dockerHostArchitecture=(await docker(['info','--format','{{.Architecture}}'],{timeoutMs:30000})).stdout;
+  kernelArchitecture={aarch64:'arm64',arm64:'arm64',x86_64:'x64',amd64:'x64'}[dockerHostArchitecture];
+  if(!kernelArchitecture)throw new Error('ENVIRONMENT_BLOCKED: unsupported Docker kernel architecture');
   if(options.mode!=='offline'&&(!process.env.OLLAMA_API_KEY||!options.model))throw new Error('ENVIRONMENT_BLOCKED: live verification requires runtime OLLAMA_API_KEY and a selected OLLAMA_MODEL / --model');
   if(!imageDigest){
     await mkdir(context,{recursive:true});
@@ -50,7 +52,7 @@ try{
   if(imageSource!==source)throw new Error('Docker image does not match the current source; rebuild before verifying');
   const imagePlatform=(await docker(['image','inspect','--format','{{.Os}}/{{.Architecture}}',imageDigest],{timeoutMs:30000})).stdout;
   if(imagePlatform!==options.platform)throw new Error('Docker image architecture does not match the requested platform');
-  const create=['create','--platform',options.platform,'--name',ownedName,'--label','org.pi-codex-auto-review.verification=true','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp=unconfined','--security-opt=systempaths=unconfined','--pids-limit=256','--memory=2g','--network',options.mode==='offline'?'none':'bridge','--env','PI_OLLAMA_WEB_TOOLS=0','--env',`PI_GUARD_IMAGE_DIGEST=${imageDigest}`];
+  const create=['create','--platform',options.platform,'--name',ownedName,'--label','org.pi-codex-auto-review.verification=true','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp=unconfined','--security-opt=systempaths=unconfined','--pids-limit=256','--memory=2g','--network',options.mode==='offline'?'none':'bridge','--env','PI_OLLAMA_WEB_TOOLS=0','--env',`PI_GUARD_IMAGE_DIGEST=${imageDigest}`,'--env',`PI_GUARD_KERNEL_ARCH=${kernelArchitecture}`];
   if(options.mode!=='offline')create.push('--env','OLLAMA_API_KEY','--env',`OLLAMA_MODEL=${options.model}`);
   containerId=(await docker([...create,imageDigest,options.mode],{timeoutMs:30000,isLive:options.mode!=='offline'})).stdout;
   if(!/^[a-f0-9]{64}$/.test(containerId))throw new Error('Docker did not return a container identity');
@@ -86,7 +88,7 @@ finally{
 const isStable=source===await sourceDigest()&&contract===await contractDigest();
 const usesArchitectureEmulation=!(options.platform==='linux/amd64'?['x86_64','amd64']:['aarch64','arm64']).includes(dockerHostArchitecture);
 const status=isInterrupted?'environment-blocked':!isStable||containerId&&!isContainerRemoved||errorMessage&&containerResult?.status==='pass'?'fail':containerResult?.status??(errorMessage?.includes('ENVIRONMENT_BLOCKED')?'environment-blocked':'fail');
-const report={schemaVersion:2,status,sourceDigest:source,contractDigest:contract,mode:options.mode,targetPlatform:options.platform,dockerHostArchitecture,usesArchitectureEmulation,imageDigest,containerId,containerRemoved:isContainerRemoved,containerResult:containerResult?.artifactPath,packageIdentity:containerResult?.identity,provider:containerResult?.provider,nativeCapabilities:containerResult?.nativeCapabilities,command:run.command,envNames:options.mode==='offline'?['PI_OLLAMA_WEB_TOOLS']:['OLLAMA_API_KEY','OLLAMA_MODEL','PI_OLLAMA_WEB_TOOLS'],outerContainer:{capabilities:'all dropped',noNewPrivileges:true,seccomp:'unconfined to permit nested namespaces; inner sandbox-runtime seccomp and filesystem/network controls remain enabled',systemPaths:'unconfined to permit inner proc namespace mount',hostMounts:[],publishedPorts:[]},blockedReasons:[...(containerResult?.blockedReasons??[]),...(errorMessage?[errorMessage]:[]),...(!isStable?['Source changed while Docker verification ran']:[]),...(containerId&&!isContainerRemoved?['Owned container cleanup failed']:[])],recordedAt:new Date().toISOString()};
+const report={schemaVersion:2,status,sourceDigest:source,contractDigest:contract,mode:options.mode,targetPlatform:options.platform,dockerHostArchitecture,kernelArchitecture,usesArchitectureEmulation,imageDigest,containerId,containerRemoved:isContainerRemoved,containerResult:containerResult?.artifactPath,packageIdentity:containerResult?.identity,provider:containerResult?.provider,nativeCapabilities:containerResult?.nativeCapabilities,command:run.command,envNames:options.mode==='offline'?['PI_OLLAMA_WEB_TOOLS','PI_GUARD_KERNEL_ARCH']:['OLLAMA_API_KEY','OLLAMA_MODEL','PI_OLLAMA_WEB_TOOLS','PI_GUARD_KERNEL_ARCH'],outerContainer:{capabilities:'all dropped',noNewPrivileges:true,seccomp:'unconfined to permit nested namespaces; inner sandbox-runtime seccomp and filesystem/network controls remain enabled',systemPaths:'unconfined to permit inner proc namespace mount',hostMounts:[],publishedPorts:[]},blockedReasons:[...(containerResult?.blockedReasons??[]),...(errorMessage?[errorMessage]:[]),...(!isStable?['Source changed while Docker verification ran']:[]),...(containerId&&!isContainerRemoved?['Owned container cleanup failed']:[])],recordedAt:new Date().toISOString()};
 await writeImmutable(join(run.directory,'docker-orchestration.json'),report);
 console.log(JSON.stringify({...report,artifactPath:`${run.artifactPath}/docker-orchestration.json`},null,2));
 if(status!=='pass')process.exitCode=1;

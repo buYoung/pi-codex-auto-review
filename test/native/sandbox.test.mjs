@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile, symlink, link, access, mkdir, rename, mkdtemp, realpath, rm } from 'node:fs/promises';
 import { constants as osConstants } from 'node:os';
 import { createServer } from 'node:http';
+import { createServer as createSocketServer } from 'node:net';
 import { once } from 'node:events';
 import { join } from 'node:path';
 import { NativeExecutor } from '../../dist/sandbox/executor.js';
 import { shellQuote, workloadEnvironment } from '../../dist/sandbox/config.js';
+import { seccompRuntime } from '../../dist/sandbox/seccomp.js';
 import { EMPTY_DELTA, createProfile, createAction } from '../../dist/contracts.js';
 import { PolicyEngine, validateSettings } from '../../dist/policy/index.js';
 import { fixture } from '../harness/fixtures.mjs';
@@ -25,8 +27,26 @@ test('[native-launch] permitted process preserves cwd, output, filtered caller e
   assert.equal(result.exitCode,7); assert.match(result.output,new RegExp(f.workspace)); assert.match(result.output,/caller-value/); assert.ok(!result.output.includes(f.secret));
   assert.equal(workloadEnvironment({API_KEY:f.secret,NODE_OPTIONS:'evil',BASH_ENV:'evil',GUARD_VALUE:'allowed'},{}).GUARD_VALUE,'allowed');
   assert.ok(!Object.hasOwn(workloadEnvironment({API_KEY:f.secret},{}),'API_KEY'));
+  assert.ok(!Object.hasOwn(workloadEnvironment({PI_GUARD_KERNEL_ARCH:'invalid'},{}),'PI_GUARD_KERNEL_ARCH'));
   assert.equal((await f.shell('kill -USR2 $$')).exitCode,128+osConstants.signals.SIGUSR2);
   recordObservation(t,'allow','shell output/cwd/caller environment and nonzero status');
+});
+test('[native-network] native kernel helper enforces inherited Unix socket denial for the actual workload architecture',async t=>{
+  const f=await setup(t),controlPath=join(f.workspace,'unix-control.sock'),deniedPath=join(f.workspace,'unix-denied.sock');
+  const control=createSocketServer();control.listen(controlPath);await once(control,'listening');await new Promise(resolve=>control.close(resolve));
+  const seccomp=seccompRuntime();
+  if(seccomp){
+    const binary=await readFile(seccomp.applyPath);
+    assert.equal(binary.subarray(0,4).toString('hex'),'7f454c46');
+    assert.equal(binary.readUInt16LE(18),seccomp.architecture==='arm64'?183:62);
+  }
+  const program=`const net=require('node:net'),fs=require('node:fs');if(process.platform==='linux'){const status=fs.readFileSync('/proc/self/status','utf8');console.log(status.split('\\n').find(line=>line.startsWith('Seccomp:')));}const server=net.createServer();server.on('error',error=>{console.log('unix-socket:'+error.code);process.exitCode=error.code==='EPERM'?0:7;});server.listen(${JSON.stringify(deniedPath)},()=>{server.close();process.exitCode=8;});`;
+  const result=await f.shell(`${shellQuote(process.execPath)} -e ${shellQuote(program)}`,f.profile,EMPTY_DELTA,{env:{PI_GUARD_KERNEL_ARCH:'invalid'},timeoutSeconds:10});
+  assert.equal(result.exitCode,0,result.output);assert.match(result.output,/unix-socket:EPERM/);
+  if(process.platform==='linux')assert.match(result.output,/Seccomp:\s+2/);
+  await assert.rejects(access(deniedPath));
+  recordObservation(t,'allow','owned Unix socket control works outside the sandbox and the workload starts inside it');
+  recordObservation(t,'deny',`Unix socket creation denied by native enforcement; workload=${process.arch}, helper=${seccomp?.architecture??'macos'}`);
 });
 test('[native-files] real shell/file/descendant/symlink writes cannot change an outside sentinel', async t => {
   const f=await setup(t), target=join(f.outside,'sentinel.txt'), allowed=join(f.workspace,'allowed.txt');
@@ -113,9 +133,13 @@ test('[native-lifecycle] cancellation and seconds deadline terminate the final p
   const f=await setup(t), caller=new AbortController(), marker=join(f.workspace,'after-cancel.txt'); let observed=false;
   const pending=f.shell(`printf ready; (sleep 1; printf leaked > ${shellQuote(marker)}) & wait`,f.profile,EMPTY_DELTA,{signal:caller.signal,timeoutSeconds:5,onData:data=>{if(data.toString().includes('ready')){observed=true;caller.abort();}}});
   await assert.rejects(pending); assert.equal(observed,true); await new Promise(resolve=>setTimeout(resolve,1100)); await assert.rejects(access(marker));
-  let isTimedProcessRunning=false;const timeoutSeconds=0.8,started=Date.now();
-  await assert.rejects(f.shell('printf timer-ready; sleep 5',f.profile,EMPTY_DELTA,{timeoutSeconds,onData:data=>{if(data.toString().includes('timer-ready'))isTimedProcessRunning=true;}}),error=>error.code==='TIMEOUT');
+  // Emulated x64 startup takes over a second. Exercise a running workload,
+  // retaining the 3.5-second completion bound and an observable denied effect.
+  const timeoutMarker=join(f.workspace,'after-timeout.txt');
+  let isTimedProcessRunning=false,timedProcessReadyAtMs=0;const timeoutSeconds=2,started=Date.now();
+  await assert.rejects(f.shell(`printf timer-ready; sleep 3; printf leaked > ${shellQuote(timeoutMarker)}`,f.profile,EMPTY_DELTA,{timeoutSeconds,onData:data=>{if(data.toString().includes('timer-ready')){isTimedProcessRunning=true;timedProcessReadyAtMs=Date.now();}}}),error=>error.code==='TIMEOUT');
   assert.equal(isTimedProcessRunning,true);assert.ok(Date.now()-started>=timeoutSeconds*1000-20);assert.ok(Date.now()-started<3500);
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,timedProcessReadyAtMs+3100-Date.now())));await assert.rejects(access(timeoutMarker));
   const already=new AbortController(); already.abort(); await assert.rejects(f.shell('printf unreachable',f.profile,EMPTY_DELTA,{signal:already.signal}));
   recordObservation(t,'deny','caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation');
 });

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
   "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -11,6 +11,7 @@
   },
   "modulePaths": [
     "src/sandbox/config.ts",
+    "src/sandbox/seccomp.ts",
     "src/sandbox/linux-read-paths.ts",
     "src/sandbox/runtime-write-paths.ts",
     "src/sandbox/executor.ts",
@@ -18,11 +19,12 @@
     "src/sandbox/worker.ts"
   ],
   "moduleHashes": {
-    "src/sandbox/config.ts": "2c09debdda248a5b60a301f5dbf0da5b723afd479e4961d18ad5e0cc8a6b8f2d",
+    "src/sandbox/config.ts": "0cee7f28fb34a19af5c1756a27b78adf1e57044e1ac017d7080fe08017bd0351",
+    "src/sandbox/seccomp.ts": "0523e1c5c5e479d7809dcb1cea6c83c370b4002dbb7aa4cff610122041d6f2a2",
     "src/sandbox/linux-read-paths.ts": "f113ad9bd0a2e84e1f3f068a410849fc9bfebe318d8af708d811cf7340a1baf4",
     "src/sandbox/runtime-write-paths.ts": "6961fd18c927fecef463d8b4490a2c2cc9031c5bfd0e893cf8046ab421278f1b",
-    "src/sandbox/executor.ts": "007815c4ab6a8676ec314e51efd0de48ed86c007e1f5d7b3ae3919a70b1a9b0a",
-    "src/sandbox/broker.ts": "5de40fcde2a90501853e05a3776d8d576d79df116cc3bf438f46fcc8779168ce",
+    "src/sandbox/executor.ts": "4cf9d05b3ad81cea49a3d9da56e8094022c3caa5ee0ac43272ecd33e186e76d7",
+    "src/sandbox/broker.ts": "97a01873bcd2edd240c5a6485a9356a385bc25b0eaca768f1caed18b2a71aff3",
     "src/sandbox/worker.ts": "94d36be732965d704832ea3df9c33d827a32e19debc29fa336ffc96ee1662c05"
   },
   "testFiles": [
@@ -38,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T01:38:42.873Z",
+      "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T02:06:02.934Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -58,6 +60,10 @@
       "tests": [
         {
           "name": "[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] native kernel helper enforces inherited Unix socket denial for the actual workload architecture",
           "status": "pass"
         },
         {
@@ -90,7 +96,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
       "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -103,6 +109,18 @@
         {
           "kind": "allow",
           "effect": "shell output/cwd/caller environment and nonzero status",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "owned Unix socket control works outside the sandbox and the workload starts inside it",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "Unix socket creation denied by native enforcement; workload=arm64, helper=macos",
           "isObserved": true,
           "platform": "darwin-arm64"
         },
@@ -186,7 +204,7 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T01:38:55.058Z"
+      "recordedAt": "2026-10-03T02:06:16.788Z"
     }
   ],
   "buildProof": {
@@ -194,7 +212,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T01:38:41.810Z"
+    "recordedAt": "2026-10-03T02:06:01.934Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -217,11 +235,11 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/native.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/native.json"
     }
   ],
   "qualification": "Only this run is described here; final aggregate validates every required architecture",
-  "recordedAt": "2026-10-03T01:39:18.397Z",
-  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/04-sandbox.json"
+  "recordedAt": "2026-10-03T02:06:40.603Z",
+  "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/04-sandbox.json"
 }

@@ -7,6 +7,7 @@ import { canonicalPath, isWithin } from '../policy/paths.js';
 import { matchesDomain } from '../policy/domains.js';
 import { linuxReadPaths } from './linux-read-paths.js';
 import { runtimeWritePaths } from './runtime-write-paths.js';
+import { seccompRuntime } from './seccomp.js';
 
 export function shellQuote(text: string): string { return `'${text.replace(/'/g, "'\\''")}'`; }
 const AMBIENT_ENV = new Set(['PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ', 'TERM']);
@@ -15,7 +16,7 @@ export function workloadEnvironment(caller: NodeJS.ProcessEnv = {}, ambient: Nod
   const env: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(ambient)) if (AMBIENT_ENV.has(key) && value !== undefined) env[key] = value;
   for (const [key, value] of Object.entries(caller)) {
-    if (!FORBIDDEN_ENV.test(key) && !['HOME', 'TMPDIR', 'TMP', 'TEMP', 'NODE_CHANNEL_FD', 'NODE_CHANNEL_SERIALIZATION_MODE'].includes(key) && /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && !value.includes('\0')) env[key] = value;
+    if (!FORBIDDEN_ENV.test(key) && !['HOME', 'TMPDIR', 'TMP', 'TEMP', 'NODE_CHANNEL_FD', 'NODE_CHANNEL_SERIALIZATION_MODE', 'PI_GUARD_KERNEL_ARCH'].includes(key) && /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && !value.includes('\0')) env[key] = value;
   }
   return env;
 }
@@ -46,7 +47,9 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
     dependencyRoots.push(root);
   }
   const systemRead = ['/usr', '/bin', '/sbin', '/System', '/Library', '/opt/homebrew', '/private/etc', '/etc', '/dev', '/proc', '/sys', nodeRoot, packageRoot, ...dependencyRoots];
+  const seccomp = seccompRuntime();
   return {
+    ...(seccomp ? {seccomp: {applyPath: seccomp.applyPath}} : {}),
     filesystem: {
       // All user data starts unreadable; runtime/assets and the admitted roots are carve-outs.
       denyRead: ['/', ...profile.denyRead],

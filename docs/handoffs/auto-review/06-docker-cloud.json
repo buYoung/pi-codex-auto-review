@@ -236,5 +236,15 @@
     "finalStatus": "environment-blocked",
     "liveAttempt": ".reports/pi-guard/runs/2026-10-03T01-37-05-187Z-3631be38-118d-4539-aa45-0073da5299a4/linux-arm64/docker-orchestration.json",
     "liveStatus": "environment-blocked: runtime key absent; zero model calls"
+  },
+  "seccompResolution": {
+    "status": "complete",
+    "handoff": "docs/handoffs/auto-review/08-seccomp.json",
+    "finalReport": "docs/handoffs/auto-review/07-conformance.json",
+    "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
+    "linuxX64Status": "pass",
+    "tests": 72,
+    "imageDigest": "sha256:fe79facbc6ff0a5188f39bb65f0b496fb9395b5d29ecb2317c86506caf5df187",
+    "liveStatus": "not-qualified"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
   "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -35,9 +35,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T01:38:55.062Z",
+      "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T02:06:16.792Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
@@ -136,7 +136,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "sourceDigest": "d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69",
       "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -146,7 +146,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T01:39:10.860Z"
+      "recordedAt": "2026-10-03T02:06:33.039Z"
     }
   ],
   "buildProof": {
@@ -154,7 +154,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T01:38:41.810Z"
+    "recordedAt": "2026-10-03T02:06:01.934Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -181,7 +181,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-03T01:39:18.398Z",
-  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-03T02:06:40.604Z",
+  "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/05-integration.json"
 }

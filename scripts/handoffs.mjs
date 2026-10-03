@@ -11,7 +11,7 @@ const modules={
  '01-contracts':['src/contracts.ts','src/reports.ts'],
  '02-policy':['src/policy/index.ts','src/policy/paths.ts','src/policy/shell.ts','src/policy/rules.ts','src/policy/domains.ts'],
  '03-review':['src/reviewer.ts','src/review/policy.ts','src/review/context.ts','src/review/investigation.ts','src/review/lifecycle.ts','src/approvals.ts','src/audit.ts','src/signals.ts'],
- '04-sandbox':['src/sandbox/config.ts','src/sandbox/linux-read-paths.ts','src/sandbox/runtime-write-paths.ts','src/sandbox/executor.ts','src/sandbox/broker.ts','src/sandbox/worker.ts'],
+ '04-sandbox':['src/sandbox/config.ts','src/sandbox/seccomp.ts','src/sandbox/linux-read-paths.ts','src/sandbox/runtime-write-paths.ts','src/sandbox/executor.ts','src/sandbox/broker.ts','src/sandbox/worker.ts'],
  '05-integration':['src/index.ts','src/startup.ts','src/cli.ts','src/tools/controller.ts'],
 };
 export async function writeHandoffs(results,buildProof={status:'not-run'},run) {

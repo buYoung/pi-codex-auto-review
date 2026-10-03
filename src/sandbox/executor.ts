@@ -69,7 +69,9 @@ export class NativeExecutor implements SandboxExecutor {
           }
           if(control.type==='workload-started'){
             if(control.schemaVersion!==1 || !Number.isInteger(control.processGroupId) || control.processGroupId! <= 1 || processGroupId || isTerminal)throw new GuardError('INVALID_IPC','Invalid broker process group');
-            processGroupId=control.processGroupId;return;
+            processGroupId=control.processGroupId;
+            if (error || signal.aborted) killOwnedGroup();
+            return;
           }
           const frame = validateWorkerFrame(raw);
           if (isTerminal) throw new GuardError('INVALID_IPC', 'Worker emitted data after its terminal frame');

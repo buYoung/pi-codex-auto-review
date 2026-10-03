@@ -114,6 +114,8 @@ npm run verify:docker -- --mode offline --platform linux/amd64
 
 ARM Docker 호스트에서 별도 ARM64 결과를 얻으려면 `--platform linux/arm64`로 실행합니다. 중첩 네임스페이스와 새 `/proc`, 네이티브 seccomp를 지원해야 합니다. 하네스는 외부 컨테이너의 seccomp·systempaths 제한만 해제하고 모든 capability를 제거하며 `no-new-privileges`를 적용합니다. 내부 파일·네트워크·Unix 소켓 격리와 PID 네임스페이스를 약화하는 옵션은 켜지 않습니다. 호스트 디렉터리·Docker 소켓 마운트와 포트 공개는 없습니다.
 
+하네스는 Docker 엔진이 보고한 커널 아키텍처를 `PI_GUARD_KERNEL_ARCH`로 제어 계층에 전달합니다. ARM 커널에서 x64 프로그램을 에뮬레이션할 때도 커널과 일치하는 ARM64용 `seccomp` 보조 프로그램으로 동일한 필터를 적용합니다. 이 값은 도구의 환경변수로 덮어쓸 수 없습니다. 보고서에는 프로그램·커널·보조 프로그램 아키텍처와 에뮬레이션 여부를 따로 기록합니다.
+
 실모델 검증은 실행할 셸에 **export된 `OLLAMA_API_KEY`**가 필요합니다. `.zshrc`에 저장했다면 그 파일을 불러온 셸에서 실행합니다. 키는 명령 인자, 이미지 빌드 인자, `auth.json`에 쓰지 않습니다. 모델 이름은 사용자가 선택한 `glm-5.3`입니다.
 
 ```sh
@@ -134,4 +136,4 @@ npm run verify:docker -- --mode conformance --platform linux/amd64
 
 현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
 
-이 작업에서 Docker ARM64의 실제 격리 효과를 확인했습니다. ARM 호스트의 Linux x64 에뮬레이션은 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`로 차단되므로 네이티브 x64 Docker 호스트가 필요합니다. GLM5.3 실모델 검증은 실행 환경에 키가 전달되지 않아 아직 확인하지 못했습니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
+이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. 최신 결과는 최종 인계 보고서에 기록합니다. GLM5.3 실모델 검증은 이전 실행에서 키가 전달되지 않아 아직 확인하지 못했습니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
