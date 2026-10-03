@@ -7,7 +7,7 @@ import { canonicalPath, isWithin, resolveToolPath } from './paths.js';
 import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
 import { reviewPolicy } from '../review/policy.js';
 import { matchesDomain } from './domains.js';
-import { parseRules, ruleCommands, matchesRule, type PrefixRule } from './rules.js';
+import { evaluateRules, ruleCommands, matchesRule, type PrefixRule, type RuleSource, type RuleMatch, type CompiledRules } from './rules.js';
 import { runtimeWritePaths } from '../sandbox/runtime-write-paths.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
 
@@ -83,22 +83,30 @@ export async function defaultProfile(cwd: string, settings: GuardSettings, contr
 export class PolicyEngine {
   private rules: readonly PrefixRule[];
   private isInitialized: boolean;
-  get revision(): string { return digest({settings: this.settings, profile: this.profile, rules: this.rules, reviewPolicyDigest: reviewPolicy(this.settings.reviewPolicy).digest}); }
-  constructor(readonly settings: GuardSettings, readonly profile: PermissionProfile) {
+  private ruleSources: readonly RuleSource[] = [];
+  private compiledRules?: CompiledRules;
+  private readonly matchCache = new Map<string, readonly (readonly RuleMatch[])[]>();
+  private effectiveProfile: PermissionProfile;
+  get profile(): PermissionProfile { return this.effectiveProfile; }
+  get revision(): string { return digest({settings: this.settings, profile: this.profile, rules: this.rules, ruleSources: this.ruleSources, compiledRules: this.compiledRules ?? null, reviewPolicyDigest: reviewPolicy(this.settings.reviewPolicy).digest}); }
+  constructor(readonly settings: GuardSettings, profile: PermissionProfile) {
+    this.effectiveProfile = profile;
     this.rules = settings.commandRules.map(rule => ({pattern: rule.prefix, decision: rule.decision === 'ask' ? 'prompt' : rule.decision === 'deny' ? 'forbidden' : 'allow'}));
     this.isInitialized = settings.ruleFiles.length === 0;
   }
   async initialize(cwd = process.cwd()): Promise<void> {
     if (this.isInitialized) return;
-    const loaded = await Promise.all(this.settings.ruleFiles.map(async path => parseRules(await readFile(resolve(cwd, path), 'utf8'))));
-    this.rules = immutable([...this.rules, ...loaded.flat()]);
+    this.ruleSources = immutable(await Promise.all(this.settings.ruleFiles.map(async path => ({name: resolve(cwd, path), source: await readFile(resolve(cwd, path), 'utf8')}))));
+    this.compiledRules = await evaluateRules(this.ruleSources);
+    const allowed = this.compiledRules.allowedDomains, denied = this.compiledRules.deniedDomains;
+    this.effectiveProfile = createProfile({...this.profile, allowedDomains: [...new Set([...this.profile.allowedDomains.filter(host => !denied.includes(host)), ...allowed])], deniedDomains: [...new Set([...this.profile.deniedDomains, ...denied])]});
     this.isInitialized = true;
   }
-  async evaluate(action: GuardAction): Promise<PolicyDecision> {
+  async evaluate(action: GuardAction, signal?: AbortSignal): Promise<PolicyDecision> {
     if (!this.isInitialized) return decision(action, 'deny', 'Command rules have not been loaded', EMPTY_DELTA, true);
     if (action.policyRevision !== this.revision || action.permissionDigest !== digest(this.profile)) return decision(action, 'deny', 'Stale policy or permission profile', EMPTY_DELTA, true);
     if (!TOOL_NAMES.includes(action.tool as never)) return decision(action, 'ask', 'Unknown tool: annotations do not establish permission');
-    if (action.tool === 'bash') return this.shellDecision(action);
+    if (action.tool === 'bash') return this.shellDecision(action, signal);
     const input = action.args.path ?? action.cwd;
     if (typeof input !== 'string') return decision(action, 'deny', 'Invalid path input', EMPTY_DELTA, true);
     const target = await canonicalPath(await resolveToolPath(input,action.cwd,action.tool==='read'), action.cwd);
@@ -111,7 +119,7 @@ export class PolicyEngine {
     const writePath = isWrite && !canWrite ? await this.nativeWriteScope(target, action.cwd) : target;
     return decision(action, 'ask', writePath === target ? 'Filesystem permission required' : 'The native backend requires the enclosing directory in this invocation; review this full write scope', { readPaths: canRead ? [] : [target], writePaths: canWrite ? [] : [writePath], domains: [] });
   }
-  private async shellDecision(action: GuardAction): Promise<PolicyDecision> {
+  private async shellDecision(action: GuardAction, signal?: AbortSignal): Promise<PolicyDecision> {
     const profile = await this.resolvedProfile(action.cwd);
     const command = action.args.command;
     if (typeof command !== 'string') return decision(action, 'deny', 'Invalid command input', EMPTY_DELTA, true);
@@ -119,7 +127,14 @@ export class PolicyEngine {
     let shouldAsk = false;
     const delta: { readPaths: string[]; writePaths: string[]; domains: string[] } = { readPaths: [], writePaths: [], domains: [] };
     const commandGroups = ruleCommands(command, typeof action.args.shellPath === 'string' ? action.args.shellPath : '/bin/bash');
-    const matches = commandGroups.map(argv => this.rules.filter(rule => matchesRule(argv, rule)));
+    const key = digest(commandGroups);
+    let compiledMatches = this.matchCache.get(key);
+    if (!compiledMatches && this.ruleSources.length) {
+      compiledMatches = (await evaluateRules(this.ruleSources, commandGroups, signal)).matches;
+      if (this.matchCache.size >= 256) this.matchCache.delete(this.matchCache.keys().next().value!);
+      this.matchCache.set(key, compiledMatches);
+    }
+    const matches = commandGroups.map((argv, index) => [...this.rules.filter(rule => matchesRule(argv, rule)), ...(compiledMatches?.[index] ?? [])]);
     const forbidden = matches.flat().find(rule => rule.decision === 'forbidden');
     if (forbidden) return decision(action, 'deny', forbidden.justification ?? 'Command forbidden by trusted rule', EMPTY_DELTA, true);
     const prompted = matches.flat().find(rule => rule.decision === 'prompt');

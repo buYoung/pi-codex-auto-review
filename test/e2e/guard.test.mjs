@@ -43,6 +43,8 @@ test('[package] npm tarball loads the default factory through public Pi APIs and
   const env={...workloadEnvironment(),...(process.env.PI_GUARD_KERNEL_ARCH?{PI_GUARD_KERNEL_ARCH:process.env.PI_GUARD_KERNEL_ARCH}:{}),PI_CODING_AGENT_DIR:f.agentDir,NPM_CONFIG_CACHE:join(f.control,'npm-cache'),NPM_CONFIG_USERCONFIG:join(f.control,'empty.npmrc'),NPM_CONFIG_GLOBALCONFIG:join(f.control,'global.npmrc')};
   const packed=JSON.parse((await exec('npm',['pack','--ignore-scripts','--json','--pack-destination',artifacts],{cwd:repository,env,timeout:20000,maxBuffer:2_000_000})).stdout)[0];
   assert.ok(packed.files.some(file=>file.path==='dist/sandbox/worker.js'));assert.ok(packed.files.some(file=>file.path==='dist/sandbox/broker.js'));
+  assert.ok(packed.files.some(file=>file.path===`dist/native/pi-guard-execpolicy${process.platform==='win32'?'.exe':''}`));
+  assert.ok(packed.files.some(file=>file.path==='native/execpolicy/LICENSE'));
   assert.ok(!packed.files.some(file=>/^(src|test|tmp|node_modules)\//.test(file.path)));
   await exec('tar',['-xzf',join(artifacts,packed.filename),'-C',consumer],{timeout:10000});
   await symlink(join(repository,'node_modules'),join(consumer,'package/node_modules'));
@@ -51,6 +53,8 @@ test('[package] npm tarball loads the default factory through public Pi APIs and
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {DefaultResourceLoader,SettingsManager,SessionManager} from '@earendil-works/pi-coding-agent';
+import {parseRules} from './dist/policy/rules.js';
+assert.equal(parseRules('prefix_rule(pattern=["packed"], decision="forbidden")')[0].decision,'forbidden');
 const cwd=process.cwd(),agentDir=process.env.GUARD_AGENT_DIR;
 const loader=new DefaultResourceLoader({cwd,agentDir,settingsManager:SettingsManager.inMemory(),additionalExtensionPaths:[${JSON.stringify(join(consumer,'package/dist/index.js'))}],noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true});
 await loader.reload();const loaded=loader.getExtensions();assert.equal(loaded.errors.length,0,JSON.stringify(loaded.errors));

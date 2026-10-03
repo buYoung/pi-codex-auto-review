@@ -1,6 +1,6 @@
 export const suites = {
   contracts: { files: ['test/unit/contracts.test.mjs', 'test/unit/dependency-security.test.mjs'], kind: 'unit-doubles', behavior: ['identity', 'profiles', 'ipc', 'evidence', 'public-api', 'dependency-security'] },
-  policy: { files: ['test/unit/policy.test.mjs'], kind: 'unit-doubles', behavior: ['paths', 'rules', 'shell', 'settings'] },
+  policy: { files: ['test/unit/policy.test.mjs', 'test/unit/execpolicy.test.mjs'], kind: 'unit-doubles', behavior: ['paths', 'rules', 'shell', 'settings'] },
   reviewer: { files: ['test/unit/reviewer.test.mjs'], kind: 'simulated-provider-ui', behavior: ['review', 'deadlines', 'cancellation'] },
   approvals: { files: ['test/unit/approvals.test.mjs'], kind: 'simulated-provider-ui', behavior: ['grants', 'queue', 'persistence', 'audit'] },
   native: { files: ['test/native/sandbox.test.mjs'], kind: 'native-os', behavior: ['native-launch', 'native-files', 'native-network', 'native-lifecycle', 'native-isolation'] },

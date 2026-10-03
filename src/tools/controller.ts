@@ -31,7 +31,7 @@ export class GuardController {
   async initialize(cwd: string): Promise<void> {
     await this.policy.initialize(cwd);
     await this.approvals.initialize();
-    await this.options.executor.qualify(this.options.profile, cwd);
+    await this.options.executor.qualify(this.policy.profile, cwd);
     this.isReady = true;
   }
   assertReady(): void { if (!this.isReady || this.stopped.signal.aborted) throw new GuardError('GUARD_NOT_READY', 'Guard is not ready for execution'); }
@@ -48,14 +48,14 @@ export class GuardController {
   startTurn(): void { this.reviewContext.startTurn(); this.approvals.lifecycle.startTurn(); this.activeReviews.clear(); }
   async authorizeRetry(id: string, context: ExtensionContext) {
     this.assertReady();
-    const denial = this.approvals.lifecycle.authorizeRetry(id, {sessionId:context.sessionManager.getSessionId(),contextId:this.reviewContext.identity,cwd:await canonicalPath(context.cwd,context.cwd),policyRevision:this.policy.revision,permissionDigest:digest(this.options.profile)});
+    const denial = this.approvals.lifecycle.authorizeRetry(id, {sessionId:context.sessionManager.getSessionId(),contextId:this.reviewContext.identity,cwd:await canonicalPath(context.cwd,context.cwd),policyRevision:this.policy.revision,permissionDigest:digest(this.policy.profile)});
     const args = this.retryArguments.get(id) ?? denial.action.args;
     this.retryArguments.delete(id);
     return {denial, args};
   }
   async retryUserBash(action: GuardAction, context: ExtensionContext): Promise<void> {
     this.startTurn();
-    const next = createAction({...action,toolCallId:randomUUID()},this.options.profile);
+    const next = createAction({...action,toolCallId:randomUUID()},this.policy.profile);
     const command=String(next.args.command),shellPath=String(next.args.shellPath??'/bin/bash');
     await this.admitAndExecute(next,{kind:'shell',command,shellPath,cwd:next.cwd},context,{timeoutSeconds:typeof next.args.timeout==='number'?next.args.timeout:undefined,env:next.args.environment as NodeJS.ProcessEnv});
   }
@@ -87,7 +87,7 @@ export class GuardController {
     }
     const turnIdentity = this.reviewContext.turnIdentity;
     return this.approvals.admit(action, policyDecision, {
-      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.options.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
+      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
       onReviewStart: () => {this.activeReviews.add(action.digest);if(context.hasUI)context.ui.setStatus('auto-review',`자동 검토 중 (${this.activeReviews.size})`);},
       onReviewResult: result => {
         this.activeReviews.delete(action.digest);
@@ -113,23 +113,23 @@ export class GuardController {
     this.assertReady();
     const signal = AbortSignal.any([this.stopped.signal,this.approvals.lifecycle.signal,...(options.signal ? [options.signal] : [])]);
     const authorizationVersion = this.reviewContext.scopeVersion;
-    const policyDecision = await this.policy.evaluate(action);
+    const policyDecision = await this.policy.evaluate(action, signal);
     const admission = await this.requestAdmission(action, policyDecision, context, signal, trustedAuthorization);
     if (!admission.isAllowed) throw this.denied(admission,retryArguments);
     signal.throwIfAborted();
     if (this.reviewContext.scopeVersion !== authorizationVersion) throw new GuardError('STALE_AUTHORIZATION', 'User authorization changed during review; request a fresh review');
     if (this.sessionId !== action.sessionId || await canonicalPath(context.cwd, context.cwd) !== action.cwd || this.policy.revision !== action.policyRevision) throw new GuardError('STALE_APPROVAL', 'Execution context changed after admission');
-    const finalDecision = await this.policy.evaluate(action);
+    const finalDecision = await this.policy.evaluate(action, signal);
     if (finalDecision.kind === 'deny') throw new GuardError('PERMISSION_DENIED', finalDecision.reason);
     if(digest(finalDecision.delta)!==digest(policyDecision.delta))throw new GuardError('STALE_APPROVAL','Resolved permissions changed after admission');
     if (digest(finalDecision.authority ?? null) !== digest(policyDecision.authority ?? null)) throw new GuardError('STALE_APPROVAL', 'Execution authority changed after admission');
     try {
       let networkDenial: GuardError | undefined;
-      const result = await this.options.executor.execute(job, this.options.profile, admission.delta, {
+      const result = await this.options.executor.execute(job, this.policy.profile, admission.delta, {
         ...options, signal, authority: admission.authority, timeoutSeconds: options.timeoutSeconds ?? this.options.settings.executionTimeoutSeconds,
         onNetworkRequest: async (destination, networkSignal) => {
-          if (networkSignal.aborted || action.sessionId !== this.sessionId || this.options.profile.deniedDomains.some(pattern => matchesDomain(destination.host, pattern))) return false;
-          const networkAction = createAction({toolCallId: `${action.toolCallId}:network:${randomUUID()}`, tool: action.tool, args: {...action.args, networkDestination: {...destination}, originatingActionDigest: action.digest}, cwd: action.cwd, source: action.source, sessionId: action.sessionId, policyRevision: action.policyRevision}, this.options.profile);
+          if (networkSignal.aborted || action.sessionId !== this.sessionId || this.policy.profile.deniedDomains.some(pattern => matchesDomain(destination.host, pattern))) return false;
+          const networkAction = createAction({toolCallId: `${action.toolCallId}:network:${randomUUID()}`, tool: action.tool, args: {...action.args, networkDestination: {...destination}, originatingActionDigest: action.digest}, cwd: action.cwd, source: action.source, sessionId: action.sessionId, policyRevision: action.policyRevision}, this.policy.profile);
           const networkPolicy = decision(networkAction, 'ask', 'Runtime network request from the exact originating command', {readPaths:[],writePaths:[],domains:[destination.host]});
           const networkAuthorizationVersion = this.reviewContext.scopeVersion;
           const reviewed = await this.requestAdmission(networkAction, networkPolicy, context, networkSignal, trustedAuthorization);
@@ -163,7 +163,7 @@ export class GuardController {
           const shellPath = (toolOptions as BashToolOptions)?.shellPath ?? '/bin/bash';
           const args = { command, shellPath, ...(options.timeout !== undefined ? { timeout: options.timeout } : {}), environment: env, ...requested };
           const resolvedCwd = await canonicalPath(finalCwd, finalCwd);
-          const action = createAction({ toolCallId, tool, args: JSON.parse(canonicalJson(args)), cwd: resolvedCwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.options.profile);
+          const action = createAction({ toolCallId, tool, args: JSON.parse(canonicalJson(args)), cwd: resolvedCwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
           return await this.admitAndExecute(action, {kind:'shell',command,shellPath,cwd:resolvedCwd}, {...context,cwd:finalCwd}, {signal:options.signal,timeoutSeconds:options.timeout,env,onData:options.onData},'',JSON.parse(canonicalJson(params))) as unknown as {exitCode:number|null};
         } } });
         return delegate.execute(toolCallId, params as {command:string;timeout?:number}, signal, onUpdate, context);
@@ -171,7 +171,7 @@ export class GuardController {
       const args = JSON.parse(canonicalJson(params)) as Record<string, Json>;
       const target = await resolveToolPath(typeof args.path==='string'?args.path:'.',cwd,tool==='read');
       args.path=pathToFileURL(target).href;
-      const action = createAction({ toolCallId, tool, args, cwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.options.profile);
+      const action = createAction({ toolCallId, tool, args, cwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
       const options = tool === 'read' ? { ...(toolOptions as ReadToolOptions), ...(context.model?.inputLimits?.images?.resize ? { resizeOptions: context.model.inputLimits.images.resize } : {}) } : undefined;
       const execute=()=>this.admitAndExecute(action, { kind: 'tool', tool, args: action.args as Record<string, Json>, cwd, toolCallId, ...(options ? {options} : {}) }, context, { signal, onUpdate: onUpdate ? result => onUpdate(result as never) : undefined },'',JSON.parse(canonicalJson(params)));
       const result = await (tool==='write'||tool==='edit'?withFileMutationQueue(await canonicalPath(target,cwd),execute):execute());
@@ -183,7 +183,7 @@ export class GuardController {
       const resolvedCwd = await canonicalPath(cwd, cwd);
       const env = workloadEnvironment(options.env);
       const shellPath = this.options.shellPath ?? '/bin/bash';
-      const action = createAction({ toolCallId: randomUUID(), tool: 'bash', source: 'user-bash', args: JSON.parse(canonicalJson({ command, shellPath, environment: env, ...(options.timeout !== undefined ? {timeout:options.timeout} : {}) })), cwd: resolvedCwd, sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.options.profile);
+      const action = createAction({ toolCallId: randomUUID(), tool: 'bash', source: 'user-bash', args: JSON.parse(canonicalJson({ command, shellPath, environment: env, ...(options.timeout !== undefined ? {timeout:options.timeout} : {}) })), cwd: resolvedCwd, sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
       return await this.admitAndExecute(action, { kind: 'shell', command, shellPath, cwd: resolvedCwd }, context, { signal: options.signal, timeoutSeconds: options.timeout, env: options.env, onData: options.onData }, trustedCommand === undefined ? '' : `The user directly requested this shell command: ${trustedCommand}`,{command:trustedCommand??command}) as unknown as {exitCode:number|null};
     } };
     this.ownedOperations.add(operations);

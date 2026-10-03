@@ -50,7 +50,7 @@ test('[shell] ordinary commands remain sandboxed and advanced syntax cannot borr
 });
 test('[rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers', async t => {
   const text=`# trusted rules\nprefix_rule(pattern=["git", ["show","status"]], decision="allow", match=["git status"], not_match=["git push"],)\nprefix_rule(pattern=["git","show"],decision="prompt",justification="Inspect before running")\nprefix_rule(pattern=["git","show","secret"],decision="forbidden")`;
-  const rules=parseRules(text);assert.ok(matchesRule(['git','status'],rules[0]));assert.ok(!matchesRule(['git','push'],rules[0]));
+  const rules=parseRules(text);assert.ok(rules.some(rule=>matchesRule(['git','status'],rule)));assert.ok(!rules.some(rule=>matchesRule(['git','push'],rule)));
   assert.deepEqual(ruleCommands('bash -lc "git status && git show x"'),[['git','status'],['git','show','x']]);
   assert.deepEqual(ruleCommands('echo ok > file'),[['/bin/bash','-c','echo ok > file']]);
   for(const invalid of ['load("x")','prefix_rule(pattern=["a"], extra="bad")','prefix_rule(pattern=["a"], match=["b"])','prefix_rule(pattern=[[]])','prefix_rule(pattern=["a"],decision="approve")'])assert.throws(()=>parseRules(invalid));

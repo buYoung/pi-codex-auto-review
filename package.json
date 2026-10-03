@@ -18,7 +18,7 @@
     ]
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-execpolicy.mjs",
     "test:contracts": "node scripts/run-tests.mjs contracts",
     "test:policy": "node scripts/run-tests.mjs policy",
     "test:reviewer": "node scripts/run-tests.mjs reviewer",
@@ -55,7 +55,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "native/execpolicy/LICENSE",
+    "native/execpolicy/NOTICE"
   ],
   "private": true
 }

@@ -1,4 +1,7 @@
 import { basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFile, spawnSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import { GuardError, immutable } from '../contracts.js';
 import { analyzeShell } from './shell.js';
 
@@ -10,67 +13,47 @@ export interface PrefixRule {
 export function matchesRule(argv: readonly string[], rule: PrefixRule): boolean {
   return rule.pattern.length <= argv.length && rule.pattern.every((part, index) => typeof part === 'string' ? part === argv[index] : part.includes(argv[index]!));
 }
-/** Only literal prefix_rule declarations are accepted; this never evaluates Starlark or JavaScript. */
+export const CODEX_EXECPOLICY_REVISION = 'a956835d020762cb2b570053af06f643a11c0ecc';
+export interface RuleSource { readonly name: string; readonly source: string }
+export interface RuleMatch { readonly decision: PrefixRule['decision']; readonly justification?: string | null; readonly matchedPrefix: readonly string[]; readonly resolvedProgram?: string | null }
+export interface CompiledRules {
+  readonly revision: string;
+  readonly rules: readonly PrefixRule[];
+  readonly matches: readonly (readonly RuleMatch[])[];
+  readonly allowedDomains: readonly string[];
+  readonly deniedDomains: readonly string[];
+  readonly networkRules: readonly {host: string; protocol: string; decision: PrefixRule['decision']; justification?: string | null}[];
+  readonly hostExecutables: Readonly<Record<string, readonly string[]>>;
+}
+const MAX_BYTES = 8 * 1024 * 1024;
+const helper = fileURLToPath(new URL(`../native/pi-guard-execpolicy${process.platform === 'win32' ? '.exe' : ''}`, import.meta.url));
+const helperEnvironment = process.platform === 'win32' ? {SystemRoot: process.env.SystemRoot} : {};
+const execute = promisify(execFile);
+function request(sources: readonly RuleSource[], commands: readonly (readonly string[])[]): string {
+  const input = JSON.stringify({sources, commands});
+  if (Buffer.byteLength(input) > MAX_BYTES) throw new GuardError('INVALID_RULES', 'Rule request exceeds the supported size');
+  return input;
+}
+function decode(stdout: string): CompiledRules {
+  const result = JSON.parse(stdout) as CompiledRules;
+  if (result.revision !== CODEX_EXECPOLICY_REVISION || !Array.isArray(result.rules) || !Array.isArray(result.matches) || !Array.isArray(result.allowedDomains) || !Array.isArray(result.deniedDomains)) throw new GuardError('INVALID_RULES', 'Unexpected Codex rule engine response');
+  return immutable(result);
+}
+/** Compatibility reader; parsing and example validation run in Codex's actual Starlark engine. */
 export function parseRules(source: string): readonly PrefixRule[] {
-  if (source.length > 1000000) throw new GuardError('INVALID_RULES', 'Rule file exceeds the supported size');
-  let position = 0;
-  const fail = (): never => { throw new GuardError('INVALID_RULES', `Unsupported or invalid prefix_rule syntax at offset ${position}`); };
-  const skip = () => { for (;;) { const match = /^(?:\s+|#[^\n]*(?:\n|$))/.exec(source.slice(position)); if (!match) break; position += match[0].length; } };
-  const take = (token: string) => { skip(); if (!source.startsWith(token, position)) fail(); position += token.length; };
-  const identifier = () => { skip(); const match = /^[A-Za-z_][A-Za-z_0-9]*/.exec(source.slice(position)); if (!match) return fail(); position += match[0].length; return match[0]; };
-  const string = (): string => {
-    skip(); const quote = source[position++]; if (quote !== '"' && quote !== "'") return fail();
-    let value = '';
-    while (position < source.length) {
-      const ch = source[position++];
-      if (ch === quote) return value;
-      if (ch === '\n' || ch === '\r') return fail();
-      if (ch !== '\\') { value += ch; continue; }
-      const escaped = source[position++];
-      const escapes: Record<string, string> = {n: '\n', r: '\r', t: '\t', '\\': '\\', '"': '"', "'": "'"};
-      if (escaped === undefined || !Object.hasOwn(escapes, escaped)) return fail();
-      value += escapes[escaped];
-    }
-    return fail();
-  };
-  const list = (depth = 0): (string | string[])[] => {
-    if (depth > 1) return fail();
-    take('['); const values: (string | string[])[] = [];
-    for (;;) {
-      skip(); if (source[position] === ']') { position++; return values; }
-      values.push(source[position] === '[' ? list(depth + 1) as string[] : string());
-      skip(); if (source[position] === ']') { position++; return values; }
-      take(',');
-    }
-  };
-  const rules: PrefixRule[] = [];
-  for (;;) {
-    skip(); if (position === source.length) return immutable(rules);
-    if (identifier() !== 'prefix_rule') fail();
-    take('('); const values: Record<string, unknown> = {};
-    for (;;) {
-      skip(); if (source[position] === ')') { position++; break; }
-      const key = identifier(); if (!['pattern', 'decision', 'justification', 'match', 'not_match'].includes(key) || Object.hasOwn(values, key)) fail();
-      take('='); values[key] = ['pattern', 'match', 'not_match'].includes(key) ? list() : string();
-      skip(); if (source[position] === ')') { position++; break; }
-      take(',');
-    }
-    const pattern = values.pattern;
-    const validString = (value: unknown): value is string => typeof value === 'string' && value.length > 0 && !/[\0\r\n]/.test(value);
-    if (!Array.isArray(pattern) || !pattern.length || !pattern.every(part => validString(part) || Array.isArray(part) && part.length > 0 && part.every(validString))) fail();
-    const result = values.decision ?? 'allow';
-    if (!['allow', 'prompt', 'forbidden'].includes(String(result)) || values.justification !== undefined && !validString(values.justification)) fail();
-    const rule = {pattern, decision: result, ...(values.justification ? {justification: values.justification} : {})} as PrefixRule;
-    for (const key of ['match', 'not_match']) {
-      const examples = values[key] ?? [];
-      if (!Array.isArray(examples) || !examples.every(validString)) fail();
-      for (const example of examples as string[]) {
-        const parsed = analyzeShell(example);
-        if (!parsed.isSupported || parsed.commands.length !== 1 || parsed.commands[0]!.reads.length || parsed.commands[0]!.writes.length || matchesRule(parsed.commands[0]!.argv, rule) !== (key === 'match')) throw new GuardError('INVALID_RULES', `prefix_rule ${key} example failed`);
-      }
-    }
-    rules.push(rule);
-  }
+  const result = spawnSync(helper, [], {input: request([{name: 'inline.rules', source}], []), encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', maxBuffer: MAX_BYTES, env: helperEnvironment});
+  if (result.error || result.status !== 0) throw new GuardError('INVALID_RULES', `Codex rule engine failed: ${result.stderr?.slice(0, 4000) || result.error?.message || result.signal}`, {cause: result.error});
+  return decode(result.stdout).rules;
+}
+export async function evaluateRules(sources: readonly RuleSource[], commands: readonly (readonly string[])[] = [], signal?: AbortSignal): Promise<CompiledRules> {
+  const input = request(sources, commands);
+  try {
+    const running = execute(helper, [], {encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', maxBuffer: MAX_BYTES, env: helperEnvironment, signal});
+    running.child.stdin?.end(input);
+    // A failed spawn can close stdin before its queued input has been delivered.
+    running.child.stdin?.on('error', () => {});
+    return decode((await running).stdout);
+  } catch (error) { throw new GuardError('INVALID_RULES', 'Codex rule engine could not evaluate the trusted rules', {cause: error}); }
 }
 /** Advanced scripts are matched as the real outer shell invocation, never as a safe inner prefix. */
 export function ruleCommands(command: string, shellPath = '/bin/bash', depth = 0): readonly (readonly string[])[] {
