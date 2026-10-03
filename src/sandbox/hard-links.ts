@@ -1,14 +1,15 @@
-import { access, lstat, readdir, realpath } from 'node:fs/promises';
+import { access, lstat, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { join, parse } from 'node:path';
+import { parse } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { SandboxRuntimeConfig } from '@anthropic-ai/sandbox-runtime';
 import { GuardError, type PermissionProfile, type PermissionDelta } from '../contracts.js';
 import { isWithin } from '../policy/paths.js';
 
 const MAX_SCAN_MS = 30000;
-const runFind = promisify(execFile);
+const runScan = promisify(execFile);
 const isMissing = (error: unknown) => ['ENOENT','ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '');
 async function existingRoots(paths: readonly string[]): Promise<string[]> {
   const values: string[] = [];
@@ -25,64 +26,80 @@ export async function assertHardLinkBoundaries(profile: PermissionProfile, delta
     if (Date.now() > deadlineMs) throw new GuardError('HARD_LINK_SCAN_LIMIT', 'The filesystem is too large to qualify hard-link boundaries safely');
   };
   const scanned = new Map<string, Promise<void>>();
+  const directoryScans = new Map<string, string[]>();
   const opaqueDirectories = async (paths: readonly string[], exclusions: readonly string[]) => {
-    const pending=(await existingRoots(paths)).filter(root=>root!==parse(root).root), denied=await existingRoots(exclusions), result: string[]=[], seen=new Set<string>();
-    while(pending.length){
-      check();if(seen.size>100000)throw new GuardError('HARD_LINK_SCAN_LIMIT','Directory metadata scope is too large to qualify safely');
-      await Promise.all(pending.splice(-64).map(async path=>{
-      if(seen.has(path)||denied.some(root=>isWithin(path,root)))return;seen.add(path);
-      let entries;
-      try{entries=await readdir(path,{withFileTypes:true});}
-      catch(error){
-        if(isMissing(error))return;
-        if(['EACCES','EPERM'].includes((error as NodeJS.ErrnoException).code??'')){
-          const isSearchable=await access(path,constants.X_OK).then(()=>true,error=>{if(['EACCES','EPERM'].includes((error as NodeJS.ErrnoException).code??''))return false;throw error;});
-          if(!isSearchable){
-            if(/[?*[\]{}]/.test(path))throw new GuardError('NATIVE_SCOPE_UNSUPPORTED','An opaque directory cannot be represented safely in the native profile');
-            result.push(path);return;
-          }
-        }
-        // An unlistable but searchable directory can still expose known filenames.
+    const denied = await existingRoots(exclusions);
+    const roots = (await existingRoots(paths)).filter(root => root !== parse(root).root && !denied.some(path => isWithin(root,path)));
+    if (!roots.length) return [];
+    const prune = denied.filter(path => roots.some(root => isWithin(path,root)));
+    const key = JSON.stringify([roots.toSorted(),prune.toSorted()]);
+    if (directoryScans.has(key)) return directoryScans.get(key)!;
+    check();
+    // Synchronous directory I/O avoids a promise per directory. Keep it in an
+    // owned process so the shared deadline and caller cancellation stay effective.
+    const scan = runScan(process.execPath,[fileURLToPath(new URL('./directory-scan.js',import.meta.url))],{encoding:'utf8',maxBuffer:16*1024*1024,timeout:Math.max(1,deadlineMs-Date.now()),killSignal:'SIGKILL',signal,env:{}});
+    scan.child.stdin!.on('error',()=>{});
+    scan.child.stdin!.end(JSON.stringify({roots,denied:prune}));
+    const {stdout} = await scan;
+    const unlistable: unknown = JSON.parse(stdout);
+    if (!Array.isArray(unlistable) || unlistable.some(path => typeof path !== 'string' || path.includes('\0') || !roots.some(root => isWithin(path,root)))) throw new GuardError('HARD_LINK_SCAN_FAILED','Invalid directory scan output');
+    const result: string[] = [];
+    for (const path of unlistable as string[]) {
+      check();
+      const isSearchable = await access(path,constants.X_OK).then(()=>true,error=>{
+        if (['EACCES','EPERM'].includes((error as NodeJS.ErrnoException).code??'')) return false;
         throw error;
-      }
-      check();for(const entry of entries)if(entry.isDirectory())pending.push(join(path,entry.name));
-      }));
+      });
+      // An unlistable but searchable directory can still expose known filenames.
+      if (isSearchable) throw new GuardError('HARD_LINK_SCAN_FAILED','A searchable directory could not be inspected safely');
+      if (/[?*[\]{}]/.test(path)) throw new GuardError('NATIVE_SCOPE_UNSUPPORTED','An opaque directory cannot be represented safely in the native profile');
+      result.push(path);
     }
+    directoryScans.set(key,result);
     return result;
   };
   const inspect = async (paths: readonly string[], exclusions: readonly string[] = []) => {
     const roots = await existingRoots(paths), denied = await existingRoots(exclusions);
     // Every name is already in scope when the filesystem root is admitted (or denied).
     if (roots.some(root => root === parse(root).root) && denied.length === 0) return;
-    const key = JSON.stringify([roots,denied]);
+    const admitted = roots.filter(path => !denied.some(root => isWithin(path,root)));
+    if (!admitted.length) return;
+    const prune = denied.filter(path => admitted.some(root => isWithin(path,root)));
+    // Read/write passes with the same effective subtree share one qualification.
+    const key = JSON.stringify([admitted.toSorted(),prune.toSorted()]);
     if (scanned.has(key)) return scanned.get(key);
     const scan = async () => {
-      const admitted = roots.filter(path => !denied.some(root => isWithin(path,root)));
-      if (!admitted.length) return;
       // Native find performs the metadata traversal without one JS promise/stat per ordinary file.
       // Arguments are passed directly (no shell); NUL framing preserves spaces/newlines in names.
-      const prune = denied.filter(path => admitted.some(root => isWithin(path,root)));
       const escapePattern = (path: string) => path.replace(/[?*\[\]\\]/g, '\\$&');
       const terms = prune.flatMap((path,index) => [...(index ? ['-o'] : []), '-path', escapePattern(path)]);
       const args = [...admitted, ...(terms.length ? ['(',...terms,')','-prune','-o'] : []), '-type','f','-links','+1','-print0'];
       check();
-      const {stdout} = await runFind('/usr/bin/find',args,{encoding:'buffer',maxBuffer:16*1024*1024,timeout:Math.max(1,deadlineMs-Date.now()),killSignal:'SIGKILL',signal,env:{}});
+      const {stdout} = await runScan('/usr/bin/find',args,{encoding:'buffer',maxBuffer:16*1024*1024,timeout:Math.max(1,deadlineMs-Date.now()),killSignal:'SIGKILL',signal,env:{}});
       const names: Buffer[] = [];
       for (let start = 0, end = stdout.indexOf(0); end >= 0; start = end + 1, end = stdout.indexOf(0,start)) names.push(stdout.subarray(start,end));
       if (stdout.length && stdout.at(-1) !== 0) throw new GuardError('HARD_LINK_SCAN_FAILED','Incomplete hard-link scan output');
       const links = new Map<string,{count:number; nlink:number; path:Buffer}>();
-      for (const path of names) {
+      for (let start = 0; start < names.length; start += 64) {
         check();
-        const info = await lstat(path);
-        if (!info.isFile() || info.nlink < 2) throw new GuardError('HARD_LINK_CHANGED','Hard-link topology changed during qualification');
-        const inode = `${info.dev}:${info.ino}`, prior = links.get(inode);
-        if (prior && prior.nlink !== info.nlink) throw new GuardError('HARD_LINK_CHANGED','Hard-link topology changed during qualification');
-        links.set(inode,{count:(prior?.count ?? 0)+1,nlink:info.nlink,path});
+        const batch = names.slice(start,start+64);
+        const metadata = await Promise.all(batch.map(path => lstat(path)));
+        for (const [index,info] of metadata.entries()) {
+          if (!info.isFile() || info.nlink < 2) throw new GuardError('HARD_LINK_CHANGED','Hard-link topology changed during qualification');
+          const inode = `${info.dev}:${info.ino}`, prior = links.get(inode);
+          if (prior && prior.nlink !== info.nlink) throw new GuardError('HARD_LINK_CHANGED','Hard-link topology changed during qualification');
+          links.set(inode,{count:(prior?.count ?? 0)+1,nlink:info.nlink,path:batch[index]!});
+        }
       }
-      for (const value of links.values()) {
+      const values = [...links.values()];
+      for (let start = 0; start < values.length; start += 64) {
         check();
-        const info = await lstat(value.path);
-        if (value.count !== value.nlink || info.nlink !== value.nlink) throw new GuardError('HARD_LINK_BOUNDARY', 'A pre-existing hard link crosses the admitted filesystem boundary');
+        const batch = values.slice(start,start+64);
+        const metadata = await Promise.all(batch.map(value => lstat(value.path)));
+        for (const [index,info] of metadata.entries()) {
+          const value = batch[index]!;
+          if (value.count !== value.nlink || info.nlink !== value.nlink) throw new GuardError('HARD_LINK_BOUNDARY', 'A pre-existing hard link crosses the admitted filesystem boundary');
+        }
       }
     };
     const pending = scan(); scanned.set(key,pending); await pending;

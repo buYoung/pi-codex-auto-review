@@ -40,7 +40,7 @@ npm ci --ignore-scripts
 pnpm release
 ```
 
-1. 현재 버전과 구체적인 다음 버전을 보고 하나를 선택합니다. 로컬 버전 태그가 없으면 **현재 준비 버전 출시**도 선택할 수 있습니다. 준비된 `0.1.1`을 처음 자동 게시할 때는 이 항목을 사용합니다.
+1. 현재 버전과 구체적인 다음 버전을 보고 하나를 선택합니다. `0.1.1`에서 `0.1.2`를 출시할 때는 **patch**를 선택합니다. 로컬 버전 태그가 없으면 **현재 준비 버전 출시**도 선택할 수 있습니다.
 2. 커밋 여부를 확인하고 릴리스 커밋을 만듭니다. 현재 버전을 그대로 출시할 때는 출시 기록을 남기는 빈 커밋을 만듭니다.
 3. `v<버전>` 태그 생성 여부를 확인하고 주석 태그를 만듭니다.
 4. `master`와 해당 태그의 푸시 여부를 확인합니다. 승인하면 두 참조를 원자적으로 함께 푸시하고 Actions의 npm 게시를 시작합니다.
@@ -81,11 +81,11 @@ git ls-remote origin refs/heads/master 'refs/tags/v*'
 
 ## 게시 결과와 Pi 설치 확인
 
-첫 자동 게시 버전이 `0.1.1`이면 다음 명령으로 확인합니다.
+`0.1.2` 게시 후 다음 명령으로 확인합니다.
 
 ```sh
-npm view pi-codex-auto-review@0.1.1 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.1.1
+npm view pi-codex-auto-review@0.1.2 version --registry=https://registry.npmjs.org/
+pi install npm:pi-codex-auto-review@0.1.2
 pi list
 pi
 ```

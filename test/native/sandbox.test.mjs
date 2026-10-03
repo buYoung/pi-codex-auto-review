@@ -146,6 +146,27 @@ test('[native-files] unsearchable subtrees stay inaccessible while searchable in
   recordObservation(t,'allow','ordinary files remain usable beside a natively masked unsearchable subtree');
   recordObservation(t,'deny','workload cannot reopen masked directory; searchable directories with unverified aliases block launch');
 });
+test('[native-files] large directory scopes qualify without weakening hard-link boundaries or cancellation',async t=>{
+  const f=await setup(t),population=join(f.workspace,'population'),effect=join(f.workspace,'large-scope.txt');
+  await mkdir(population);
+  for(let group=0;group<100;group++){
+    const parent=join(population,String(group));await mkdir(parent);
+    await Promise.all(Array.from({length:1000},(_,index)=>mkdir(join(parent,String(index)))));
+  }
+  await f.execute({kind:'file',operation:'write',path:effect,content:'qualified'});
+  assert.equal(await readFile(effect,'utf8'),'qualified');
+  const cancelled=join(f.workspace,'cancelled.txt'),abort=new AbortController();
+  const timer=setTimeout(()=>abort.abort(),100);
+  try{await assert.rejects(f.execute({kind:'file',operation:'write',path:cancelled,content:'must not run'},f.profile,EMPTY_DELTA,{signal:abort.signal}),error=>error.name==='AbortError');}
+  finally{clearTimeout(timer);}
+  await assert.rejects(access(cancelled));
+  await link(join(f.outside,'sentinel.txt'),join(population,'99/999/alias'));
+  await assert.rejects(f.execute({kind:'file',operation:'write',path:effect,content:'must not run'}),error=>error.code==='HARD_LINK_BOUNDARY');
+  assert.equal(await readFile(effect,'utf8'),'qualified');
+  assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
+  recordObservation(t,'allow','an actual workload writes after scanning more than 100000 directories');
+  recordObservation(t,'deny','large scans still reject outside hard-link aliases and preserve caller cancellation before launch');
+});
 test('[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not', async t => {
   const serviceFixture=await fixture(t); let requests=0;
   const socketPath=join(serviceFixture.control,'network.sock');

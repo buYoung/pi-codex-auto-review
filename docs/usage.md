@@ -7,14 +7,16 @@ pi-codex-auto-review를 Pi 확장으로 등록하는 방법과 CLI·SDK·정책 
 npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 배포 대상은 macOS ARM64와 Linux x64이며, 패키지에 두 플랫폼의 규칙 엔진을 포함하므로 설치할 때 Rust가 필요하지 않습니다. 운영체제 샌드박스가 사용할 수 있는 환경이어야 하며 Windows의 네이티브 격리는 지원하지 않습니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.1
+pi install npm:pi-codex-auto-review@0.1.2
 pi list
 pi remove npm:pi-codex-auto-review
 ```
 
 `--local`을 추가하면 현재 프로젝트의 `.pi/settings.json`에 등록합니다. 프로젝트 패키지는 해당 프로젝트의 신뢰 결정 후 로드됩니다. 버전을 명시한 설치는 그 버전으로 고정됩니다.
 
-0.1.0에서 `Cannot find package '@earendil-works/pi-coding-agent'`로 시작에 실패하면 0.1.1로 업데이트합니다. Pi는 관리하는 확장에 호스트 SDK의 물리적 복사본을 설치하지 않습니다. 0.1.1은 Pi의 공개 경로 API로 호스트 SDK를 찾고, 그 절대 경로를 격리 워커에도 전달합니다. 별도의 SDK 복사본이나 심볼릭 링크를 추가할 필요가 없습니다.
+0.1.0에서 `Cannot find package '@earendil-works/pi-coding-agent'`로 시작에 실패하면 0.1.2로 업데이트합니다. Pi는 관리하는 확장에 호스트 SDK의 물리적 복사본을 설치하지 않습니다. 0.1.1부터 Pi의 공개 경로 API로 호스트 SDK를 찾고, 그 절대 경로를 격리 워커에도 전달합니다. 별도의 SDK 복사본이나 심볼릭 링크를 추가할 필요가 없습니다.
+
+0.1.1에서 `Directory metadata scope is too large to qualify safely`로 시작에 실패해도 0.1.2로 업데이트합니다. 0.1.2는 별도 프로세스에서 디렉터리 메타데이터를 탐색하며, 10만 개 제한을 제거합니다. 기본 `/tmp`·`TMPDIR`의 쓰기 범위와 하드링크 보호, 30초 검사 제한 및 취소 처리는 유지합니다. 검사에 실패하거나 제한 시간을 초과하면 실행을 차단합니다.
 
 기본 설치 위치인 `.pi/agent/npm` 안에서도 실행에 필요한 확장 코드와 의존성을 읽을 수 있습니다. 에이전트 설정과 자격 증명 경로의 보호는 유지합니다.
 

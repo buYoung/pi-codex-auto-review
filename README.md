@@ -7,7 +7,7 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 npm에 게시된 버전은 Pi에서 설치합니다. 배포 패키지는 macOS ARM64와 Linux x64용 규칙 엔진을 포함하며, 설치할 때 Rust 빌드가 필요하지 않습니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.1
+pi install npm:pi-codex-auto-review@0.1.2
 pi list
 ```
 
