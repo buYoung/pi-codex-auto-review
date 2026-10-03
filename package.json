@@ -28,6 +28,8 @@
     "test:e2e": "node scripts/run-tests.mjs e2e",
     "test:conformance": "node scripts/run-tests.mjs conformance",
     "verify:guard": "node scripts/verify-guard.mjs",
+    "verify:platform": "node scripts/verify-platform.mjs",
+    "verify:windows": "node scripts/verify-windows.mjs",
     "verify:docker": "node scripts/verify-docker.mjs"
   },
   "dependencies": {

@@ -11,14 +11,14 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 export async function sourceDigest() {
   const hash = createHash('sha256');
   async function add(dir) {
-    for (const item of (await readdir(join(root, dir), { withFileTypes: true })).sort((a,b) => a.name.localeCompare(b.name))) {
+    for (const item of (await readdir(join(root, dir), { withFileTypes: true })).sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
       const path = `${dir}/${item.name}`;
       if (item.isDirectory()) await add(path);
       else { hash.update(path); hash.update(await readFile(join(root, path))); }
     }
   }
-  for (const dir of ['src', 'test', 'scripts', 'vendor', 'native']) await add(dir);
-  for (const path of ['package.json', 'package-lock.json', 'tsconfig.json']) hash.update(await readFile(join(root, path)));
+  for (const dir of ['src', 'test', 'scripts', 'vendor', 'native', '.github']) await add(dir);
+  for (const path of ['package.json', 'package-lock.json', 'tsconfig.json', 'README.md']) hash.update(await readFile(join(root, path)));
   return hash.digest('hex');
 }
 export async function contractDigest() {

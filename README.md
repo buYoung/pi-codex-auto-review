@@ -6,7 +6,7 @@ Codex 공개 소스 [`rust-v0.160.0`](https://github.com/openai/codex/tree/a9568
 
 ## 실행
 
-Node.js 22.19 이상과 Pi 0.99.1이 필요합니다. 개발 의존성을 설치하고 빌드합니다.
+Node.js 22.19 이상, Pi 0.99.1, Rust 1.95 이상이 필요합니다. 소스 빌드는 고정된 Codex 규칙 엔진도 함께 컴파일합니다. 설치 패키지에는 빌드한 운영체제·아키텍처용 실행 파일이 들어가므로 대상 환경에서 빌드합니다. 네이티브 격리는 macOS와 Linux를 지원하며 `/usr/bin/find`가 필요합니다. 개발 의존성을 설치하고 빌드합니다.
 
 ```sh
 npm ci
@@ -65,9 +65,9 @@ try {
 }
 ```
 
-`approvalPolicy`는 `"on-request"`, `"never"` 또는 `{"sandbox": true, "rules": false}` 형태입니다. `never`와 꺼진 범주의 경계 요청은 검토 없이 차단합니다. `reviewModel` 예시는 `{"provider": "ollama-cloud", "id": "glm-5.3"}`이며, 해당 공급자를 먼저 등록해야 합니다.
+`approvalPolicy`는 `"on-request"`, `"never"` 또는 `{"sandbox": true, "rules": false, "mcp_elicitations": true}` 형태입니다. 기존 두 필드 구성도 지원하며, 생략한 `mcp_elicitations`는 허용하지 않습니다. `never`와 꺼진 범주의 경계 요청은 검토 없이 차단합니다. `reviewModel` 예시는 `{"provider": "ollama-cloud", "id": "glm-5.3"}`이며, 해당 공급자를 먼저 등록해야 합니다.
 
-`ruleFiles`에는 Codex `.rules`의 리터럴 `prefix_rule(pattern=[...], decision="allow|prompt|forbidden")`을 지정할 수 있습니다. 대안 인자 목록, `match`·`not_match`, `justification`을 지원하고 복합 명령에서 가장 강한 규칙을 적용합니다. 일반 Starlark 코드는 실행하지 않습니다. 해석하지 못하는 쉘 구문은 접두사 허용을 빌려 쓰지 않고 기본 격리에서 실행합니다. 신뢰한 `allow` 규칙은 일치하는 명령의 권한을 넓힐 수 있으므로 필요한 명령에만 지정합니다.
+`ruleFiles`의 `.rules`는 고정 리비전의 Codex `codex-execpolicy`가 직접 평가합니다. Starlark 함수·조건식·컴프리헨션·문자열 보간, `prefix_rule`, `host_executable`, `network_rule`, `match`·`not_match` 검증을 지원합니다. 복합 명령에는 가장 강한 규칙을 적용합니다. Codex의 네트워크 규칙 변환처럼 프로토콜 표시는 호스트 허용·거부 목록으로 합쳐지며, 별도 프로토콜별 권한으로 분리하지 않습니다. 해석하지 못하는 쉘 구문은 접두사 허용을 빌려 쓰지 않고 기본 격리에서 실행합니다. 신뢰한 `allow` 규칙은 일치하는 명령의 권한을 넓힐 수 있으므로 필요한 명령에만 지정합니다.
 
 `reviewPolicy`는 검토자의 조직 정책 부분을 교체합니다. 위험 평가·출처 구분·결과 기준은 유지합니다. `reviewMaxRounds`·`reviewMaxOutputTokens`·`reviewContextChars`는 각각 검토 왕복·출력·문맥 상한입니다. `writableRoots`는 추가 쓰기 루트이며, `excludeSlashTmp`·`excludeTmpdir`로 기본 임시 경로 허용을 제외할 수 있습니다.
 
@@ -79,11 +79,19 @@ try {
 
 Pi와 명시적으로 신뢰한 확장은 제어 계층입니다. 임의의 같은 프로세스 확장 코드나 원격 MCP 서버 내부까지 이 샌드박스로 보호하지는 않습니다. 보호 진입점은 자동 확장 탐색을 끄고, 알 수 없는 도구는 신뢰한 어댑터가 없으면 차단합니다. `trustedExtensionPaths`에 설치된 공급자의 진입 파일을 명시하면 Pi의 공개 로더로 읽습니다. 예를 들어 이 저장소에서는 `node_modules/pi-ollama-cloud/index.ts`를 절대 경로로 지정합니다.
 
-보호 진입점은 자동 컨텍스트 파일 탐색도 끕니다. Pi가 실제 제공한 지시만 검토에 반영하며, `AGENTS.md`라는 파일명이나 도구 출력만으로 권한을 만들지 않습니다. 이 자동 탐색 설정, 제어 계층의 절대 보호, 일반 Starlark 미지원은 Codex와의 명시적 차이입니다.
+보호 진입점은 선택한 `agentDir`의 전역 지침과 프로젝트 루트부터 현재 디렉터리까지의 지침을 자동 탐색합니다. 같은 디렉터리에서는 `AGENTS.override.md`, `AGENTS.md`, `projectDocFallbackFilenames` 순서로 선택합니다. 기본 루트 표시는 `.git`이며 `projectRootMarkers: []`는 상위 탐색을 끕니다. 프로젝트 지침의 합산 한도는 `projectDocMaxBytes`의 기본값 32768바이트입니다. Pi가 비신뢰로 표시한 프로젝트는 제외하고, 새로고침 때 다시 읽습니다. 보호 파일로 연결되는 별칭은 거부하며, 도구 출력에 등장한 파일명을 지침의 출처로 취급하지 않습니다.
+
+MCP는 Pi에 등록된 서버와 `agentDir/mcp.json`, 신뢰한 프로젝트의 `.pi/mcp.json`을 사용합니다. 서버의 실제 도구 등록을 최종 실행 승인에 연결하며 입력·스키마·등록 정보가 바뀌거나 취소되면 실행하지 않습니다. `auto_review`는 읽기 전용 표시나 이전 승인으로 검토를 생략하지 않습니다. 사용자 검토 모드는 Codex의 annotation 우선순위를 따릅니다. `createGuardedRuntime()`의 `mcp: false`로 연결을 끄거나, `mcpToolPolicies`의 `서버/도구` 키에 `approvalMode`와 `kind`를 지정할 수 있습니다.
+
+Computer Use 실행 도구는 설치된 공급자가 제공해야 합니다. `node_repl`의 `js`나 `externalExtensions`의 신뢰한 어댑터를 승인 계층에 연결할 수 있습니다. 민감한 중첩 요청은 살아 있는 원래 호출에 결합해 별도로 검토합니다. `codex_requires_user_input`은 모델이 대신 승인하지 않습니다. 빈 승인 폼은 처리하지만, 입력 필드가 있는 일반 폼과 URL 인증 요청은 이 어댑터에서 거부합니다.
 
 Linux에서 아직 없는 파일을 만들려면 기존 상위 디렉터리의 쓰기 마운트가 필요할 수 있습니다. 이때 실제 상위 경로를 검토 요청에 포함하며, 승인된 호출 동안 그 디렉터리가 쓰기 범위가 됩니다. 기존 파일의 좁은 승인과 다음 호출의 격리는 별도로 검증합니다. 파일 하나만 생성할 수 있는 권한과 완전히 같다고 보장하지 않습니다.
 
 네이티브 런타임이 기본으로 추가하는 임시·로그 쓰기 경로도 선언된 권한 밖이면 차단합니다. 그 내부를 승인할 때 런타임이 디렉터리 전체 권한을 필요로 하면 검토 요청에 실제 범위를 포함합니다. SDK에서 그 경로의 일부만 쓰기 루트로 직접 지정하는 구성은 범위를 몰래 넓히지 않고 `NATIVE_SCOPE_UNSUPPORTED`로 거부합니다.
+
+실행 전에 만들어진 하드링크도 검사합니다. 같은 inode의 모든 이름이 허용 범위에 포함되어야 하며, 경계를 넘는 별칭은 `HARD_LINK_BOUNDARY`로 차단합니다. 검사 실패·출력 초과·30초 시간 초과도 실행을 막습니다. 실행과 동시에 격리 밖의 호스트 프로그램이 링크 구조를 바꾸는 공격까지 방어한다고 보장하지 않습니다.
+
+의존성 보안 조치는 [적용 근거와 재생성 방법](docs/security/dependencies.md)에 있습니다. `node-forge`는 상류의 미병합 수정 리비전으로 고정했고, 개발용 Pi 패키지는 소스 코드를 보존한 채 내부 의존성 잠금만 교정했습니다. 별도로 설치한 Pi 호스트의 의존성까지 자동 교체하지 않습니다.
 
 ## 검증
 
@@ -104,7 +112,9 @@ npm run verify:guard
 
 [보호 경계 검증표](docs/testing/auto-review-protection.md)는 보호·허용·검토 실패·취소 사례와 검증하지 않은 범위를 설명합니다. Codex의 유한 응답 재생 하네스 방식을 반영해 호출 누락·초과, 다음 모델 요청에 전달되는 도구 결과 본문, 실제 파일·네트워크 효과를 함께 검사합니다.
 
-`verify:guard`는 빌드와 전체 로컬 검증을 실행한 다음, **같은 소스의 `darwin-arm64`·`linux-x64` 전체 결과와 같은 Linux x64 이미지의 GLM5.3 실모델 결과**를 합칩니다. 하나라도 없거나 차단·실패·오래된 결과이면 종료 코드는 1입니다. ARM64 Linux 결과는 별도 관찰이며 x64를 대체하지 않습니다.
+`verify:guard`는 빌드와 전체 로컬 검증을 실행한 다음, **같은 소스의 `darwin-arm64`·`linux-x64` 전체 결과와 같은 Linux x64 이미지의 GLM5.3 실모델 결과**를 합칩니다. 실제 x64 커널에서 실행한 `verify:platform` 결과도 필요합니다. 하나라도 없거나 차단·실패·오래된 결과이면 종료 코드는 1입니다. ARM64 Linux 결과는 별도 관찰이며 x64를 대체하지 않습니다.
+
+`npm run verify:platform`은 현재 운영체제의 전체 검증만 실행합니다. GitHub Actions의 `자동 검토 운영체제 검증`은 실제 Linux x64 검사와 Docker 이미지·결과 반출을 수행합니다. Windows의 `npm run verify:windows`는 원본 규칙 엔진·승인 정책과 미지원 네이티브 실행의 사전 거부를 검증합니다. Windows 보고서의 성공은 네이티브 격리 지원을 뜻하지 않습니다. workflow에는 Ollama 키를 전달하지 않습니다.
 
 ## Docker에서 Ollama Cloud 검증
 
@@ -142,4 +152,4 @@ npm run verify:docker -- --mode conformance --platform linux/amd64
 
 현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), 보호 사례 확장·Docker 수정·GLM5.3 재검증은 [보호 경계 인계](docs/handoffs/auto-review/10-protection-matrix.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
 
-이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. GLM5.3 실모델 검증은 환경변수 수정 후 일반 실행 허용·범위 밖 쓰기 자동 승인·보호 경로 거부·검토자 정책 거부의 4개 시나리오가 통과했습니다. 보호 사례 40개를 추가한 같은 소스의 macOS·Docker x64 각각 112개 검증과 실모델 결과를 합친 `verify:guard`의 최종 상태는 `complete`입니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
+이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널의 x64 실행과 실제 x64 커널의 실행은 보고서에서 구분합니다. 이전 112개 검증과 GLM5.3 네 사례의 완료 기록은 보호 경계 인계에 남아 있으며, 새 변경의 완료 여부는 최종 인계의 현재 소스 해시와 실행 근거를 확인해야 합니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.

@@ -25,6 +25,7 @@ COPY src ./src
 COPY test ./test
 COPY scripts ./scripts
 COPY native ./native
+COPY .github ./.github
 COPY tsconfig.json README.md ./
 COPY --from=execpolicy /build/target/release/pi-guard-execpolicy ./dist/native/pi-guard-execpolicy
 RUN ./node_modules/.bin/tsc && node test/docker/package.mjs \

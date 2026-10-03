@@ -1,6 +1,6 @@
 import { mkdir, readFile, readdir, writeFile, link, unlink } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const repository = fileURLToPath(new URL('../', import.meta.url));
@@ -20,7 +20,7 @@ export async function createRun({ platform = `${process.platform}-${process.arch
   const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID()}`;
   const directory = join(base, 'runs', runId, platform);
   await mkdir(directory, { recursive: true });
-  const run = { runId, platform, directory, artifactPath: relative(repository, directory), recordedAt: new Date().toISOString(), ...metadata };
+  const run = { runId, platform, directory, artifactPath: relative(repository, directory).split(sep).join('/'), recordedAt: new Date().toISOString(), ...metadata };
   await writeImmutable(join(directory, 'started.json'), { schemaVersion: 2, ...run });
   return run;
 }

@@ -1,0 +1,25 @@
+{
+  "status": "remote-pending",
+  "sourceDigest": "6e2a62da6045d0eba72fc372b6e3de876a1130b416cbe34f54a60fc3acda0b01",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
+  "local": {
+    "platform": "darwin-arm64",
+    "status": "pass",
+    "tests": 138,
+    "artifactPath": ".reports/pi-guard/runs/2026-10-03T04-42-19-777Z-ac108601-d08c-41ec-960d-487a676e8cbd/darwin-arm64/platform.json"
+  },
+  "remote": {
+    "repository": "buYoung/pi-codex-permission",
+    "branch": "codex/auto-review-platform-verification-20261003",
+    "linux": "pending",
+    "windows": "pending"
+  },
+  "live": {
+    "model": "glm-5.3",
+    "status": "pending"
+  },
+  "limitations": [
+    "Windows verifies portable rules and fail-closed unsupported native startup, not successful native confinement.",
+    "No provider credentials are sent to GitHub Actions."
+  ]
+}

@@ -1,0 +1,75 @@
+name: 자동 검토 운영체제 검증
+on:
+  push:
+    branches: ['codex/auto-review-platform-verification-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: auto-review-platforms-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux-x64:
+    name: Linux x64 네이티브 및 Docker 검증
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.0
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d
+        with:
+          toolchain: 1.95.0
+      - name: Prepare isolated runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap socat ripgrep fd-find libcap2-bin
+          if ! command -v fd >/dev/null 2>&1; then sudo ln -s /usr/bin/fdfind /usr/local/bin/fd; fi
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm audit --audit-level=low
+      - run: npm run verify:platform
+      - run: npm run verify:docker -- --mode offline --platform linux/amd64
+      - run: node scripts/export-verification-image.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: linux-x64-evidence
+          path: .reports/pi-guard
+          include-hidden-files: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-x64-image
+          path: tmp/ci
+          compression-level: 0
+          if-no-files-found: error
+  windows-x64:
+    name: Windows x64 규칙 및 사전 거부 검증
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.0
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d
+        with:
+          toolchain: 1.95.0
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm run verify:windows
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-x64-evidence
+          path: .reports/pi-guard
+          include-hidden-files: true
+          if-no-files-found: error

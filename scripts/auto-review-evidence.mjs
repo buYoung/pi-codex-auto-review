@@ -20,7 +20,11 @@ export const scenarioMatrix = [
   row('read-only-investigation',[guardian('model')],'Only bounded native read inspection is available; protected reads, writes and network are denied',[['integration','native reviewer investigation'],['reviewer','registered model override']]),
   row('review-model-selection',[guardian('model')],'Configured registered review model and final limits reach the provider',[['reviewer','registered model override']]),
   row('ordinary-actions-and-routing',[guardian('routing')],'Ordinary interpreter runs confined without review; never/granular/user routing are distinct',[['policy','ordinary commands'],['approvals','disabled categories'],['conformance','[joined]']]),
-  row('command-rule-format-and-authority',[guardian('routing')],'Literal prefix_rule validates examples, strongest rule wins and full command authority remains invocation-bound',[['policy','literal Codex'],['integration','explicit full-command']]),
+  row('command-rule-format-and-authority',[ref('execpolicy/src/parser.rs'),ref('execpolicy/src/policy.rs')],'Pinned Codex Starlark, host executables and network rules reach matching and native configuration; command authority remains invocation-bound',[['policy','literal Codex'],['policy','Codex Starlark'],['policy','host executable'],['policy','all network_rule'],['integration','explicit full-command']]),
+  row('context-file-discovery',[ref('core/src/agents_md.rs')],'Trusted project discovery preserves precedence, byte bounds, read protection and runtime provenance across reload',[['policy','[context-files]'],['integration','discovered instructions']]),
+  row('MCP-and-computer-use',[ref('core/src/mcp_tool_call.rs'),ref('core/src/session/mcp.rs')],'Registered external actions and live-origin nested approvals preserve strict automatic, human-only, stale and cancelled routing',[['policy','[external-policy]'],['integration','[external-tools]'],['integration','[computer-use]']]),
+  row('preexisting-hard-link-boundaries',[ref('prompts/templates/guardian/policy_template.md')],'Pre-existing inode aliases cannot cross protected reads or narrow write grants; contained links remain usable',[['native','pre-existing hard-link'],['native','narrow reviewed grant does not expose']]),
+  row('additional-network-protocols',[ref('execpolicy/src/rule.rs')],'HTTPS certificate verification, SOCKS5 TCP and IPv6 proxy controls succeed while denied and direct traffic stays isolated',[['native','HTTPS CONNECT'],['native','SOCKS5 TCP'],['native','IPv6 proxy']]),
   row('filesystem-temp-protected-paths',[ref('prompts/templates/guardian/policy_template.md')],'Read/write protections, temporary roots, Git metadata, scoped writes and protected credential directories reach native consumers',[['policy','default readable roots'],['native','reviewed metadata grant'],['native','backend convenience write paths'],['integration','complete explicitly selected agent credential directory'],['conformance','[creation]']]),
   row('dynamic-network-origin',[guardian('routing')],'Review sees the original command and exact dynamic destination without replaying preceding effects',[['integration','runtime network review'],['native','live broker approval']]),
   row('distinct-failure-states',[guardian('completion'),guardian('feedback')],'Denial, timeout, cancellation and technical failure remain distinguishable and never execute',[['reviewer','configured milliseconds'],['reviewer','caller cancellation'],['conformance','[failures]']]),
@@ -75,6 +79,16 @@ export async function dockerCandidates(sourceDigest, contractDigest) {
     catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}
   }
   return candidates;
+}
+
+export async function windowsQualification(sourceDigest, contractDigest) {
+  let entries;try{entries=await readdir(join(reportRoot,'runs'));}catch(error){if(error.code==='ENOENT')return;throw error;}
+  for(const id of entries.sort().reverse()){
+    try{
+      const result=JSON.parse(await readFile(join(reportRoot,'runs',id,'win32-x64','windows.json'),'utf8'));
+      if(result.status==='pass'&&result.sourceDigest===sourceDigest&&result.contractDigest===contractDigest&&result.qualification==='portable-engine-and-fail-closed'&&result.host?.platform==='win32'&&result.host.arch==='x64'&&result.nativeConfinementPassed===false&&result.portableTests?.status==='pass'&&['hostWrite','unsupportedExecutionRejected','noWorkloadEffect','startupRejected','noToolRegistration'].every(key=>result.controls?.[key]===true))return result;
+    }catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}
+  }
 }
 
 export function matrixResults(platformResults) {
