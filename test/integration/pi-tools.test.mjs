@@ -45,14 +45,17 @@ test('[user-bash] ! and !! return handled operations with native output and deni
   await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});
   t.after(()=>extension.assertReady().close()); const context={cwd:f.workspace,sessionManager:{getSessionId:()=> 'shell-session'},hasUI:false};
   handlers.get('session_start')({},context);
+  // Check routing and effects with room for emulated process startup. The native
+  // lifecycle suite separately enforces a two-second deadline and no late effects.
+  const executionTimeoutSeconds=15;
   for(const excludeFromContext of [false,true]) {
     const response=await handlers.get('user_bash')({command:'printf ok',cwd:f.workspace,excludeFromContext},context); assert.ok(response.operations);const chunks=[];
-    assert.equal((await response.operations.exec('printf ok',f.workspace,{onData:data=>chunks.push(data),timeout:3,env:{GUARD_TEST:'ok'}})).exitCode,0);assert.equal(Buffer.concat(chunks).toString(),'ok');
-    await assert.rejects(response.operations.exec(`echo bad > '${join(f.control,'protected.txt')}'`,f.workspace,{onData:()=>{},timeout:3}));
+    assert.equal((await response.operations.exec('printf ok',f.workspace,{onData:data=>chunks.push(data),timeout:executionTimeoutSeconds,env:{GUARD_TEST:'ok'}})).exitCode,0);assert.equal(Buffer.concat(chunks).toString(),'ok');
+    await assert.rejects(response.operations.exec(`echo bad > '${join(f.control,'protected.txt')}'`,f.workspace,{onData:()=>{},timeout:executionTimeoutSeconds}));
   }
   assert.equal(await readFile(join(f.control,'protected.txt'),'utf8'),f.secret);
   const command=`${shellQuote(process.execPath)} --version`,handled=await handlers.get('user_bash')({command,cwd:f.workspace,excludeFromContext:false},context);
-  assert.equal((await handled.operations.exec(command,f.workspace,{onData:()=>{},timeout:3})).exitCode,0);
+  assert.equal((await handled.operations.exec(command,f.workspace,{onData:()=>{},timeout:executionTimeoutSeconds})).exitCode,0);
   assert.ok(reviews.some(request=>request.context.items.some(item=>item.source==='user'&&JSON.stringify(item.content).includes(command))&&request.untrustedAction.source==='user-bash'));
 });
 test('[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call',async t=>{
