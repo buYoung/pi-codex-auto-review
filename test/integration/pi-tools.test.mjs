@@ -188,6 +188,16 @@ test('[startup] default permissions protect the complete explicitly selected age
   await assert.rejects(tools.find(tool=>tool.name==='read').execute('auth-read',{path:authPath},undefined,undefined,context),/Protected path/);
   assert.equal(await readFile(authPath,'utf8'),'owned-auth-fixture');
 });
+test('[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected',async t=>{
+  const f=await fixture(t),metadata=join(f.workspace,'.agents'),piDirectory=join(f.workspace,'.pi'),locked=join(f.workspace,'locked.txt');
+  await mkdir(metadata);await mkdir(piDirectory);
+  await writeFile(join(metadata,'state.txt'),'original');await writeFile(join(piDirectory,'mcp.json'),'{"mcpServers":{}}');await writeFile(locked,'locked');
+  const runtime=await guardedFixture(t,f,{profile:{...f.profile,readOnlyPaths:[locked]},provider:{complete:async()=>'{"outcome":"deny","rationale":"Keep the caller-selected file unchanged"}'}});
+  await planStream(runtime.session,[[{name:'write',args:{path:join(metadata,'state.txt'),content:'caller-permitted'}}],[{name:'write',args:{path:locked,content:'forbidden'}}],[{name:'write',args:{path:join(piDirectory,'mcp.json'),content:'forbidden'}}]]);
+  await runtime.session.prompt('Exercise only the explicitly selected metadata permissions.');
+  assert.equal(await readFile(join(metadata,'state.txt'),'utf8'),'caller-permitted');assert.equal(await readFile(locked,'utf8'),'locked');
+  assert.equal(await readFile(join(piDirectory,'mcp.json'),'utf8'),'{"mcpServers":{}}');
+});
 test('[nested] actual built-in codemode calls reach guarded local tools and retain structured bash results', async t => {
   const f=await fixture(t), runtime=await guardedFixture(t,f), events=[];runtime.session.subscribe(e=>events.push(e));
   await planStream(runtime.session,[[{name:'codemode',args:{code:'const r = await tools.bash({command: "printf nested"}); console.log(r); await tools.write({path: "nested.txt", content: "nested-effect"});'}}]]);

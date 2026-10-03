@@ -23,6 +23,10 @@ export function workloadEnvironment(caller: NodeJS.ProcessEnv = {}, ambient: Nod
 }
 export async function nativeConfig(profile: PermissionProfile, delta: PermissionDelta, cwd: string, authority?: ExecutionAuthority): Promise<SandboxRuntimeConfig> {
   createProfile(profile);
+  const resolved = {...profile};
+  for (const key of ['readRoots','writeRoots','denyRead','denyWrite'] as const) resolved[key] = await Promise.all(profile[key].map(path => canonicalPath(path, cwd)));
+  profile = createProfile(resolved);
+  if (profile.readRoots.some(path => profile.denyRead.some(root => isWithin(path, root))) || profile.writeRoots.some(path => [...profile.denyRead,...profile.denyWrite].some(root => isWithin(path, root)))) throw new GuardError('HARD_DENY', 'An explicit permission root conflicts with an absolute deny');
   for (const key of ['readPaths', 'writePaths', 'domains'] as const) if (!Array.isArray(delta[key]) || delta[key].some(x => typeof x !== 'string')) throw new GuardError('INVALID_DELTA', 'Invalid permission delta');
   const reads = await Promise.all(delta.readPaths.map(path => canonicalPath(path, cwd)));
   const writes = await Promise.all(delta.writePaths.map(path => canonicalPath(path, cwd)));

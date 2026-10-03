@@ -38,7 +38,6 @@ export function createGuardExtension(options: GuardOptions = {}) {
     const profile = options.profile ? createProfile({...options.profile,
       denyRead:[...new Set([...options.profile.denyRead,...baseline.denyRead])],
       denyWrite:[...new Set([...options.profile.denyWrite,...baseline.denyWrite])],
-      readOnlyPaths:[...new Set([...(options.profile.readOnlyPaths ?? []),...(baseline.readOnlyPaths ?? [])])],
     }) : baseline;
     const audit = new AuditLog(join(controlDir, 'audit.jsonl'));
     const approvals = new ApprovalManager({ reviewTimeoutMs: settings.reviewTimeoutMs, approvalTimeoutMs: settings.approvalTimeoutMs, approvalPolicy: settings.approvalPolicy, approvalsReviewer: settings.approvalsReviewer, audit, persistence: new FileGrantPersistence(join(controlDir, 'grants.json')) });

@@ -37,6 +37,22 @@ test('[native-files] SDK permission roots cannot turn literal metacharacters int
     await assert.rejects(access(effect));
   }
 });
+test('[native-files] missing metadata write protections remain traversable without permitting creation',async t=>{
+  const f=await setup(t),git=join(f.workspace,'.git'),pi=join(f.workspace,'.pi');
+  await writeFile(join(f.workspace,'owned.txt'),'owned-search-control');
+  const profile=createProfile({...f.profile,readOnlyPaths:[git,pi],denyWrite:[...f.profile.denyWrite,join(pi,'mcp.json'),join(pi,'settings.json')]});
+  const result=await f.execute({kind:'tool',tool:'grep',toolCallId:'owned-search',args:{path:f.workspace,pattern:'owned-search-control'}},profile);
+  assert.ok(JSON.stringify(result).includes('owned-search-control'));
+  assert.equal((await f.shell('mkdir allowed-metadata-control && printf allowed > allowed-metadata-control/owned.txt',profile)).exitCode,0);
+  assert.equal(await readFile(join(f.workspace,'allowed-metadata-control/owned.txt'),'utf8'),'allowed');
+  const attempt=await f.shell(`mkdir -p ${shellQuote(pi)} && printf forbidden > ${shellQuote(join(pi,'mcp.json'))}`,profile);
+  assert.notEqual(attempt.exitCode,0);await assert.rejects(access(join(pi,'mcp.json')));
+  assert.equal(await readFile(join(f.workspace,'owned.txt'),'utf8'),'owned-search-control');
+  const overlap=createProfile({...profile,readRoots:[...profile.readRoots,f.control],writeRoots:[...profile.writeRoots,f.control]});
+  await assert.rejects(f.execute({kind:'file',operation:'read',path:join(f.control,'protected.txt')},overlap),error=>error.code==='HARD_DENY');
+  const alias=join(f.workspace,'protected-alias');await symlink(f.control,alias);
+  await assert.rejects(f.execute({kind:'file',operation:'read',path:join(alias,'protected.txt')},{...profile,readRoots:[alias]}),error=>error.code==='HARD_DENY');
+});
 test('[native-launch] permitted process preserves cwd, output, filtered caller env and nonzero exits', async t => {
   const f=await setup(t);
   const result=await f.shell('pwd; printf "%s" "$GUARD_CALLER_VALUE"; exit 7',f.profile,EMPTY_DELTA,{env:{GUARD_CALLER_VALUE:'caller-value',API_KEY:f.secret,NODE_OPTIONS:'--bad-option'},timeoutSeconds:5});
