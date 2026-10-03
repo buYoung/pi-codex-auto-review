@@ -1,9 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
+import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, ProjectTrustStore, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
+import { loadContextFiles } from './context-files.js';
+import { guardedExternalExtension, type ExternalExtension } from './tools/mcp.js';
 
 export async function assertSupportedPi(): Promise<string> {
   let path = dirname(fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')));
@@ -24,30 +26,61 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   agentDir: string;
   modelRuntime?: ModelRuntime;
   settingsManager?: SettingsManager;
+  /** Explicit trust for the initially selected project; later cwd changes use their own trust record. */
+  isProjectTrusted?: boolean;
   model?: CreateAgentSessionOptions['model'];
+  /** Resolve an explicitly selected model after trusted provider extensions have registered. */
+  modelSelection?: {readonly provider: string; readonly id: string};
   sessionManager?: SessionManager;
   trustedExtensions?: InlineExtension[];
+  externalExtensions?: readonly ExternalExtension[];
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
   await assertSupportedPi();
+  if (options.model && options.modelSelection) throw new GuardError('CONFLICTING_MODEL_SELECTION','Provide either a model object or a provider/model selection');
+  if (options.isProjectTrusted !== undefined && typeof options.isProjectTrusted !== 'boolean') throw new GuardError('INVALID_PROJECT_TRUST','Project trust must be an explicit boolean');
   const initialCwd = resolve(options.cwd), agentDir = resolve(options.agentDir);
+  const trustedExtensionPaths = (options.trustedExtensionPaths ?? []).map(path => resolve(initialCwd, path));
   const createRuntime = async (input: {cwd:string;agentDir:string;sessionManager:SessionManager;sessionStartEvent?:CreateAgentSessionOptions['sessionStartEvent']}) => {
-    const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir);
-    const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
+    const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir,{projectTrusted:false});
+    const explicitTrust=resolve(input.cwd)===initialCwd ? options.isProjectTrusted : undefined;
+    if (options.settingsManager) {
+      if (explicitTrust !== undefined && settingsManager.isProjectTrusted() !== explicitTrust) throw new GuardError('CONFLICTING_PROJECT_TRUST','Explicit project trust conflicts with the supplied settings manager');
+    } else {
+      const storedTrust=new ProjectTrustStore(input.agentDir).get(input.cwd);
+      settingsManager.setProjectTrusted(explicitTrust ?? storedTrust ?? settingsManager.getDefaultProjectTrust()==='always');
+    }
+    const guard = createGuardExtension({...options,trustedExtensionPaths,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
+      const external = (options.externalExtensions ?? []).map(extension => guardedExternalExtension(extension, () => guard.assertReady()));
       const services = await createAgentSessionServices({cwd:input.cwd,agentDir:input.agentDir,modelRuntime:options.modelRuntime,settingsManager,
-        resourceLoaderOptions:{extensionFactories:[{name:'pi-guard',factory:guard.factory},createCodemodeExtension({models:false}),...(options.trustedExtensions ?? [])],noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true}});
+        resourceLoaderOptions:{additionalExtensionPaths:trustedExtensionPaths,extensionFactories:[{name:'pi-codex-auto-review',factory:guard.factory},createCodemodeExtension({models:false}),...external,...(options.trustedExtensions ?? [])],noExtensions:true,noContextFiles:true,
+          agentsFilesOverride:()=>{const controller=guard.assertReady();return {agentsFiles:loadContextFiles({cwd:input.cwd,agentDir:input.agentDir,profile:controller.policy.profile,settings:controller.options.settings,isProjectTrusted:settingsManager.isProjectTrusted()})};}}});
       const loaded=services.resourceLoader.getExtensions();
       if (loaded.errors.length || services.diagnostics.some(item=>item.type==='error')) throw new GuardError('GUARDED_STARTUP_FAILED','An extension or runtime service failed to load');
       guard.assertReady();
-      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:options.model,sessionStartEvent:input.sessionStartEvent,tools:['read','bash','edit','write','grep','find','ls','codemode',...(options.settings?.trustedTools ?? [])]});
+      const selectedModel = options.modelSelection ? services.modelRuntime.getModel(options.modelSelection.provider, options.modelSelection.id) : options.model;
+      if (options.modelSelection && !selectedModel) throw new GuardError('MODEL_UNAVAILABLE',`Registered model not found: ${options.modelSelection.provider}/${options.modelSelection.id}`);
+      // A fixed SDK `tools` list is a permanent allowlist and discards later MCP registrations.
+      // Local tools still have final execution guards; unknown tools are blocked by the guard hook.
+      const result=await createAgentSessionFromServices({services,sessionManager:input.sessionManager,model:selectedModel,sessionStartEvent:input.sessionStartEvent,excludeTools:['powershell']});
       await result.session.bindExtensions({mode:'print'});
       guard.assertReady();
       const session=result.session;
+      session.setActiveToolsByName(session.getAllTools().filter(tool => ['read','bash','edit','write','grep','find','ls','codemode',...(options.settings?.trustedTools ?? [])].includes(tool.name) || guard.assertReady().isExternalTool(tool.name)).filter(tool => ['direct','model-only'].includes(tool.exposure)).map(tool => tool.name));
       const prompt=session.prompt.bind(session);
       session.prompt=async (...args)=>{guard.assertReady();return prompt(...args);};
       const reload=session.reload.bind(session);
-      session.reload=async()=>{await reload();guard.assertReady();};
+      session.reload=async(...args)=>{
+        await reload(...args);
+        const controller=guard.assertReady();
+        // Pi omits session_start after reload when print/SDK mode has no UI or command bindings.
+        if(!controller.isBoundToSession(session.sessionManager.getSessionId())){
+          await args[0]?.beforeSessionStart?.();
+          await session.extensionRunner.emit({type:'session_start',reason:'reload'});
+        }
+        guard.assertReady();
+      };
       const executeBash=session.executeBash.bind(session);
       session.executeBash=async(command,onChunk,options)=>{
         const controller=guard.assertReady();

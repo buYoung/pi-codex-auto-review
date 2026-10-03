@@ -1,12 +1,15 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { StringDecoder } from 'node:string_decoder';
+import { randomUUID } from 'node:crypto';
 import { SandboxManager, type SandboxRuntimeConfig } from '@anthropic-ai/sandbox-runtime';
 import { GuardError, validateWorkerFrame, type WorkerJob, type WorkerFrame } from '../contracts.js';
 import { shellQuote, workloadEnvironment } from './config.js';
 
 let workload: ChildProcess | undefined, isExecuting = false;
 const cancellation = new AbortController();
+const networkRequests = new Map<string, (allowed: boolean) => void>();
+cancellation.signal.addEventListener('abort', () => { for (const resolve of networkRequests.values()) resolve(false); networkRequests.clear(); });
 const send = (frame: WorkerFrame) => { if (process.connected) process.send?.(frame); };
 function killGroup(signal: NodeJS.Signals): void {
   if (!workload?.pid) return;
@@ -15,6 +18,13 @@ function killGroup(signal: NodeJS.Signals): void {
 process.on('disconnect', () => { cancellation.abort(); killGroup('SIGKILL'); void SandboxManager.reset().finally(() => process.exit(1)); });
 process.on('message', raw => {
   const message = raw as { type: string; commandId: string; config: SandboxRuntimeConfig; job: WorkerJob };
+  if (message?.type === 'network-response') {
+    const response = raw as {schemaVersion?: number; requestId?: string; isAllowed?: boolean};
+    if (response.schemaVersion !== 1 || typeof response.requestId !== 'string' || typeof response.isAllowed !== 'boolean') { cancellation.abort(); killGroup('SIGKILL'); return; }
+    networkRequests.get(response.requestId)?.(response.isAllowed && !cancellation.signal.aborted);
+    networkRequests.delete(response.requestId);
+    return;
+  }
   if (message?.type === 'cancel') { cancellation.abort(); killGroup('SIGTERM'); setTimeout(() => killGroup('SIGKILL'), 300).unref(); return; }
   if (message?.type !== 'execute' || isExecuting) { send({ schemaVersion: 1, type: 'error', code: 'INVALID_IPC', message: 'Invalid broker request' }); process.exitCode = 1; return; }
   isExecuting = true;
@@ -27,11 +37,25 @@ process.on('message', raw => {
 });
 async function run({ commandId, config, job }: { commandId: string; config: SandboxRuntimeConfig; job: WorkerJob }): Promise<void> {
   if (!job || !['shell', 'tool', 'file'].includes(job.kind) || typeof job.cwd !== 'string') throw new GuardError('INVALID_IPC', 'Invalid workload');
-  await SandboxManager.initialize(config, undefined, false);
+  await SandboxManager.initialize(config, config.network.strictAllowlist === false ? async destination => {
+    if (cancellation.signal.aborted || !process.connected || networkRequests.size >= 32) return false;
+    const requestId = randomUUID();
+    return new Promise<boolean>(resolve => {
+      networkRequests.set(requestId, resolve);
+      process.send?.({schemaVersion:1,type:'network-request',requestId,destination});
+    });
+  } : undefined, false);
   cancellation.signal.throwIfAborted();
   if (!SandboxManager.isSandboxingEnabled() || !await SandboxManager.waitForNetworkInitialization()) throw new GuardError('BACKEND_UNAVAILABLE', 'Native filesystem/network sandbox is unavailable');
+  if (process.platform === 'linux') {
+    // SRT emits bridge mounts before filesystem masks. Restore only this
+    // invocation's proxy sockets when a restrictive read profile masks /tmp.
+    const sockets = [SandboxManager.getLinuxHttpSocketPath(), SandboxManager.getLinuxSocksSocketPath()].filter((path): path is string => !!path);
+    SandboxManager.updateConfig({...config, filesystem: {...config.filesystem, allowRead: [...(config.filesystem.allowRead ?? []), ...sockets]}});
+  }
   const command = `${shellQuote(process.execPath)} ${shellQuote(fileURLToPath(new URL('./worker.js', import.meta.url)))}`;
   const wrapped = await SandboxManager.wrapWithSandboxArgv(command, '/bin/bash', undefined, cancellation.signal, job.cwd, { commandId });
+  cancellation.signal.throwIfAborted();
   if (!wrapped.argv.length || !wrapped.argv.some(arg => arg.includes('sandbox-exec') || arg.includes('bwrap'))) throw new GuardError('BACKEND_UNAVAILABLE', 'Runtime did not return a native isolation command');
   await new Promise<void>((resolve, reject) => {
     let buffer = '', stderr = '', hasTerminal = false, parseError: Error | undefined;

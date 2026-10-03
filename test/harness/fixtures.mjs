@@ -4,6 +4,9 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createProfile, createAction } from '../../dist/contracts.js';
 
+export const auditDirectory = process.env.PI_GUARD_RUN_DIR ?? new URL(`../../.reports/pi-guard/runs/direct-${randomUUID()}/${process.platform}-${process.arch}/`, import.meta.url).pathname;
+export const auditPopulationPath = join(auditDirectory, 'owned-audits.jsonl');
+
 export async function fixture(t) {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'pi-guard-test-')));
   const workspace = join(root, 'workspace'), outside = join(root, 'outside'), control = join(root, 'control'), agentDir = join(control, 'agent');
@@ -18,8 +21,8 @@ export async function fixture(t) {
         try { text=await readFile(path,'utf8'); } catch(error) {if(error.code==='ENOENT')continue;throw error;}
         if (!text.trim()) throw new Error('Audit population is empty');
         if (text.includes(secret)) throw new Error('Audit contains the full owned synthetic marker');
-        await mkdir(new URL('../../.reports/pi-guard/',import.meta.url),{recursive:true});
-        await appendFile(new URL('../../.reports/pi-guard/owned-audits.jsonl',import.meta.url),text);
+        await mkdir(auditDirectory,{recursive:true});
+        await appendFile(auditPopulationPath,text);
       }
     } finally {await rm(root,{recursive:true,force:true});}
   });

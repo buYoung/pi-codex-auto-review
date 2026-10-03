@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -16,13 +16,14 @@
     "src/tools/controller.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "3a9ab75f45e20627e6a939dfe8194cec464f109e37d915b8a0babe978a0d99cd",
-    "src/startup.ts": "75c5f42927bea5760333da20edcc2cbdd1307a9582ece45241634dc2cb3cacab",
-    "src/cli.ts": "dd2909a16b308a09c2c9839d367805d6a452635d3eac68ad2b50892532fdde02",
-    "src/tools/controller.ts": "e616cd26a8bd817e00af055e0d29bcd8999ceb02cd641985cf4d23c020087768"
+    "src/index.ts": "c3ef6c1d0fe88b4a4bfb9bac7a9e956dbbe3014cf6d8b45f22b748376cdebc4c",
+    "src/startup.ts": "3fe698450fe42c2c293eec6cce4030425336804772b009c40b9e40cb917b0c59",
+    "src/cli.ts": "68c6b5590b2f539347fd7071f8d532f718f33c893b9442ca8f8a23f3e1b28747",
+    "src/tools/controller.ts": "86b185b541f7a44851b433d82c7fbc571720ee03a76d96f68b4c34c9226e534c"
   },
   "testFiles": [
-    "test/integration/pi-tools.test.mjs"
+    "test/integration/pi-tools.test.mjs",
+    "test/integration/mcp.test.mjs"
   ],
   "coveredBehavior": [
     "tools",
@@ -30,16 +31,23 @@
     "user-bash",
     "startup",
     "nested",
-    "options"
+    "options",
+    "context-files",
+    "external-tools"
   ],
   "results": [
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T09:43:37.776Z",
+      "provenance": "executed",
       "suite": "integration",
       "status": "pass",
       "command": "npm run test:integration",
       "testFiles": [
-        "test/integration/pi-tools.test.mjs"
+        "test/integration/pi-tools.test.mjs",
+        "test/integration/mcp.test.mjs"
       ],
       "coveredBehavior": [
         "tools",
@@ -47,7 +55,9 @@
         "user-bash",
         "startup",
         "nested",
-        "options"
+        "options",
+        "context-files",
+        "external-tools"
       ],
       "tests": [
         {
@@ -63,6 +73,30 @@
           "status": "pass"
         },
         {
+          "name": "[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] runtime network review sees original command and exact destination without replaying earlier effects",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence",
+          "status": "pass"
+        },
+        {
+          "name": "[context-files] discovered instructions reach Pi and review with provenance and refresh on reload",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected",
+          "status": "pass"
+        },
+        {
           "name": "[user-bash] installed Pi session consumer records ! and !! with the guarded operations",
           "status": "pass"
         },
@@ -71,11 +105,23 @@
           "status": "pass"
         },
         {
-          "name": "[tools] approved outside write covers its mkdir helper without widening sibling permissions",
+          "name": "[tools] outside creation reviews its actual native scope and cannot approve a later sibling",
           "status": "pass"
         },
         {
           "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] default permissions protect the complete explicitly selected agent credential directory",
+          "status": "pass"
+        },
+        {
+          "name": "[options] caller metadata permissions remain effective while mandatory Pi control paths stay protected",
           "status": "pass"
         },
         {
@@ -89,11 +135,75 @@
         {
           "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
           "status": "pass"
+        },
+        {
+          "name": "[tools] three denied reviews interrupt the actual Pi turn before a fourth action",
+          "status": "pass"
+        },
+        {
+          "name": "[final-input] authorization changed during a pending review cannot reach native execution",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] MCP denial, required human input and granular policy prevent effects",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] user reviewer honors read hints and requires UI for destructive tools",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] a nested MCP request cannot downgrade the originating strict review requirement",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] changed registration and cancellation during review cannot execute a registered adapter",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] real MCP stdio server runs only an approved exact call and preserves structured results",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] explicit human-input flag uses a fresh human dialog without automatic inference",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "3d14dcd93e6b692c17bc9aefdbdf1d6716960778530a04f0a52d9b24ecb8bc41",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -102,15 +212,15 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:41:10.343Z"
+      "recordedAt": "2026-10-03T09:48:32.380Z"
     }
   ],
   "buildProof": {
     "command": "npm run build",
-    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-01T06:40:53.903Z"
+    "recordedAt": "2026-10-03T09:42:58.655Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -137,5 +247,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-01T06:41:15.658Z"
+  "recordedAt": "2026-10-03T09:56:11.007Z",
+  "runId": "2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T09-42-54-509Z-cfe4f93d-cd5d-4feb-b526-21e8a869ca75/darwin-arm64/05-integration.json"
 }

@@ -1,7 +1,7 @@
 {
-  "name": "pi-guard",
+  "name": "pi-codex-auto-review",
   "version": "1.0.0",
-  "description": "Pi permission extension with request-bound approvals and native OS isolation",
+  "description": "Codex의 ‘Approve for me’에서 영감을 받은 Pi용 자동 실행 승인 검토 확장. 규칙과 Pi의 현재 모델로 도구 실행을 검토하고, 필요한 경우 사용자 승인을 요청합니다.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,10 +9,16 @@
     ".": "./dist/index.js",
     "./startup": "./dist/startup.js"
   },
-  "bin": { "pi-guard": "dist/cli.js" },
-  "pi": { "extensions": ["./dist/index.js"] },
+  "bin": {
+    "pi-codex-auto-review": "dist/cli.js"
+  },
+  "pi": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-execpolicy.mjs",
     "test:contracts": "node scripts/run-tests.mjs contracts",
     "test:policy": "node scripts/run-tests.mjs policy",
     "test:reviewer": "node scripts/run-tests.mjs reviewer",
@@ -20,7 +26,11 @@
     "test:native": "node scripts/run-tests.mjs native",
     "test:integration": "node scripts/run-tests.mjs integration",
     "test:e2e": "node scripts/run-tests.mjs e2e",
-    "verify:guard": "node scripts/verify-guard.mjs"
+    "test:conformance": "node scripts/run-tests.mjs conformance",
+    "verify:guard": "node scripts/verify-guard.mjs",
+    "verify:platform": "node scripts/verify-platform.mjs",
+    "verify:windows": "node scripts/verify-windows.mjs",
+    "verify:docker": "node scripts/verify-docker.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.78"
@@ -29,15 +39,27 @@
     "@earendil-works/pi-coding-agent": "0.99.1"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-coding-agent": "file:vendor/pi-coding-agent-0.99.1-security.1.tgz",
+    "@sinclair/typebox": "0.34.52",
     "@types/node": "24.0.0",
+    "pi-ollama-cloud": "0.12.2",
     "typescript": "6.0.3"
   },
   "overrides": {
     "@earendil-works/pi-ai": "0.99.1",
-    "@earendil-works/pi-agent-core": "0.99.1"
+    "@earendil-works/pi-agent-core": "0.99.1",
+    "@earendil-works/pi-tui": "0.99.1",
+    "brace-expansion": "5.0.12",
+    "node-forge": "https://codeload.github.com/digitalbazaar/forge/tar.gz/ceba34402e329f0365134f23fe19898756527d65"
   },
-  "engines": { "node": ">=22.19.0" },
-  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "native/execpolicy/LICENSE",
+    "native/execpolicy/NOTICE"
+  ],
   "private": true
 }

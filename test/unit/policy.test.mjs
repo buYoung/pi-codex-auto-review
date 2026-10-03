@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { symlink, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createAction, createProfile } from '../../dist/contracts.js';
-import { PolicyEngine, validateSettings, loadSettings, canonicalPath, isWithin, analyzeShell, resolveToolPath } from '../../dist/policy/index.js';
+import { PolicyEngine, validateSettings, loadSettings, defaultProfile, canonicalPath, isWithin, analyzeShell, resolveToolPath } from '../../dist/policy/index.js';
+import { parseRules, matchesRule, ruleCommands } from '../../dist/policy/rules.js';
 import { fixture } from '../harness/fixtures.mjs';
 
 async function setup(t, settings = {}, profileOverrides = {}) {
@@ -31,19 +32,65 @@ test('[rules] deny outranks allow for every compound segment and stale identitie
   assert.equal((await f.evaluate('bash', { command: 'git status && git push' })).kind, 'deny');
   assert.equal((await f.evaluate('bash', { command: 'git status | git push' })).kind, 'deny');
   assert.equal((await f.evaluate('bash', { command: 'git status; git push' })).kind, 'deny');
-  assert.equal((await f.evaluate('bash', { command: 'gitx status' })).kind, 'ask');
+  assert.equal((await f.evaluate('bash', { command: 'gitx status' })).kind, 'allow');
   assert.equal((await f.policy.evaluate(f.action('read', { path: 'a' }, { policyRevision: 'stale' }))).kind, 'deny');
   assert.equal((await f.evaluate('unverified', { readOnlyHint: true })).kind, 'ask');
 });
-test('[shell] literal quotes are parsed but substitutions, interpreters, comments and expansions require review', async t => {
+test('[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant', async t => {
   const f = await setup(t, { commandRules: [{ prefix: ['node'], decision: 'allow' }, { prefix: ['echo'], decision: 'allow' }] });
   assert.deepEqual(analyzeShell("printf '%s' 'a b'").commands[0].argv, ['printf','%s','a b']);
   assert.equal((await f.evaluate('bash', { command: "printf '%s' 'a b'" })).kind, 'allow');
-  for (const command of ['echo $(node dangerous.js)', 'echo `whoami`', 'echo $HOME', 'echo *.txt', 'node -e "process.exit(0)"', 'echo ok # comment', 'echo ok & node a', 'A=1 echo ok', 'cat <<EOF', "echo 'unclosed"]) assert.equal((await f.evaluate('bash',{command})).kind, 'ask', command);
+  for (const command of ['echo $(node dangerous.js)', 'echo `whoami`', 'echo $HOME', 'echo *.txt', 'echo ok # comment', 'echo ok & node a', 'A=1 echo ok', 'cat <<EOF', "echo 'unclosed"]) { const result=await f.evaluate('bash',{command});assert.equal(result.kind,'allow',command);assert.equal(result.authority,undefined,command); }
+  const interpreter=await f.evaluate('bash',{command:'node -e "process.exit(0)"'});assert.equal(interpreter.authority.kind,'command-rule');
+  assert.equal((await f.evaluate('bash',{command:'npm test'})).kind,'allow');
   assert.equal((await f.evaluate('bash',{command:`echo x > '${f.control}/protected.txt'`})).kind, 'deny');
   const result = await f.evaluate('bash',{command:`echo x > '${f.outside}/sentinel.txt'`});
   assert.equal(result.kind, 'ask'); assert.deepEqual(result.delta.writePaths, [join(f.outside, 'sentinel.txt')]);
   const externalRead=await f.evaluate('bash',{command:`cat '${f.outside}/sentinel.txt'`});assert.equal(externalRead.kind,'ask');assert.deepEqual(externalRead.delta.readPaths,[join(f.outside,'sentinel.txt')]);
+});
+test('[rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers', async t => {
+  const text=`# trusted rules\nprefix_rule(pattern=["git", ["show","status"]], decision="allow", match=["git status"], not_match=["git push"],)\nprefix_rule(pattern=["git","show"],decision="prompt",justification="Inspect before running")\nprefix_rule(pattern=["git","show","secret"],decision="forbidden")`;
+  const rules=parseRules(text);assert.ok(rules.some(rule=>matchesRule(['git','status'],rule)));assert.ok(!rules.some(rule=>matchesRule(['git','push'],rule)));
+  assert.deepEqual(ruleCommands('bash -lc "git status && git show x"'),[['git','status'],['git','show','x']]);
+  assert.deepEqual(ruleCommands('echo ok > file'),[['/bin/bash','-c','echo ok > file']]);
+  for(const invalid of ['load("x")','prefix_rule(pattern=["a"], extra="bad")','prefix_rule(pattern=["a"], match=["b"])','prefix_rule(pattern=[[]])','prefix_rule(pattern=["a"],decision="approve")'])assert.throws(()=>parseRules(invalid));
+  const f=await fixture(t),path=join(f.control,'trusted.rules');await writeFile(path,text);
+  const policy=new PolicyEngine(validateSettings({ruleFiles:[path]}),f.profile);await policy.initialize();
+  const evaluate=command=>policy.evaluate(createAction({toolCallId:'rule',tool:'bash',args:{command},cwd:f.workspace,source:'model',sessionId:'s',policyRevision:policy.revision},f.profile));
+  assert.equal((await evaluate('git status')).authority.kind,'command-rule');
+  assert.equal((await evaluate('bash -lc "git status && git show x"')).approvalCategory,'rules');
+  assert.equal((await evaluate('git status && git show secret')).isHardDeny,true);
+  assert.equal((await evaluate('git status && echo x')).authority,undefined);
+});
+test('[paths] write-protected metadata remains readable and scoped elevation differs from absolute denial',async t=>{
+  const f=await fixture(t),git=join(f.workspace,'.git');await mkdir(git);await writeFile(join(git,'HEAD'),'owned');
+  const setupValue=await setup(t,{},{}); // Existing absolute denyRead/denyWrite coverage remains separate.
+  assert.equal((await setupValue.evaluate('read',{path:join(setupValue.control,'protected.txt')})).kind,'deny');
+  const profile=createProfile({...f.profile,denyWrite:[...f.profile.denyWrite,git]});
+  const policy=new PolicyEngine(validateSettings({}),profile);
+  const action=command=>createAction({toolCallId:'metadata',tool:'bash',args:{command},cwd:f.workspace,source:'model',sessionId:'s',policyRevision:policy.revision},profile);
+  assert.equal((await policy.evaluate(action('cat .git/HEAD'))).kind,'allow');
+  assert.equal((await policy.evaluate(action('ls .git'))).kind,'allow');
+  assert.equal((await policy.evaluate(action('echo x > .git/HEAD'))).isHardDeny,true);
+  const basePolicy=new PolicyEngine(validateSettings({}),createProfile({...f.profile,readOnlyPaths:[git]}));
+  const request=createAction({...action('echo x > .git/HEAD'),policyRevision:basePolicy.revision},basePolicy.profile);
+  assert.equal((await basePolicy.evaluate(request)).kind,'ask');
+});
+test('[settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary',async t=>{
+  const f=await fixture(t),gitdir=join(f.outside,'gitdir');await mkdir(gitdir);await mkdir(join(f.workspace,'.agents'));await mkdir(join(f.workspace,'.codex'));await writeFile(join(f.workspace,'.git'),`gitdir: ${gitdir}\n`);
+  const profile=await defaultProfile(f.workspace,validateSettings({}),[f.control]);assert.deepEqual(profile.readRoots,['/']);assert.ok(profile.writeRoots.includes(await canonicalPath('/tmp',f.workspace)));
+  for(const path of [join(f.workspace,'.git'),join(f.workspace,'.agents'),join(f.workspace,'.codex'),gitdir])assert.ok(profile.readOnlyPaths.includes(path),path);
+  assert.ok(profile.denyRead.includes(f.control));
+});
+test('[shell] wildcard domains agree with native rules and explicit elevation is action scoped',async t=>{
+  const f=await setup(t,{}, {allowedDomains:['*.example.com'],deniedDomains:['*.blocked.example.com']});
+  const allowed=await f.evaluate('bash',{command:'curl https://api.example.com'});assert.equal(allowed.kind,'allow');assert.deepEqual(allowed.delta.domains,[]);
+  assert.equal((await f.evaluate('bash',{command:'curl https://example.com'})).kind,'ask');
+  assert.equal((await f.evaluate('bash',{command:'curl https://a.blocked.example.com'})).isHardDeny,true);
+  const dynamic=await f.evaluate('bash',{command:'host=api.example.com; curl \"http://$host/proof\"'});assert.equal(dynamic.kind,'allow');assert.deepEqual(dynamic.delta.domains,[]);
+  const full=await f.evaluate('bash',{command:'node action.js',sandbox_permissions:'require_escalated'});assert.equal(full.kind,'ask');assert.equal(full.authority.kind,'reviewed-command');
+  const scoped=await f.evaluate('bash',{command:'node action.js',additional_permissions:{writePaths:[join(f.outside,'owned.txt')]}});assert.equal(scoped.kind,'ask');assert.equal(scoped.authority,undefined);
+  assert.equal((await f.evaluate('bash',{command:'echo x',additional_permissions:{writePaths:[f.control]}})).isHardDeny,true);
 });
 test('[settings] corrupt or weakening settings fail closed and read-only file writes require permission', async t => {
   const f = await setup(t, { mode: 'read-only' }, { mode: 'read-only', writeRoots: [] });
