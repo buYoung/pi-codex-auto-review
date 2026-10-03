@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TOOL_NAMES, type GuardAction, type PermissionDelta, type PermissionProfile, type PolicyDecision, type ApprovalPolicy } from '../contracts.js';
 import { canonicalPath, isWithin, resolveToolPath } from './paths.js';
 import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
+import { reviewPolicy } from '../review/policy.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
 
 export interface CommandRule { readonly prefix: readonly string[]; readonly decision: 'allow' | 'ask' | 'deny' }
@@ -72,7 +73,7 @@ export async function defaultProfile(cwd: string, settings: GuardSettings, contr
 export class PolicyEngine {
   readonly revision: string;
   constructor(readonly settings: GuardSettings, readonly profile: PermissionProfile) {
-    this.revision = digest({ settings, profile });
+    this.revision = digest({ settings, profile, reviewPolicyDigest: reviewPolicy(settings.reviewPolicy).digest });
   }
   async evaluate(action: GuardAction): Promise<PolicyDecision> {
     if (action.policyRevision !== this.revision || action.permissionDigest !== digest(this.profile)) return decision(action, 'deny', 'Stale policy or permission profile', EMPTY_DELTA, true);

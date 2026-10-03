@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy } from './contracts.js';
+import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy, type ReviewContext, type ReviewResult } from './contracts.js';
 import { deadlineSignal, withSignal, type Clock } from './signals.js';
 import { reviewAction, type ReviewProvider } from './reviewer.js';
 import { AuditLog } from './audit.js';
+import type { GuardSettings } from './policy/index.js';
 
 export type ApprovalChoice = 'deny' | 'once' | 'session' | 'persistent';
 export interface ApprovalUI { select(action: GuardAction, delta: PermissionDelta, options: { signal: AbortSignal; timeoutMs: number }): Promise<ApprovalChoice | undefined> }
@@ -25,7 +26,7 @@ export class FileGrantPersistence implements GrantPersistence {
     finally { await rm(temp, { force: true }); }
   }
 }
-export interface Admission { readonly isAllowed: boolean; readonly delta: PermissionDelta; readonly reason: string; readonly grant?: Grant }
+export interface Admission { readonly isAllowed: boolean; readonly delta: PermissionDelta; readonly reason: string; readonly grant?: Grant; readonly review?: ReviewResult }
 export class ApprovalManager {
   private grants: Grant[] = [];
   private tail: Promise<unknown> = Promise.resolve();
@@ -40,7 +41,7 @@ export class ApprovalManager {
     this.grants = this.grants.filter(grant => grant.scope === 'persistent');
   }
   invalidate(): void { this.reset(this.sessionId); this.grants = []; }
-  async admit(action: GuardAction, policy: PolicyDecision, context: { provider: ReviewProvider; ui?: ApprovalUI; trustedAuthorization: string; signal?: AbortSignal }): Promise<Admission> {
+  async admit(action: GuardAction, policy: PolicyDecision, context: { provider: ReviewProvider; ui?: ApprovalUI; trustedAuthorization: string; signal?: AbortSignal; reviewContext?: ReviewContext; settings?: GuardSettings }): Promise<Admission> {
     this.sessionId ??= action.sessionId;
     const signal = context.signal ? AbortSignal.any([context.signal, this.epoch.signal]) : this.epoch.signal;
     const deny = (reason: string): Admission => ({ isAllowed: false, delta: EMPTY_DELTA, reason });
@@ -50,10 +51,14 @@ export class ApprovalManager {
     if (!approvalEligible(this.options.approvalPolicy ?? 'on-request', policy.approvalCategory ?? 'sandbox')) return deny('Approval policy disables this request category');
     const cached = this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
     if (cached) { await this.options.audit.record(action, 'grant', cached.scope); return { isAllowed: true, delta: cached.delta, grant: cached, reason: 'Bound rule authorized the action' }; }
-    const review = this.options.approvalsReviewer === 'user' ? { decision: 'ask', reason: 'User review requested' } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock });
+    const review = this.options.approvalsReviewer === 'user' ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: context.reviewContext, settings: context.settings });
     if (signal.aborted) return deny('Call cancelled');
-    if (review.decision === 'deny') { await this.options.audit.record(action, 'review', 'deny'); return deny(review.reason); }
-    if (review.decision === 'allow') { await this.options.audit.record(action, 'review', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: review.reason }; }
+    if (review.decision === 'deny') { await this.options.audit.record(action, 'review', review.result?.status ?? 'deny'); return {...deny(review.reason), review: review.result}; }
+    if (review.decision === 'allow') {
+      // Child 04 replaces this conservative adapter together with final native permission delivery.
+      if (Object.values(policy.delta).some(paths => paths.length)) return {...deny('Reviewed permission delivery is not enabled yet'), review: review.result};
+      await this.options.audit.record(action, 'review', 'allow'); return { isAllowed: true, delta: EMPTY_DELTA, reason: review.reason, review: review.result };
+    }
     if (!context.ui) return deny('Approval UI unavailable');
     const ui = context.ui;
     // Queue all dialogs, including compensated persistence, until this decision settles.

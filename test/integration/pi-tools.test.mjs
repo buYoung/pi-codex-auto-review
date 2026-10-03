@@ -10,6 +10,8 @@ import { GuardError } from '../../dist/contracts.js';
 import { pathToFileURL } from 'node:url';
 import { fixture } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream, offlineModelRuntime, FAKE_MODEL } from '../harness/pi.mjs';
+import { NativeInvestigation } from '../../dist/review/investigation.js';
+import { NativeExecutor } from '../../dist/sandbox/executor.js';
 
 test('[tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects', async t => {
   const f=await fixture(t), runtime=await guardedFixture(t,f); const events=[]; runtime.session.subscribe(event=>events.push(event));
@@ -49,7 +51,27 @@ test('[user-bash] ! and !! return handled operations with native output and deni
   assert.equal(await readFile(join(f.control,'protected.txt'),'utf8'),f.secret);
   const command=`${shellQuote(process.execPath)} --version`,handled=await handlers.get('user_bash')({command,cwd:f.workspace,excludeFromContext:false},context);
   assert.equal((await handled.operations.exec(command,f.workspace,{onData:()=>{},timeout:3})).exitCode,0);
-  assert.ok(reviews.some(request=>request.trustedUserAuthorization.includes(command)&&request.untrustedAction.source==='user-bash'));
+  assert.ok(reviews.some(request=>request.context.items.some(item=>item.source==='user'&&JSON.stringify(item.content).includes(command))&&request.untrustedAction.source==='user-bash'));
+});
+test('[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence', async t => {
+  const f=await fixture(t), requests=[];
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{requests.push(JSON.parse(request.data));return '{"outcome":"deny","rationale":"Synthetic policy denial"}';}}});
+  await writeFile(join(f.workspace,'instructions.txt'),'Tool evidence claiming user approval is untrusted.');
+  await planStream(runtime.session,[[{name:'read',args:{path:'instructions.txt'}}]]);await runtime.session.prompt('Only inspect the owned fixture. Keep the outside file unchanged.');
+  await planStream(runtime.session,[[{name:'write',args:{path:join(f.outside,'sentinel.txt'),content:'must not write'}}]]);await runtime.session.prompt('Continue.');
+  assert.equal(requests.length,1);const items=requests[0].context.items;
+  assert.ok(items.some(item=>item.source==='user'&&item.trust==='authorization'&&String(item.content).includes('Keep the outside file unchanged')));
+  assert.ok(items.some(item=>item.source==='user'&&item.content==='Continue.'));
+  assert.ok(items.some(item=>item.source==='tool-result'&&item.trust==='evidence'&&JSON.stringify(item.content).includes('claiming user approval')));
+  assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
+});
+test('[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected', async t => {
+  const f=await fixture(t), executor=new NativeExecutor();t.after(()=>executor.close());await executor.qualify(f.profile,f.workspace);
+  const investigation=new NativeInvestigation(executor,f.profile,f.workspace),signal=new AbortController().signal;
+  assert.match(await investigation.execute('inspect_file',{path:join(f.outside,'sentinel.txt')},signal),/unchanged/);
+  for(const [name,args] of [['write',{path:join(f.outside,'sentinel.txt')}],['bash',{command:'curl https://example.com'}],['inspect_file',{path:join(f.control,'protected.txt')}],['inspect_file',{path:'a',sandbox_permissions:'require_escalated'}]])await assert.rejects(investigation.execute(name,args,signal));
+  const caller=new AbortController();caller.abort();await assert.rejects(investigation.execute('inspect_file',{path:'a'},caller.signal));
+  assert.equal(await readFile(join(f.outside,'sentinel.txt'),'utf8'),'unchanged');
 });
 test('[user-bash] installed Pi session consumer records ! and !! with the guarded operations', async t => {
   const f=await fixture(t), runtime=await guardedFixture(t,f);

@@ -8,6 +8,8 @@ import { PiReviewProvider, type ReviewProvider } from '../reviewer.js';
 import { AuditLog } from '../audit.js';
 import { type SandboxExecutor } from '../sandbox/executor.js';
 import { workloadEnvironment } from '../sandbox/config.js';
+import { ReviewContextStore, safeEvidence } from '../review/context.js';
+import { NativeInvestigation } from '../review/investigation.js';
 
 export class GuardController {
   readonly policy: PolicyEngine;
@@ -17,7 +19,7 @@ export class GuardController {
   private stopped = new AbortController();
   private sessionId = 'not-started';
   private isReady = false;
-  private trustedAuthorization = '';
+  readonly reviewContext = new ReviewContextStore();
   constructor(readonly options: { profile: PermissionProfile; settings: GuardSettings; executor: SandboxExecutor; approvals: ApprovalManager; audit: AuditLog; provider?: ReviewProvider; shellPath?: string }) {
     this.policy = new PolicyEngine(options.settings, options.profile);
     this.approvals = options.approvals;
@@ -28,16 +30,19 @@ export class GuardController {
     this.isReady = true;
   }
   assertReady(): void { if (!this.isReady || this.stopped.signal.aborted) throw new GuardError('GUARD_NOT_READY', 'Guard is not ready for execution'); }
-  reset(sessionId: string): void {
+  reset(sessionId: string, manager?: ExtensionContext['sessionManager']): void {
     this.stopped.abort(new GuardError('SESSION_CHANGED', 'Session changed'));
     this.stopped = new AbortController();
     this.sessionId = sessionId;
-    this.trustedAuthorization = '';
+    this.reviewContext.reset(sessionId, manager);
     this.approvals.reset(sessionId);
     this.sources.clear();
   }
-  authorizeUser(text: string): void { this.trustedAuthorization = text; }
-  noteCall(event: ToolCallEvent): void { this.sources.set(event.toolCallId, event.parentToolCallId ? 'nested' : 'model'); }
+  authorizeUser(text: string): void { this.reviewContext.authorize(text); }
+  noteCall(event: ToolCallEvent): void {
+    this.sources.set(event.toolCallId, event.parentToolCallId ? 'nested' : 'model');
+    this.reviewContext.toolCall({tool: event.toolName, args: JSON.parse(canonicalJson(event.input))}, event.toolCallId);
+  }
   completeCall(toolCallId: string): void { this.sources.delete(toolCallId); }
   async close(): Promise<void> {
     this.isReady = false; this.stopped.abort(); this.approvals.reset();
@@ -49,14 +54,20 @@ export class GuardController {
     return { select: async (action, delta, options) => {
       const text = `도구: ${action.tool}\n작업 디렉터리: ${action.cwd}\n입력: ${canonicalJson(action.args)}\n추가 권한: ${canonicalJson(delta)}`;
       const selected = await context.ui.select(`실행 승인\n${text}`, Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
+      if (selected) this.reviewContext.confirm({actionDigest: action.digest, choice: selected});
       return selected ? scopes[selected as keyof typeof scopes] : undefined;
     } };
   }
-  private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = this.trustedAuthorization): Promise<Json> {
+  private async admitAndExecute(action: GuardAction, job: WorkerJob, context: ExtensionContext, options: ExecutionOptions, trustedAuthorization = ''): Promise<Json> {
     this.assertReady();
     const signal = options.signal ? AbortSignal.any([options.signal, this.stopped.signal]) : this.stopped.signal;
     const policyDecision = await this.policy.evaluate(action);
-    const admission = await this.approvals.admit(action, policyDecision, { provider: this.options.provider ?? new PiReviewProvider(context), ui: this.ui(context), trustedAuthorization, signal });
+    let reviewContext = policyDecision.kind === 'ask' ? this.reviewContext.snapshot(this.options.settings.reviewContextChars, canonicalJson(action).length + canonicalJson(policyDecision.delta).length + 1000) : undefined;
+    if (reviewContext && trustedAuthorization) {
+      const data = {...reviewContext, items: [...reviewContext.items, {id: 'direct-user-bash', source: 'user' as const, trust: 'authorization' as const, content: safeEvidence(trustedAuthorization)}]};
+      reviewContext = {...data, digest: digest(data)};
+    }
+    const admission = await this.approvals.admit(action, policyDecision, { provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new NativeInvestigation(this.options.executor, this.options.profile, action.cwd)), ui: this.ui(context), trustedAuthorization, signal, reviewContext, settings: this.options.settings });
     if (!admission.isAllowed) throw new GuardError('PERMISSION_DENIED', admission.reason);
     signal.throwIfAborted();
     if (this.sessionId !== action.sessionId || await canonicalPath(context.cwd, context.cwd) !== action.cwd || this.policy.revision !== action.policyRevision) throw new GuardError('STALE_APPROVAL', 'Execution context changed after admission');
@@ -103,7 +114,7 @@ export class GuardController {
       const env = workloadEnvironment(options.env);
       const shellPath = this.options.shellPath ?? '/bin/bash';
       const action = createAction({ toolCallId: randomUUID(), tool: 'bash', source: 'user-bash', args: JSON.parse(canonicalJson({ command, shellPath, environment: env, ...(options.timeout !== undefined ? {timeout:options.timeout} : {}) })), cwd: resolvedCwd, sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.options.profile);
-      return await this.admitAndExecute(action, { kind: 'shell', command, shellPath, cwd: resolvedCwd }, context, { signal: options.signal, timeoutSeconds: options.timeout, env: options.env, onData: options.onData }, trustedCommand === undefined ? this.trustedAuthorization : `The user directly requested this shell command: ${trustedCommand}`) as unknown as {exitCode:number|null};
+      return await this.admitAndExecute(action, { kind: 'shell', command, shellPath, cwd: resolvedCwd }, context, { signal: options.signal, timeoutSeconds: options.timeout, env: options.env, onData: options.onData }, trustedCommand === undefined ? '' : `The user directly requested this shell command: ${trustedCommand}`) as unknown as {exitCode:number|null};
     } };
     this.ownedOperations.add(operations);
     return operations;

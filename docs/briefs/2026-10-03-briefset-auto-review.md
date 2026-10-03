@@ -7,7 +7,7 @@
 ## Child Briefs
 - [x] `docs/briefs/2026-10-03-fix-auto-review-01-evidence.md` — Completed; `docs/handoffs/auto-review/01-evidence.json` records 14 preserved artifacts, passing build, 6 contract cases and 5 E2E cases, and the separately retained sandbox-restricted failed attempt.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-02-contracts.md` — Completed; `docs/handoffs/auto-review/02-contracts.json` pins Codex 0.160.0 at `a956835d020762cb2b570053af06f643a11c0ecc`, assigns all gaps, and records passing build plus 18 contract/policy/approval checks.
-- [ ] `docs/briefs/2026-10-03-feat-auto-review-03-reviewer.md` — Implement evidence-based review; exists because risk judgments require policy and retained trustworthy context.
+- [x] `docs/briefs/2026-10-03-feat-auto-review-03-reviewer.md` — Completed; `docs/handoffs/auto-review/03-reviewer.json` records pinned policy, retained provenance, bounded native investigation, distinct failures, and 25 passing reviewer/approval/Pi integration checks.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-04-permissions.md` — Apply reviewed permissions; exists because an assessment must produce the correct effect at the native execution boundary.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-05-denials.md` — Add denial recovery; exists because review rejection and retry authority have a distinct turn lifecycle.
 - [ ] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — Restore the Docker Cloud environment; exists because the actual installed provider and packaged guard must run together on Linux.
