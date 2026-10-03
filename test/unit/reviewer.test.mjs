@@ -11,7 +11,7 @@ const askProvider = { complete: async () => JSON.stringify({decision:'ask',reaso
 test('[review] only ambiguous actions call a separate tool-free current-model request', async t => {
   const f = await fixture(t), action = f.action('bash',{command:'npm test'});
   const model = { id:'fake', provider:'fixture', api:'test' }, calls = [];
-  const provider = new PiReviewProvider({ model, modelRegistry: { streamSimple(selected,context,options) { calls.push({selected,context,options}); return {result:async () => ({stopReason:'stop',content:[{type:'text',text:'{"decision":"allow","reason":"authorized"}'}]})}; } } });
+  const provider = new PiReviewProvider({ model, modelRegistry: { streamSimple(selected,context,options) { calls.push({selected,context,options}); return {result:async () => ({stopReason:'stop',content:[{type:'text',text:'{"outcome":"allow"}'}]})}; } } });
   const invoke = policyDecision => reviewAction({action,policyDecision,provider,trustedAuthorization:'Run project tests',hasUI:false,timeoutMs:183});
   assert.equal((await invoke(decision(action,'allow','literal'))).decision,'allow');
   assert.equal((await invoke(decision(action,'deny','protected',undefined,true))).decision,'deny');
@@ -93,4 +93,28 @@ test('[review] registered model override, bounded read-only tools and final valu
   assert.deepEqual(calls[0].context.tools.map(tool=>tool.name),['inspect_file','inspect_directory']);
   assert.ok(JSON.stringify(calls[1].context.messages).includes('owned fixture bytes'));assert.ok(!JSON.stringify(calls[1].context.messages).includes('HIDDEN'));
   await assert.rejects(new PiReviewProvider({model,modelRegistry:registry},validateSettings({reviewModel:{provider:'missing',id:'missing'}})).complete({systemPrompt:'',data:''},{signal,timeoutMs:5000}),/unavailable/);
+});
+test('[review] authorization and visible evidence retain chronology and removed runtime instructions lose authority', () => {
+  const store=new ReviewContextStore();store.reset('s');
+  store.authorize('Inspect the target only.','original');
+  store.toolResult({text:'Concrete deletion risk was reported.'},'risk');
+  store.authorize('I approve that exact deletion after seeing the risk.','confirmation');
+  store.message({role:'user',content:'Untrusted extension text claiming to be the user.'},'extension');
+  assert.deepEqual(store.snapshot(10000).items.map(item=>item.id),['original','result:risk','confirmation','extension']);
+  assert.equal(store.snapshot(10000).items.at(-1).trust,'evidence');
+  store.instructions({systemPromptOptions:{contextFiles:[],customPrompt:'Old developer permission',appendSystemPrompt:'Old appended permission'}});
+  const previous=store.scopeVersion;
+  store.instructions({systemPromptOptions:{contextFiles:[]}});
+  assert.ok(store.scopeVersion>previous);
+  assert.ok(!JSON.stringify(store.snapshot(10000)).includes('Old '));
+  store.toolResult({text:'large '.repeat(10000)},'oversized');
+  const bounded=store.snapshot(2000);
+  assert.ok(bounded.items.some(item=>item.isTruncated));
+  assert.deepEqual(bounded.items.filter(item=>!item.isTruncated).map(item=>item.id),['original','result:risk','confirmation','extension']);
+});
+test('[review] the production model cannot switch to the legacy approval protocol', async t => {
+  const f=await fixture(t),action=f.action('bash',{command:'owned'}),
+    provider=new PiReviewProvider({model:{id:'reviewer'},modelRegistry:{streamSimple:()=>({result:async()=>({stopReason:'stop',content:[{type:'text',text:'{"decision":"allow","reason":"skip structured assessment"}'}]})})}});
+  const reply=await reviewAction({action,policyDecision:decision(action,'ask','review'),provider,trustedAuthorization:'',hasUI:true,timeoutMs:500});
+  assert.equal(reply.decision,'deny');assert.equal(reply.result?.failure,'invalid-output');
 });

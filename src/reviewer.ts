@@ -90,7 +90,7 @@ export async function reviewAction(options: {
     const value = await withSignal(options.provider.complete(request, { signal: deadline.signal, timeoutMs: options.timeoutMs }), deadline.signal);
     deadline.signal.throwIfAborted();
     // Existing explicitly supplied providers keep their narrow legacy interface.
-    if (typeof value === 'string' && /"decision"\s*:/.test(value)) {
+    if (!(options.provider instanceof PiReviewProvider) && typeof value === 'string' && /"decision"\s*:/.test(value)) {
       let legacy: ReviewReply;
       try { legacy = parseReview(value); } catch { throw new GuardError('REVIEW_PARSE', 'Invalid legacy review schema'); }
       if (legacy.decision === 'deny') return {...legacy, result:{...binding,status:'denied',assessment:{risk_level:'high',user_authorization:'unknown',outcome:'deny',rationale:legacy.reason}}};

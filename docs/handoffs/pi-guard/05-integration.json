@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+  "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
   "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -21,7 +21,7 @@
     "src/startup.ts": "4e8233c2d71e148b959a88bc0a925e2aaa499398e25cc075a379d9d5acaead0f",
     "src/cli.ts": "fb3d4f4c9f49f6425d29329883397e53ef6dbd9dfe1467b71efa73b83c852c3f",
     "src/tools/controller.ts": "5508591c2a3443072935c9384d0041fc12d08407c19687c55fe4a739c3b39678",
-    "src/approval-commands.ts": "57d93e894ed0cd9db494f956cad481068867b25df0a0fb15a3d24811b78d2d5f",
+    "src/approval-commands.ts": "ad488974f90fc84b7941e4c8ba304abd70c0460ddf48a7e09d4b994afda06e40",
     "src/approval-settings.ts": "c03a555c86a42572d41a23bf475c2951958791bc53ad1ea58f64c5194bf7317b"
   },
   "testFiles": [
@@ -43,9 +43,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T23:15:09.671Z",
+      "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T23:36:00.883Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
@@ -254,10 +254,18 @@
         {
           "name": "[approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects",
           "status": "pass"
+        },
+        {
+          "name": "[approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant",
+          "status": "pass"
+        },
+        {
+          "name": "[approval-settings] the actual Pi retry command preserves its one-use marker through extension-generated input",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+      "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -266,7 +274,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:15:11.885Z"
+      "recordedAt": "2026-10-03T23:36:03.469Z"
     }
   ],
   "buildProof": {
@@ -274,7 +282,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T23:15:07.189Z"
+    "recordedAt": "2026-10-03T23:35:58.356Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -301,7 +309,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-03T23:15:18.645Z",
-  "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-03T23:36:10.375Z",
+  "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/05-integration.json"
 }

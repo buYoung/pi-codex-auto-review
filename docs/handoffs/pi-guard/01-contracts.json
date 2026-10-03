@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+  "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
   "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -31,9 +31,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/contracts.json",
-      "startedAt": "2026-10-03T23:15:07.199Z",
+      "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/contracts.json",
+      "startedAt": "2026-10-03T23:35:58.366Z",
       "provenance": "executed",
       "suite": "contracts",
       "status": "pass",
@@ -93,7 +93,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+      "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -102,7 +102,7 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:15:07.914Z"
+      "recordedAt": "2026-10-03T23:35:59.010Z"
     }
   ],
   "buildProof": {
@@ -110,7 +110,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T23:15:07.189Z"
+    "recordedAt": "2026-10-03T23:35:58.356Z"
   },
   "publicPiApis": [
     "createGuardExtension (package)",
@@ -256,7 +256,7 @@
     "e2e": "npm run test:e2e",
     "conformance": "npm run test:conformance"
   },
-  "recordedAt": "2026-10-03T23:15:18.641Z",
-  "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/01-contracts.json"
+  "recordedAt": "2026-10-03T23:36:10.371Z",
+  "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/01-contracts.json"
 }

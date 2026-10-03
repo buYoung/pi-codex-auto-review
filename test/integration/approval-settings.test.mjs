@@ -211,3 +211,55 @@ test('[approval-settings] Pi session scope selection reaches the auxiliary revie
   assert.equal(requests.length,2);assert.ok(requests.every(item=>item.model.id==='scoped-reviewer'));
   assert.equal(runtime.session.model.id,FAKE_MODEL.id);
 });
+test('[approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant',async t=>{
+  const requests=[],sent=[];
+  const f=await setup(t,{provider:{complete:async request=>{
+    const data=JSON.parse(request.data);requests.push(data);
+    const hasRetry=data.context.items.some(item=>item.content?.type==='exact-action-retry-approval');
+    return JSON.stringify({outcome:hasRetry?'allow':'deny',risk_level:'high',user_authorization:hasRetry?'high':'low',rationale:'The exact overwrite needs explicit confirmation.'});
+  }}});
+  f.api.sendUserMessage=(text,options)=>sent.push({text,options});
+  const tool=f.tools.get('write'),args={path:join(f.outside,'sentinel.txt'),content:'confirmed once'};
+  await assert.rejects(tool.execute('initial',args,undefined,undefined,f.context),error=>error.code==='AUTO_REVIEW_DENIED');
+  f.context.ui.select=async(title,choices)=>{
+    assert.match(title,/denied action/);assert.match(choices[0],/exact overwrite/);
+    return choices[0];
+  };
+  await f.commands.get('approve').handler('retry',f.context);
+  assert.equal(sent.length,1);assert.ok(sent[0].text.includes(JSON.stringify(args).slice(1,-1).split(',')[0]));
+  assert.equal(sent[0].options.expandPromptTemplates,false);
+  assert.equal(f.extension.assertReady().options.settings.approvalsReviewer,'auto_review');
+  await tool.execute('retry',args,undefined,undefined,f.context);
+  assert.equal(await readFile(args.path,'utf8'),'confirmed once');
+  await assert.rejects(tool.execute('consumed',args,undefined,undefined,f.context),error=>error.code==='AUTO_REVIEW_DENIED');
+  assert.equal(requests.length,3);
+  assert.equal(requests.filter(request=>request.context.items.some(item=>item.content?.type==='exact-action-retry-approval')).length,1);
+});
+test('[approval-settings] the actual Pi retry command preserves its one-use marker through extension-generated input',async t=>{
+  const f=await fixture(t),requests=[],target=join(f.outside,'sentinel.txt');
+  const runtime=await guardedFixture(t,f,{provider:{complete:async request=>{
+    const data=JSON.parse(request.data);requests.push(data);
+    const hasRetry=data.context.items.some(item=>item.content?.type==='exact-action-retry-approval');
+    return JSON.stringify({outcome:hasRetry?'allow':'deny',risk_level:'high',user_authorization:hasRetry?'high':'low',rationale:'Confirm this exact overwrite.'});
+  }}});
+  await runtime.session.bindExtensions({mode:'rpc',uiContext:{
+    select:async(title,choices)=>{assert.match(title,/denied action/);return choices[0];},
+    notify(){},setStatus(){},setWidget(){},
+  }});
+  const step=[[{name:'write',args:{path:target,content:'retried through Pi'}}]];
+  await planStream(runtime.session,step);await runtime.session.prompt('Perform the named overwrite if approved.');
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  let finish;
+  const settled=new Promise(resolve=>finish=resolve);
+  const unsubscribe=runtime.session.subscribe(event=>{if(event.type==='agent_end')finish();});
+  const timeout=setTimeout(()=>finish(),10000);
+  try{
+    await planStream(runtime.session,step);
+    await runtime.session.prompt('/approve retry');
+    await settled;
+  }finally{clearTimeout(timeout);unsubscribe();}
+  assert.equal(await readFile(target,'utf8'),'retried through Pi');
+  assert.equal(requests.length,2);
+  assert.ok(requests[1].context.items.some(item=>item.content?.type==='exact-action-retry-approval'));
+  assert.ok(!requests[1].context.items.some(item=>item.source==='user'&&String(item.content).includes('controller holds a one-use')));
+});

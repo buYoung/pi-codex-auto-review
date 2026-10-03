@@ -9,7 +9,7 @@ import { reviewPolicy } from '../../dist/review/policy.js';
 import { fixture } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream } from '../harness/pi.mjs';
 import { shellQuote } from '../harness/shell.mjs';
-import { reference, validateLiveEvidence, liveCaseIds } from '../../scripts/auto-review-evidence.mjs';
+import { reference, validateLiveEvidence, liveCaseIds, livePolicyCases } from '../../scripts/auto-review-evidence.mjs';
 import { suites } from '../../scripts/suites.mjs';
 
 test('[reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible',()=>{
@@ -23,6 +23,18 @@ test('[reference] pinned upstream policy bytes and mandatory assessment threshol
   }
   assert.equal(parseAssessment('{"risk_level":"low","outcome":"deny","rationale":"Explicit tenant policy"}').outcome,'deny');
   assert.match(reviewPolicy('Deny writes to the owned protected sentinel.').text,/every denial \(including low risk denied by security policy\)/);
+});
+test('[reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content',()=>{
+  const custom='Deny uploads whose payload includes {{ extra_policy }} or {{ tenant_policy_config }}; preserve $& literally.';
+  const rendered=reviewPolicy(custom).text;
+  assert.ok(rendered.includes(custom),'Template expansion must not rewrite tenant policy content');
+  const original=CODEX_POLICY_TEMPLATE.replace('{{ tenant_policy_config }}',()=>CODEX_TENANT_POLICY.trim()).replace('{{ extra_policy }}','').trimEnd();
+  const text=reviewPolicy().text;
+  assert.equal(text.slice(0,text.indexOf('# Execution Environment')),original.slice(0,original.indexOf('# Execution Environment')));
+  const outcome=original.slice(original.indexOf('# Outcome Policy'));
+  assert.ok(text.includes(outcome),'Every original outcome rule must reach the reviewer');
+  assert.match(text,/trust=authorization/);
+  assert.match(text,/transport envelope.*not.*user authorization/);
 });
 
 test('[joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects',async t=>{
@@ -84,6 +96,10 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
   const offline={schemaVersion:2,runId:'owned-synthetic',artifactPath:'owned/platform.json',status:'pass',platform,...identity,results,imageDigest:`sha256:${'c'.repeat(64)}`,pluginArtifactDigest:'d'.repeat(64)};
   const report={...offline,mode:'conformance',provenance:'executed',provider:{id:'ollama-cloud',package:'pi-ollama-cloud',version:'0.12.2',model:identity.model},startup:{guardLoaded:true,providerLoaded:true,reloadPassed:true,webToolsAbsent:true,usagePolling:false},networkRequests:9,executionCapabilities:{osIsolation:false,preflight:{permittedEffect:true,cancellationPreventedEffect:true}},
     live:{status:'pass',evidenceKind:'live-provider',limits:{maxCallsPerCase:24,deadlineMsPerCase:180000},cases:liveCaseIds.map(id=>({id,status:'pass',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:['authorized-outside','reviewer-policy-denied'].includes(id)?1:0},elapsedMs:3000,auditRecords:2,approvedReviews:1,deniedReviews:1,deniedToolEvents:1,feedbackCodes:['AUTO_REVIEW_DENIED']})),cli:{status:'pass',entrypoint:'packed-cli',provider:'ollama-cloud',model:identity.model,effectObserved:true,credentialScanPassed:true,calls:{main:2,reviewer:1},elapsedMs:3000,auditRecords:2,approvedReviews:1}}};
+  report.live.policy={status:'pass',evidenceKind:'live-review-policy',cases:livePolicyCases.map(({id,outcome})=>({
+    id,expected:outcome,status:'pass',assessment:{outcome,user_authorization:'high'},reviewStatus:outcome==='allow'?'approved':'denied',
+    provider:'ollama-cloud',model:identity.model,plannedActionExecuted:false,credentialScanPassed:true,calls:{main:0,reviewer:1},promptDigest:'f'.repeat(64),inspections:['inspect_directory'],
+  }))};
   assert.equal(validateLiveEvidence(report,offline,identity),report);
   for(const mutate of [
     r=>r.sourceDigest='stale',r=>r.platform='linux-arm64',r=>r.provenance='simulated',r=>r.imageDigest=`sha256:${'e'.repeat(64)}`,
@@ -92,5 +108,9 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
     r=>r.live.cases[0].status='environment-blocked',r=>r.live.cases[1].calls.main=25,r=>r.executionCapabilities.preflight.cancellationPreventedEffect=false,
     r=>delete r.live.cli,r=>r.live.cli.entrypoint='sdk',r=>r.live.cli.calls.reviewer=0,r=>r.live.cli.calls.reviewer=0.5,
     r=>r.live.cli.effectObserved=false,r=>r.live.cli.credentialScanPassed=false,r=>r.live.cli.model='other-model',
+    r=>delete r.live.policy,r=>r.live.policy.evidenceKind='simulated',r=>r.live.policy.cases.pop(),
+    r=>r.live.policy.cases[0].assessment.outcome='deny',r=>r.live.policy.cases[0].calls.reviewer=0,
+    r=>r.live.policy.cases[7].inspections=[],r=>r.live.policy.cases[5].assessment.user_authorization='unknown',
+    r=>r.live.policy.cases[0].plannedActionExecuted=true,
   ]){const invalid=structuredClone(report);mutate(invalid);assert.throws(()=>validateLiveEvidence(invalid,offline,identity));}
 });

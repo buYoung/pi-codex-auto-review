@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+  "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
   "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -19,9 +19,9 @@
     "src/signals.ts"
   ],
   "moduleHashes": {
-    "src/reviewer.ts": "8515006543f3d944b3374207a2be76cd121ac62a197e8099f95e3a9a0f93eefe",
-    "src/review/policy.ts": "44b4e3b567fb9e514907ce0c0aa585858edcf0cb109ce85cebba4c3c2b0e32a0",
-    "src/review/context.ts": "338fc54427f7b018392bed7e7c8727a1cbfafb20d4ecf7210f6637681bd78b91",
+    "src/reviewer.ts": "094d44da91421cf91dfe6c7a176e851329f21221d36545b0f9d18743787f21cd",
+    "src/review/policy.ts": "41b2d238b674c96edbbf1e75da877a73960c725e8e81f9da0d40eb0d7ff17749",
+    "src/review/context.ts": "5e1efca727b809380d6f513c12474ae3ce44508a49d61d3950cdba725d665c97",
     "src/review/investigation.ts": "dfce31e013649ab074fef0d327d9fd50cfb99d4049191ef8aaa27433c0cc496a",
     "src/review/lifecycle.ts": "5e047f580353e47a9341877b41e4c1e191e3f0647754cfd78e9505f0bc9bb9d7",
     "src/approvals.ts": "105f5dc32722408ce849589fa898213c5c13d286c96ce06736317eb6ef4422ff",
@@ -44,9 +44,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/reviewer.json",
-      "startedAt": "2026-10-03T23:15:08.392Z",
+      "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/reviewer.json",
+      "startedAt": "2026-10-03T23:35:59.462Z",
       "provenance": "executed",
       "suite": "reviewer",
       "status": "pass",
@@ -87,10 +87,18 @@
         {
           "name": "[review] registered model override, bounded read-only tools and final values reach the provider",
           "status": "pass"
+        },
+        {
+          "name": "[review] authorization and visible evidence retain chronology and removed runtime instructions lose authority",
+          "status": "pass"
+        },
+        {
+          "name": "[review] the production model cannot switch to the legacy approval protocol",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+      "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -99,13 +107,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:15:08.454Z"
+      "recordedAt": "2026-10-03T23:35:59.530Z"
     },
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/approvals.json",
-      "startedAt": "2026-10-03T23:15:08.463Z",
+      "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/approvals.json",
+      "startedAt": "2026-10-03T23:35:59.539Z",
       "provenance": "executed",
       "suite": "approvals",
       "status": "pass",
@@ -166,7 +174,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "6dd78190cd1b6462b6b71ab4e5d78504beae9f29d59b09694a15610cd7bb6f49",
+      "sourceDigest": "42d154d4e8316209d126faf576ad23dc3807f03b444ebafb222f08a2abbbd3b5",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -175,7 +183,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:15:08.539Z"
+      "recordedAt": "2026-10-03T23:35:59.618Z"
     }
   ],
   "buildProof": {
@@ -183,7 +191,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T23:15:07.189Z"
+    "recordedAt": "2026-10-03T23:35:58.356Z"
   },
   "decisionFallbacks": "Structured allow grants the reviewed invocation delta or command authority. Denied/timed-out/aborted/failed remain distinct; technical failures never become approvals or UI fallbacks. Legacy decision/reason providers cannot widen authority automatically.",
   "context": "Trusted retained user/developer/AGENTS/confirmation sources remain distinct from visible assistant/tool evidence; no hidden reasoning",
@@ -204,7 +212,7 @@
     "FileGrantPersistence",
     "AuditLog"
   ],
-  "recordedAt": "2026-10-03T23:15:18.643Z",
-  "runId": "2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-15-03-695Z-7489d990-909f-4915-92c4-299287d8e6df/darwin-arm64/03-review.json"
+  "recordedAt": "2026-10-03T23:36:10.373Z",
+  "runId": "2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/03-review.json"
 }

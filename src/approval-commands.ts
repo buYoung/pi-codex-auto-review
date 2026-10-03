@@ -4,6 +4,7 @@ import { canonicalJson, GuardError } from './contracts.js';
 import { validateSettings, type GuardSettings } from './policy/index.js';
 import type { GuardController } from './tools/controller.js';
 import type { ApprovalSettingsStore } from './approval-settings.js';
+import { redact } from './audit.js';
 
 type ReviewModel = GuardSettings['reviewModel'];
 const CURRENT_MODEL = 'current';
@@ -104,6 +105,25 @@ async function chooseReviewModel(context: ExtensionCommandContext, current: Revi
   return result === CURRENT_MODEL ? null : JSON.parse(result) as ReviewModel;
 }
 
+async function retryDeniedAction(pi: ExtensionAPI, guard: GuardController, context: ExtensionCommandContext): Promise<void> {
+  const denials = [...guard.approvals.lifecycle.recentDenials].reverse();
+  if (!denials.length) { context.ui.notify('No recent denied actions to review again.','info'); return; }
+  const choices = denials.map(item => `${item.action.tool} | ${redact(canonicalJson(item.action.args))} | ${item.assessment.rationale} | ${item.id}`);
+  const selected = await context.ui.select('Choose a denied action to review again once',choices);
+  const index = choices.indexOf(selected ?? '');
+  if (index < 0) return;
+  const retry = await guard.authorizeRetry(denials[index]!.id,context);
+  if (retry.denial.action.source === 'user-bash') {
+    await guard.retryUserBash(retry.denial.action,context);
+    context.ui.notify('The selected command was reviewed again and executed.','info');
+    return;
+  }
+  const instruction = retry.denial.action.source === 'nested'
+    ? 'Invoke only this exact tool through codemode to preserve the original nested source.'
+    : 'Retry only this exact tool action.';
+  pi.sendUserMessage(`${instruction}\nTool: ${retry.denial.action.tool}\nArguments: ${canonicalJson(retry.args)}\nThe user selected denial ${retry.denial.id} for one retry. The controller holds a one-use exact-action marker; automatic review and policy still apply. Do not repeat unrelated earlier side effects.`,{expandPromptTemplates:false});
+}
+
 export function registerApprovalCommands(pi: ExtensionAPI, guard: GuardController, store: ApprovalSettingsStore): void {
   const requireUI = (context: ExtensionCommandContext) => {
     if (!context.hasUI) throw new GuardError('APPROVAL_UI_UNAVAILABLE','Approval settings require an interactive Pi session');
@@ -112,9 +132,11 @@ export function registerApprovalCommands(pi: ExtensionAPI, guard: GuardControlle
     await guard.updateSettings(current => validateSettings({...current,...patch}),context.cwd,settings => store.save(settings));
     context.ui.setStatus('auto-review',undefined);
   };
-  pi.registerCommand('approve',{description:'Choose how actions are approved: Approve for me or Ask for approval.',handler:async(_args,context) => {
+  pi.registerCommand('approve',{description:'Choose an approval mode, or use /approve retry to review a denied action again once.',handler:async(args,context) => {
     requireUI(context);
     await context.waitForIdle();
+    if (args.trim() === 'retry') { await retryDeniedAction(pi,guard,context); return; }
+    if (args.trim()) throw new GuardError('INVALID_APPROVAL_COMMAND','Use /approve to choose a mode or /approve retry to review a denied action again.');
     const current = guard.options.settings;
     const choices = approvalModes.map(item => `${item.label} — ${item.description}`);
     const choice = context.mode === 'rpc'

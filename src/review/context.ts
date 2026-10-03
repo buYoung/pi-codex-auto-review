@@ -52,6 +52,7 @@ export class ReviewContextStore {
     for (const file of event.systemPromptOptions.contextFiles) this.add('agents', 'authorization', {path: file.path, content: file.content}, `agents:${file.path}`);
     for (const [name, content] of [['customPrompt', event.systemPromptOptions.customPrompt], ['appendSystemPrompt', event.systemPromptOptions.appendSystemPrompt]] as const) {
       if (content) this.add('developer', 'authorization', content, `runtime:${name}`);
+      else if (this.items.delete(`runtime:${name}`)) this.authorizationVersion++;
     }
   }
   message(message: unknown, id: string = randomUUID()): void {
@@ -75,8 +76,10 @@ export class ReviewContextStore {
       const text = canonicalJson(item);
       if (text.length <= remaining) { retained.unshift(item); remaining -= text.length; }
     }
-    if (retained.length !== evidence.length) retained.unshift({id: 'omission', source: 'assistant', trust: 'evidence', content: '<truncated reason="review-context-budget" />', isTruncated: true});
-    const data = {...fields, items: [...authorization, ...retained]};
+    const retainedIds = new Set([...authorization, ...retained].map(item => item.id));
+    const ordered = [...this.items.values()].filter(item => retainedIds.has(item.id));
+    if (retained.length !== evidence.length) ordered.unshift({id: 'omission', source: 'assistant', trust: 'evidence', content: '<truncated reason="review-context-budget" />', isTruncated: true});
+    const data = {...fields, items: ordered};
     return immutable({...data, digest: digest(data)});
   }
 }

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { cloudFixture } from './runtime.mjs';
 import { liveCaseIds } from '../../scripts/auto-review-evidence.mjs';
 import { liveCli } from './live-cli.mjs';
+import { livePolicyConformance } from './live-policy.mjs';
 
 export async function liveConformance(modelId) {
   if(!process.env.OLLAMA_API_KEY||!modelId)throw new Error('ENVIRONMENT_BLOCKED: runtime OLLAMA_API_KEY and OLLAMA_MODEL are required');
@@ -50,5 +51,6 @@ export async function liveConformance(modelId) {
   }
   const hasPassed=cases.length===liveCaseIds.length&&cases.every(item=>item.status==='pass');
   const cli=hasPassed?await liveCli(modelId):undefined;
-  return {status:hasPassed&&cli?.status==='pass'?'pass':cases.some(item=>item.status==='environment-blocked')?'environment-blocked':'fail',evidenceKind:'live-provider',provider:'ollama-cloud',model:modelId,limits,cases,cli};
+  const policy=hasPassed&&cli?.status==='pass'?await livePolicyConformance(modelId):undefined;
+  return {status:hasPassed&&cli?.status==='pass'&&policy?.status==='pass'?'pass':cases.some(item=>item.status==='environment-blocked')?'environment-blocked':'fail',evidenceKind:'live-provider',provider:'ollama-cloud',model:modelId,limits,cases,cli,policy};
 }
