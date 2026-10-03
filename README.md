@@ -128,7 +128,7 @@ npm run verify:guard
 npm run verify:docker -- --mode offline --platform linux/amd64
 ```
 
-ARM Docker 호스트에서 별도 ARM64 결과를 얻으려면 `--platform linux/arm64`로 실행합니다. 중첩 네임스페이스와 새 `/proc`, 네이티브 seccomp를 지원해야 합니다. 하네스는 외부 컨테이너의 seccomp·systempaths 제한만 해제하고 모든 capability를 제거하며 `no-new-privileges`를 적용합니다. 내부 파일·네트워크·Unix 소켓 격리와 PID 네임스페이스를 약화하는 옵션은 켜지 않습니다. 호스트 디렉터리·Docker 소켓 마운트와 포트 공개는 없습니다.
+ARM Docker 호스트에서 별도 ARM64 결과를 얻으려면 `--platform linux/arm64`로 실행합니다. 중첩 네임스페이스와 새 `/proc`, 네이티브 seccomp를 지원해야 합니다. 하네스는 검증 컨테이너의 외부 seccomp·systempaths 제한을 해제합니다. AppArmor가 있는 Docker 엔진에서는 기본 정책의 마운트 차단을 피하도록 해당 컨테이너에만 `apparmor=unconfined`를 적용하고 실제 프로필을 기록합니다. [Docker의 컨테이너별 AppArmor 정책](https://docs.docker.com/engine/security/apparmor/)을 사용하며 호스트 전체 정책은 변경하지 않습니다. 모든 capability를 제거하고 `no-new-privileges`를 적용합니다. 내부 파일·네트워크·Unix 소켓 격리와 PID 네임스페이스를 약화하는 옵션은 켜지 않습니다. 호스트 디렉터리·Docker 소켓 마운트와 포트 공개는 없습니다.
 
 `--init`으로 종료된 고아 프로세스를 회수하고, 사전 검사에서 실제 회수를 확인합니다. 회수에 실패하면 본 검증을 시작하지 않습니다. PID 한도는 256개입니다.
 
