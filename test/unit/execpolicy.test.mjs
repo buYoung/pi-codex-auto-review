@@ -48,6 +48,7 @@ network_rule(host="api.example.com", protocol="https", decision="allow")
 network_rule(host="blocked.example.com", protocol="http", decision="forbidden")
 network_rule(host="tcp.example.com", protocol="socks5_tcp", decision="allow")
 network_rule(host="udp.example.com", protocol="socks5_udp", decision="forbidden")
+network_rule(host="[::1]:443", protocol="https", decision="allow")
 `);
   await writeFile(paths[1], `
 network_rule(host="api.example.com", protocol="https_connect", decision="forbidden")
@@ -56,7 +57,7 @@ network_rule(host="prompt.example.com", protocol="https", decision="prompt")
 `);
   const policy = new PolicyEngine(validateSettings({ruleFiles: paths}), f.profile);
   await policy.initialize(f.workspace);
-  const action = host => createAction({toolCallId:'network-rule', tool:'bash', args:{command:`curl https://${host}`}, cwd:f.workspace, source:'model', sessionId:'s', policyRevision:policy.revision}, policy.profile);
+  const action = host => createAction({toolCallId:'network-rule', tool:'bash', args:{command:`curl ${JSON.stringify(`https://${host}`)}`}, cwd:f.workspace, source:'model', sessionId:'s', policyRevision:policy.revision}, policy.profile);
   assert.equal((await policy.evaluate(action('api.example.com'))).kind, 'allow');
   assert.equal((await policy.evaluate(action('blocked.example.com'))).isHardDeny, true);
   assert.equal((await policy.evaluate(action('prompt.example.com'))).kind, 'ask');
@@ -64,6 +65,8 @@ network_rule(host="prompt.example.com", protocol="https", decision="prompt")
   assert.ok(config.network.allowedDomains.includes('tcp.example.com'));
   assert.ok(config.network.deniedDomains.includes('udp.example.com'));
   assert.ok(!config.network.deniedDomains.includes('api.example.com'));
+  assert.ok(config.network.allowedDomains.includes('::1'));
+  assert.equal((await policy.evaluate(action('[::1]'))).kind,'allow');
 });
 
 test('[rules] malformed rules, cancelled evaluation and oversized requests fail closed', async () => {

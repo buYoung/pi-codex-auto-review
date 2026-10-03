@@ -6,7 +6,7 @@ import { GuardError, EMPTY_DELTA, type ExecutionOptions, type Json, type Permiss
 import { nativeConfig, workloadEnvironment } from './config.js';
 import { assertHardLinkBoundaries } from './hard-links.js';
 import { withSignal } from '../signals.js';
-import { matchesDomain } from '../policy/domains.js';
+import { matchesDomain, isNetworkHost, normalizeHost } from '../policy/domains.js';
 
 export interface SandboxExecutor {
   execute(job: WorkerJob, profile: PermissionProfile, delta: PermissionDelta, options?: ExecutionOptions): Promise<Json>;
@@ -62,9 +62,9 @@ export class NativeExecutor implements SandboxExecutor {
           const control=raw as {schemaVersion?:number;type?:string;processGroupId?:number;requestId?:string;destination?:{host?:string;port?:number}};
           if (control.type === 'network-request') {
             const requestId=control.requestId, destination=control.destination;
-            if (control.schemaVersion!==1 || !requestId || seenNetworkRequests.has(requestId) || !destination || typeof destination.host!=='string' || !/^[a-z0-9][a-z0-9.-]*$/i.test(destination.host) || destination.port!==undefined && (!Number.isInteger(destination.port)||destination.port<1||destination.port>65535) || isTerminal) throw new GuardError('INVALID_IPC','Invalid network approval request');
+            if (control.schemaVersion!==1 || !requestId || seenNetworkRequests.has(requestId) || !destination || typeof destination.host !== 'string' || !isNetworkHost(destination.host) || destination.port!==undefined && (!Number.isInteger(destination.port)||destination.port<1||destination.port>65535) || isTerminal) throw new GuardError('INVALID_IPC','Invalid network approval request');
             seenNetworkRequests.add(requestId);
-            const request={host:destination.host.toLowerCase(),...(destination.port!==undefined?{port:destination.port}:{})};
+            const request={host:normalizeHost(destination.host),...(destination.port!==undefined?{port:destination.port}:{})};
             const pending = signal.aborted || profile.deniedDomains.some(pattern=>matchesDomain(request.host,pattern)) || !options.onNetworkRequest
               ? Promise.resolve(false) : withSignal(options.onNetworkRequest(request,signal),signal);
             void pending.catch(()=>false).then(isAllowed=>{if(child.connected)child.send({schemaVersion:1,type:'network-response',requestId,isAllowed:isAllowed===true&&!signal.aborted});});

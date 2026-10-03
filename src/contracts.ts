@@ -1,3 +1,4 @@
+import { isDomainPattern, normalizeHost } from './policy/domains.js';
 import { createHash } from 'node:crypto';
 import { isAbsolute, resolve } from 'node:path';
 import type { ReadToolOptions } from '@earendil-works/pi-coding-agent';
@@ -200,9 +201,9 @@ export function createProfile(input: PermissionProfile): PermissionProfile {
   if (input.readOnlyPaths !== undefined && (!Array.isArray(input.readOnlyPaths) || input.readOnlyPaths.some(path => typeof path !== 'string' || !isAbsolute(path) || path.includes('\0')))) throw new GuardError('INVALID_PROFILE', 'Invalid readOnlyPaths');
   if (input.mode === 'read-only' && input.writeRoots.length) throw new GuardError('INVALID_PROFILE', 'Read-only profiles cannot contain write roots');
   for (const key of ['allowedDomains', 'deniedDomains'] as const) {
-    if (!Array.isArray(input[key]) || input[key].some(p => typeof p !== 'string' || !/^(\*\.)?[a-z0-9][a-z0-9.-]*$/i.test(p))) throw new GuardError('INVALID_PROFILE', `Invalid ${key}`);
+    if (!Array.isArray(input[key]) || input[key].some(p => !isDomainPattern(p))) throw new GuardError('INVALID_PROFILE', `Invalid ${key}`);
   }
-  return immutable(JSON.parse(canonicalJson(input)) as PermissionProfile);
+  return immutable(JSON.parse(canonicalJson({...input, allowedDomains: input.allowedDomains.map(normalizeHost), deniedDomains: input.deniedDomains.map(normalizeHost)})) as PermissionProfile);
 }
 export function createAction(input: Omit<GuardAction, 'schemaVersion' | 'digest' | 'permissionDigest'>, profile: PermissionProfile): GuardAction {
   for (const key of ['toolCallId', 'tool', 'cwd', 'sessionId', 'policyRevision'] as const) {

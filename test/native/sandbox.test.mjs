@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile, symlink, link, access, mkdir, rename, mkdtemp, realpath, rm, stat, chmod } from 'node:fs/promises';
 import { constants as osConstants } from 'node:os';
 import { createServer } from 'node:http';
-import { createServer as createSocketServer } from 'node:net';
+import { createServer as createSocketServer, connect } from 'node:net';
+import { createServer as createHttpsServer, get as httpsGet } from 'node:https';
+import { createSocket } from 'node:dgram';
 import { once } from 'node:events';
 import { join } from 'node:path';
 import { NativeExecutor } from '../../dist/sandbox/executor.js';
@@ -12,6 +14,7 @@ import { seccompRuntime } from '../../dist/sandbox/seccomp.js';
 import { EMPTY_DELTA, createProfile, createAction } from '../../dist/contracts.js';
 import { PolicyEngine, validateSettings } from '../../dist/policy/index.js';
 import { fixture } from '../harness/fixtures.mjs';
+import { tlsFixtureIdentity } from '../harness/tls-fixture.mjs';
 const recordObservation=(t,kind,effect)=>t.diagnostic('NATIVE_OBSERVATION:'+JSON.stringify({kind,effect,isObserved:true,platform:`${process.platform}-${process.arch}`}));
 
 async function setup(t, transport) {
@@ -117,6 +120,63 @@ test('[native-network] allowed proxy control reaches an owned service and denied
   const control=await fetch(directURL);assert.equal(await control.text(),'direct-control');assert.equal(directRequests,1);
   const direct=await f.shell(`curl --noproxy '*' --fail --silent --max-time 3 ${shellQuote(directURL)}`,allowed); assert.notEqual(direct.exitCode,0); assert.equal(directRequests,1);assert.equal(requests,1);
   recordObservation(t,'allow','one authorized proxy request reached owned Unix socket service');recordObservation(t,'deny','domain-denied and direct requests did not reach owned service');
+});
+test('[native-network] HTTPS CONNECT preserves certificate validation and gates the exact destination',async t=>{
+  const f=await fixture(t),identity=tlsFixtureIdentity('tls.example'),socketPath=join(f.control,'tls-proxy.sock'),ca=join(f.workspace,'owned-ca.pem');
+  await writeFile(ca,identity.cert);let requests=0,connects=0;
+  const service=createHttpsServer(identity,(_req,res)=>{requests++;res.end('owned-tls-response');});
+  service.listen(0,'127.0.0.1');await once(service,'listening');t.after(()=>new Promise(resolve=>service.close(resolve)));
+  const port=service.address().port,sockets=new Set();
+  const proxy=createServer();
+  proxy.on('connect',(request,socket,head)=>{
+    connects++;socket.on('error',()=>{});
+    if(request.url!=='tls.example:443'){socket.destroy();return;}
+    const upstream=connect(port,'127.0.0.1');
+    for(const value of [socket,upstream]){sockets.add(value);value.on('close',()=>sockets.delete(value));value.on('error',()=>{socket.destroy();upstream.destroy();});}
+    upstream.once('connect',()=>{socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');if(head.length)upstream.write(head);socket.pipe(upstream);upstream.pipe(socket);});
+  });
+  proxy.listen(socketPath);await once(proxy,'listening');t.after(async()=>{for(const socket of sockets)socket.destroy();await new Promise(resolve=>proxy.close(resolve));});
+  const runtime=await setup(t,{socketPath,domains:['tls.example']}),allowed=createProfile({...runtime.profile,readRoots:[...runtime.profile.readRoots,f.workspace],allowedDomains:['tls.example']});
+  const control=await new Promise((resolve,reject)=>{httpsGet({hostname:'127.0.0.1',port,path:'/',servername:'tls.example',ca:identity.cert,agent:false},res=>{let body='';res.on('data',data=>body+=data);res.on('end',()=>resolve(body));}).on('error',reject);});
+  assert.equal(control,'owned-tls-response');assert.equal(requests,1);
+  const command=`curl --fail --silent --show-error --max-time 5 --cacert ${shellQuote(ca)} https://tls.example/proof`;
+  const positive=await runtime.shell(command,allowed);assert.equal(positive.exitCode,0,positive.output);assert.match(positive.output,/owned-tls-response/);assert.equal(requests,2);
+  assert.notEqual((await runtime.shell(command,createProfile({...allowed,allowedDomains:[]}))).exitCode,0);
+  assert.equal(requests,2);assert.equal(connects,1);
+  const untrusted=await runtime.shell('curl --fail --silent --max-time 5 https://tls.example/proof',allowed);
+  assert.equal(untrusted.exitCode,60);assert.equal(requests,2);
+  recordObservation(t,'allow','HTTPS CONNECT reached the owned TLS service using an explicitly trusted synthetic certificate');
+  recordObservation(t,'deny','unapproved destination and untrusted certificate did not produce an HTTP service effect');
+});
+test('[native-network] SOCKS5 TCP obeys allow and deny rules and direct UDP cannot reach an owned listener',async t=>{
+  const f=await setup(t);let requests=0,datagrams=0;
+  const service=createServer((_req,res)=>{requests++;res.end('owned-socks-response');});service.listen(0,'127.0.0.1');await once(service,'listening');t.after(()=>new Promise(resolve=>service.close(resolve)));
+  const url=`http://127.0.0.1:${service.address().port}/proof`,allowed=createProfile({...f.profile,allowedDomains:['127.0.0.1']});
+  const command=`curl --noproxy '' --proxy \"\${ALL_PROXY/http:/socks5h:}\" --fail --silent --show-error --max-time 5 ${shellQuote(url)}`;
+  const positive=await f.shell(command,allowed);assert.equal(positive.exitCode,0,positive.output);assert.match(positive.output,/owned-socks-response/);assert.equal(requests,1);
+  assert.notEqual((await f.shell(command,createProfile({...allowed,deniedDomains:['127.0.0.1']}))).exitCode,0);assert.equal(requests,1);
+  const udp=createSocket('udp4');udp.on('message',()=>{datagrams++;});udp.bind(0,'127.0.0.1');await once(udp,'listening');t.after(()=>new Promise(resolve=>udp.close(resolve)));
+  const sender=createSocket('udp4'),received=once(udp,'message');sender.send('owned-control',udp.address().port,'127.0.0.1');await received;sender.close();assert.equal(datagrams,1);
+  const program=`const socket=require('node:dgram').createSocket('udp4');socket.on('error',()=>socket.close());socket.send('denied',${udp.address().port},'127.0.0.1',()=>{setTimeout(()=>{try{socket.close()}catch{}},200)});`;
+  await f.shell(`${shellQuote(process.execPath)} -e ${shellQuote(program)}`,allowed);
+  assert.equal(datagrams,1);
+  recordObservation(t,'allow','SOCKS5 TCP through the native proxy and owned host UDP control reached their listeners');
+  recordObservation(t,'deny','denied SOCKS5 destination and direct sandbox UDP produced no additional listener effects');
+});
+test('[native-network] IPv6 proxy grants and dynamic review work while direct and denied IPv6 stay isolated',async t=>{
+  const f=await setup(t);let requests=0;
+  const service=createServer((_req,res)=>{requests++;res.end('owned-ipv6-response');});service.listen(0,'::1');
+  try{await once(service,'listening');}catch(error){throw new Error(`ENVIRONMENT_BLOCKED: owned IPv6 control unavailable: ${error.code}`);}
+  t.after(()=>new Promise(resolve=>service.close(resolve)));
+  const url=`http://[::1]:${service.address().port}/proof`,allowed=createProfile({...f.profile,allowedDomains:['0:0:0:0:0:0:0:1']});
+  assert.equal(await (await fetch(url)).text(),'owned-ipv6-response');assert.equal(requests,1);
+  const command=`curl --noproxy '' --fail --silent --show-error --max-time 5 ${shellQuote(url)}`;
+  const positive=await f.shell(command,allowed);assert.equal(positive.exitCode,0,positive.output);assert.match(positive.output,/owned-ipv6-response/);assert.equal(requests,2);
+  assert.notEqual((await f.shell(command,createProfile({...allowed,deniedDomains:['[::1]']}))).exitCode,0);assert.equal(requests,2);
+  const reviews=[];assert.equal((await f.shell(command,f.profile,EMPTY_DELTA,{onNetworkRequest:async request=>{reviews.push(request);return true;}})).exitCode,0);assert.equal(requests,3);assert.equal(reviews[0].host,'::1');assert.equal(reviews[0].port,service.address().port);
+  assert.notEqual((await f.shell(`curl --noproxy '*' --fail --silent --max-time 3 ${shellQuote(url)}`,allowed)).exitCode,0);assert.equal(requests,3);
+  recordObservation(t,'allow','owned IPv6 host control, canonical IPv6 proxy grant and exact dynamic review reached the service');
+  recordObservation(t,'deny','explicit IPv6 deny and direct IPv6 egress did not reach the service');
 });
 test('[native-files] backend convenience write paths cannot override a read-only profile or borrow a narrow grant',async t=>{
   const f=await setup(t);await mkdir('/tmp/claude',{recursive:true});

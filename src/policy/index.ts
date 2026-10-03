@@ -6,7 +6,7 @@ import { createProfile, decision, digest, immutable, GuardError, EMPTY_DELTA, TO
 import { canonicalPath, isWithin, resolveToolPath } from './paths.js';
 import { analyzeShell, matchesPrefix, INTERPRETERS } from './shell.js';
 import { reviewPolicy } from '../review/policy.js';
-import { matchesDomain } from './domains.js';
+import { matchesDomain, isNetworkHost, isDomainPattern, normalizeHost } from './domains.js';
 import { evaluateRules, ruleCommands, matchesRule, type PrefixRule, type RuleSource, type RuleMatch, type CompiledRules } from './rules.js';
 import { runtimeWritePaths } from '../sandbox/runtime-write-paths.js';
 export { canonicalPath, isWithin, analyzeShell, matchesPrefix, resolveToolPath };
@@ -50,7 +50,7 @@ export function validateSettings(value: unknown): GuardSettings {
   const settings = { ...DEFAULT_SETTINGS, ...raw } as GuardSettings;
   if (!['read-only', 'workspace-write'].includes(settings.mode)) throw new GuardError('INVALID_SETTINGS', 'Unknown mode');
   for (const key of ['reviewTimeoutMs', 'approvalTimeoutMs', 'executionTimeoutSeconds'] as const) if (!Number.isFinite(settings[key]) || settings[key] <= 0) throw new GuardError('INVALID_SETTINGS', `Invalid ${key}`);
-  if (!Array.isArray(settings.allowedDomains) || settings.allowedDomains.some(x => typeof x !== 'string' || !/^(\*\.)?[a-z0-9][a-z0-9.-]*$/i.test(x))) throw new GuardError('INVALID_SETTINGS', 'Invalid domains');
+  if (!Array.isArray(settings.allowedDomains) || settings.allowedDomains.some(x => !isDomainPattern(x))) throw new GuardError('INVALID_SETTINGS', 'Invalid domains');
   if (!Array.isArray(settings.trustedTools) || settings.trustedTools.some(x => typeof x !== 'string' || !x)) throw new GuardError('INVALID_SETTINGS', 'Invalid trusted tools');
   const approval = settings.approvalPolicy;
   if (approval !== 'on-request' && approval !== 'never' && (!approval || typeof approval !== 'object' || Array.isArray(approval) || Object.keys(approval).some(key => !['sandbox','rules','mcp_elicitations'].includes(key)) || typeof approval.sandbox !== 'boolean' || typeof approval.rules !== 'boolean' || approval.mcp_elicitations !== undefined && typeof approval.mcp_elicitations !== 'boolean')) throw new GuardError('INVALID_SETTINGS', 'Invalid approval policy');
@@ -181,17 +181,17 @@ export class PolicyEngine {
       if (analysis.isSupported && ['curl', 'wget'].includes(executable)) {
         const urls = item.argv.slice(1).filter(arg => /^https?:\/\//.test(arg));
         for (const text of urls) {
-          const domain = new URL(text).hostname.toLowerCase();
+          const domain = normalizeHost(new URL(text).hostname);
           if (profile.deniedDomains.some(pattern => matchesDomain(domain, pattern))) return decision(action, 'deny', 'Network domain denied', EMPTY_DELTA, true);
           if (!profile.allowedDomains.some(pattern => matchesDomain(domain, pattern))) { delta.domains.push(domain); shouldAsk = true; }
         }
       }
     }
     for (const key of ['readPaths','writePaths'] as const) delta[key] = [...new Set(await Promise.all(delta[key].map(path => canonicalPath(path, action.cwd))))];
-    if (delta.readPaths.some(path => profile.denyRead.some(root => isWithin(path, root))) || delta.writePaths.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root))) || delta.domains.some(host => !/^[a-z0-9][a-z0-9.-]*$/i.test(host) || profile.deniedDomains.some(pattern => matchesDomain(host, pattern)))) return decision(action, 'deny', 'Requested permissions target an absolute deny', EMPTY_DELTA, true);
+    if (delta.readPaths.some(path => profile.denyRead.some(root => isWithin(path, root))) || delta.writePaths.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root))) || delta.domains.some(host => !isNetworkHost(host) || profile.deniedDomains.some(pattern => matchesDomain(host, pattern)))) return decision(action, 'deny', 'Requested permissions target an absolute deny', EMPTY_DELTA, true);
     const writeScopes = await Promise.all(delta.writePaths.map(path => this.nativeWriteScope(path, action.cwd)));
     const hasCreationScope = writeScopes.some((path, index) => path !== delta.writePaths[index]);
-    const boundDelta = {...delta, writePaths: [...new Set(writeScopes)], domains: [...new Set(delta.domains.map(host => host.toLowerCase()))]};
+    const boundDelta = {...delta, writePaths: [...new Set(writeScopes)], domains: [...new Set(delta.domains.map(normalizeHost))]};
     if (isRuleAllowed) return immutable({...decision(action, 'allow', 'Trusted prefix rule authorizes this command', boundDelta), authority: {kind:'command-rule', actionDigest:action.digest, ruleDigest:digest(matches)}});
     const isFullRequest = action.args.sandbox_permissions === 'require_escalated' && explicit === undefined;
     shouldAsk ||= action.args.sandbox_permissions === 'require_escalated';

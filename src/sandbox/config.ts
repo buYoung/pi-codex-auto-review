@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import type { SandboxRuntimeConfig } from '@anthropic-ai/sandbox-runtime';
 import { GuardError, createProfile, type PermissionDelta, type PermissionProfile, type ExecutionAuthority } from '../contracts.js';
 import { canonicalPath, isWithin } from '../policy/paths.js';
-import { matchesDomain } from '../policy/domains.js';
+import { matchesDomain, isNetworkHost, normalizeHost } from '../policy/domains.js';
 import { linuxReadPaths } from './linux-read-paths.js';
 import { runtimeWritePaths } from './runtime-write-paths.js';
 import { seccompRuntime } from './seccomp.js';
@@ -26,7 +26,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
   const reads = await Promise.all(delta.readPaths.map(path => canonicalPath(path, cwd)));
   const writes = await Promise.all(delta.writePaths.map(path => canonicalPath(path, cwd)));
   if (reads.some(path => profile.denyRead.some(root => isWithin(path, root))) || writes.some(path => [...profile.denyRead, ...profile.denyWrite].some(root => isWithin(path, root)))) throw new GuardError('HARD_DENY', 'Permission delta targets a protected path');
-  if (delta.domains.some(domain => !/^[a-z0-9][a-z0-9.-]*$/i.test(domain) || profile.deniedDomains.some(pattern => matchesDomain(domain, pattern)))) throw new GuardError('HARD_DENY', 'Invalid or denied network domain');
+  if (delta.domains.some(domain => !isNetworkHost(domain) || profile.deniedDomains.some(pattern => matchesDomain(domain, pattern)))) throw new GuardError('HARD_DENY', 'Invalid or denied network domain');
   const isCommandAuthority = authority?.kind === 'command-rule' || authority?.kind === 'reviewed-command';
   const baseProtected = await Promise.all((profile.readOnlyPaths ?? []).map(path => canonicalPath(path, cwd)));
   const lifted = baseProtected.filter(root => writes.some(path => isWithin(path, root)));
@@ -58,7 +58,7 @@ export async function nativeConfig(profile: PermissionProfile, delta: Permission
       denyWrite: [...profile.denyWrite, ...profile.denyRead, ...unapprovedDefaults, ...(isCommandAuthority ? [] : baseProtected.filter(root => !lifted.includes(root))), ...dependencyRoots, resolve(packageRoot, 'dist'), resolve(packageRoot, 'node_modules'), resolve(packageRoot, 'package.json'), resolve(packageRoot, 'package-lock.json')],
       allowGitConfig: isCommandAuthority || writes.some(path => /[/\\]\.git(?:[/\\]config)?$/.test(path)),
     },
-    network: { allowedDomains: isCommandAuthority ? ['*'] : [...profile.allowedDomains, ...delta.domains], deniedDomains: [...profile.deniedDomains], strictAllowlist: true, allowAllUnixSockets: false, allowLocalBinding: false },
+    network: { allowedDomains: isCommandAuthority ? ['*'] : [...profile.allowedDomains, ...delta.domains.map(normalizeHost)], deniedDomains: [...profile.deniedDomains], strictAllowlist: true, allowAllUnixSockets: false, allowLocalBinding: false },
     credentials: { files: profile.denyRead.map(path => ({ path, mode: 'deny' as const })) },
     enableWeakerNestedSandbox: false,
     enableWeakerNetworkIsolation: false,
