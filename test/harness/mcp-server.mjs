@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline';
 import { writeFile } from 'node:fs/promises';
 const reply = value => process.stdout.write(JSON.stringify(value)+'\n');
+if(process.argv[3]==='startup-effect')await writeFile(process.argv[2],'started-by-project-config');
 const lines=createInterface({input:process.stdin,crlfDelay:Infinity});
 for await (const line of lines) {
   if(Buffer.byteLength(line)>1_000_000)throw new Error('Oversized fixture request');

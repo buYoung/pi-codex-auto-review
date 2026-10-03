@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions, type McpExtensionOptions } from '@earendil-works/pi-coding-agent';
+import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, ProjectTrustStore, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions, type McpExtensionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
 import { loadContextFiles } from './context-files.js';
@@ -26,6 +26,8 @@ export interface GuardedRuntimeOptions extends GuardOptions {
   agentDir: string;
   modelRuntime?: ModelRuntime;
   settingsManager?: SettingsManager;
+  /** Explicit trust for the initially selected project; later cwd changes use their own trust record. */
+  isProjectTrusted?: boolean;
   model?: CreateAgentSessionOptions['model'];
   sessionManager?: SessionManager;
   trustedExtensions?: InlineExtension[];
@@ -37,10 +39,18 @@ export interface GuardedRuntimeOptions extends GuardOptions {
 }
 export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
   await assertSupportedPi();
+  if (options.isProjectTrusted !== undefined && typeof options.isProjectTrusted !== 'boolean') throw new GuardError('INVALID_PROJECT_TRUST','Project trust must be an explicit boolean');
   const initialCwd = resolve(options.cwd), agentDir = resolve(options.agentDir);
   const trustedExtensionPaths = (options.trustedExtensionPaths ?? []).map(path => resolve(initialCwd, path));
   const createRuntime = async (input: {cwd:string;agentDir:string;sessionManager:SessionManager;sessionStartEvent?:CreateAgentSessionOptions['sessionStartEvent']}) => {
-    const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir);
+    const settingsManager=options.settingsManager ?? SettingsManager.create(input.cwd,input.agentDir,{projectTrusted:false});
+    const explicitTrust=resolve(input.cwd)===initialCwd ? options.isProjectTrusted : undefined;
+    if (options.settingsManager) {
+      if (explicitTrust !== undefined && settingsManager.isProjectTrusted() !== explicitTrust) throw new GuardError('CONFLICTING_PROJECT_TRUST','Explicit project trust conflicts with the supplied settings manager');
+    } else {
+      const storedTrust=new ProjectTrustStore(input.agentDir).get(input.cwd);
+      settingsManager.setProjectTrusted(explicitTrust ?? storedTrust ?? settingsManager.getDefaultProjectTrust()==='always');
+    }
     const guard = createGuardExtension({...options,cwd:input.cwd,agentDir:input.agentDir,bashOptions:{commandPrefix:settingsManager.getShellCommandPrefix(),shellPath:settingsManager.getShellPath(),...options.bashOptions},readOptions:{autoResizeImages:settingsManager.getImageAutoResize(),...options.readOptions}});
     try {
       const external = (options.externalExtensions ?? []).map(extension => guardedExternalExtension(extension, () => guard.assertReady()));

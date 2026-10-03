@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { ProjectTrustStore } from '@earendil-works/pi-coding-agent';
 import { fixture } from '../harness/fixtures.mjs';
 import { guardedFixture, planStream } from '../harness/pi.mjs';
 import { FixtureMcpTransport, mcpFixture, mcpText } from '../harness/mcp.mjs';
@@ -110,4 +111,23 @@ test('[external-tools] ordinary MCP elicitation reviews registered arguments ins
   await invoke(runtime,'mcp__owned__write','actual-input');
   assert.equal(reviews.length,2);assert.equal(reviews[1].untrustedAction.args.arguments.value,'actual-input');
   assert.equal(transport.replies.at(-1).result.action,'accept');
+});
+test('[external-tools] project MCP startup requires a recorded or explicit project trust decision',async t=>{
+  const f=await fixture(t),target=join(f.outside,'sentinel.txt');
+  await mkdir(join(f.workspace,'.pi'));
+  await writeFile(join(f.workspace,'.pi','mcp.json'),JSON.stringify({mcpServers:{project:{command:process.execPath,args:[resolve('test/harness/mcp-server.mjs'),target,'startup-effect'],exposure:'direct'}}}));
+  const untrusted=await guardedFixture(t,f,{settingsManager:undefined});
+  await planStream(untrusted.session,[]);await untrusted.session.prompt('Do not start untrusted project resources.');
+  assert.equal(await readFile(target,'utf8'),'unchanged');
+  const trusted=await guardedFixture(t,f,{settingsManager:undefined,isProjectTrusted:true});
+  await planStream(trusted.session,[]);await trusted.session.prompt('Load the explicitly trusted owned project.');
+  assert.equal(await readFile(target,'utf8'),'started-by-project-config');
+  await writeFile(target,'unchanged');new ProjectTrustStore(f.agentDir).set(f.workspace,true);
+  const recorded=await guardedFixture(t,f,{settingsManager:undefined});
+  await planStream(recorded.session,[]);await recorded.session.prompt('Use the recorded owned project trust.');
+  assert.equal(await readFile(target,'utf8'),'started-by-project-config');
+  await writeFile(target,'unchanged');
+  const explicitDeny=await guardedFixture(t,f,{settingsManager:undefined,isProjectTrusted:false});
+  await planStream(explicitDeny.session,[]);await explicitDeny.session.prompt('Keep this project untrusted.');
+  assert.equal(await readFile(target,'utf8'),'unchanged');
 });
