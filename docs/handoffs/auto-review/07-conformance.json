@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/final.json",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/auto-review-conformance.json",
   "state": "environment-blocked",
   "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
   "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
@@ -3889,5 +3889,50 @@
     }
   },
   "legacyArchive": ".reports/pi-guard/archives/legacy-db2e7bb0-5a15-441a-8744-ae6976af668b",
-  "recordedAt": "2026-10-03T01:39:18.398Z"
+  "recordedAt": "2026-10-03T01:39:18.398Z",
+  "status": "environment-blocked",
+  "implementationStatus": "implemented",
+  "platformRuns": [
+    {
+      "platform": "darwin-arm64",
+      "status": "pass",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/platform.json"
+    },
+    {
+      "platform": "linux-x64",
+      "status": "environment-blocked",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-07-412Z-cf557ca0-87f5-4a10-96c0-66074bf96361/linux-x64/docker-offline.json"
+    },
+    {
+      "platform": "linux-arm64",
+      "status": "pass",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-37-58-990Z-d948c0be-dd4c-453a-ba86-c82bed05b0b5/linux-arm64/docker-offline.json"
+    }
+  ],
+  "packagePins": {
+    "node": "v24.14.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@anthropic-ai/sandbox-runtime": "0.0.78",
+    "pi-ollama-cloud": "0.12.2"
+  },
+  "commands": {
+    "aggregate": "npm run verify:guard",
+    "focused": "npm run test:conformance",
+    "dockerOffline": "npm run verify:docker -- --mode offline --platform linux/amd64",
+    "dockerLive": "npm run verify:docker -- --mode conformance --platform linux/amd64 --model glm-5.3"
+  },
+  "recoveryProvenance": "Docker harness reconstructed; original historical Docker run unverified; earlier reports preserved",
+  "limitations": [
+    "Pi execution/approval scope only; no MCP/app/Computer Use, Windows, enterprise service or proprietary-model equivalence.",
+    "Controller and native mandatory protections remain absolute; literal .rules subset does not execute general Starlark.",
+    "Guarded startup disables automatic context-file discovery; only actual runtime-supplied instruction sources are trusted.",
+    "Linux creation and runtime default scratch/log paths may require enclosing-directory authority, shown in the reviewed delta; exact-file creation confinement is not claimed. Unsupported partial SDK scopes fail closed.",
+    "Deterministic model doubles and real OS effects do not establish live GLM5.3 behavior.",
+    "The locked dependency audit reported three high-severity entries. No unverified downgrade or automatic audit fix was applied."
+  ],
+  "unresolved": [
+    "ENVIRONMENT_BLOCKED: native qualification failed: Native worker failed (1): apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument\n",
+    "No same-source, same-image GLM5.3 live conformance run qualifies on required linux-x64; real model calls and all four effects are mandatory."
+  ]
 }

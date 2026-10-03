@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -11,14 +11,22 @@
   },
   "modulePaths": [
     "src/reviewer.ts",
+    "src/review/policy.ts",
+    "src/review/context.ts",
+    "src/review/investigation.ts",
+    "src/review/lifecycle.ts",
     "src/approvals.ts",
     "src/audit.ts",
     "src/signals.ts"
   ],
   "moduleHashes": {
-    "src/reviewer.ts": "1ea39a24a25cb438e6acaeb5d5f17774f09e9a8ca31e7c6d5ad59a2cfcf54391",
-    "src/approvals.ts": "784266c4d92f8cac55a94389d03a6b6d12003f9a3bf30805b721b2bd3de4a41a",
-    "src/audit.ts": "c674b02ced15bac19b5ac9d2a717bb928f8c86d35a3722073330ecfda8e93c22",
+    "src/reviewer.ts": "d90e21fcd2eb0c502d1d66094cc29bc982cc067458fb45e4bbb7cb03455e5852",
+    "src/review/policy.ts": "1537cc7134ff0b9f7a5b95c901fa6d027658f0c03c3c57f805c5f204391cadae",
+    "src/review/context.ts": "06ecf58e896f5300ac70841edf8ca99a8900f7b24f85bd2553aeaa14b1c19e50",
+    "src/review/investigation.ts": "e829cd5eb32cae6b1224ed603d38acd6d44f7873e1239c53f0b019069da5c453",
+    "src/review/lifecycle.ts": "36fca5d7726c7d870d10bb36b57578efb8be9c4c3a0233c75dda3b6969a62d6f",
+    "src/approvals.ts": "62f3c4f455fd9913c5e34fff4d89983fcb6a718fa4af65bbee7b7e41993b7648",
+    "src/audit.ts": "fbc4efa887910ccb25e1aec9d62c23d40ba7f8e1175bdc55f5801a287200a783",
     "src/signals.ts": "6821b3eb44e894357c71b9ea9d5bef4d8256d45d529e37f7440edd28aac02ad5"
   },
   "testFiles": [
@@ -36,7 +44,11 @@
   ],
   "results": [
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/reviewer.json",
+      "startedAt": "2026-10-03T01:38:42.637Z",
+      "provenance": "executed",
       "suite": "reviewer",
       "status": "pass",
       "command": "npm run test:reviewer",
@@ -64,11 +76,23 @@
         {
           "name": "[cancellation] caller cancellation reaches the final provider even when it ignores the signal",
           "status": "pass"
+        },
+        {
+          "name": "[review] pinned short/full assessments and policy retain risk thresholds and distinct failures",
+          "status": "pass"
+        },
+        {
+          "name": "[review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking",
+          "status": "pass"
+        },
+        {
+          "name": "[review] registered model override, bounded read-only tools and final values reach the provider",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -77,10 +101,14 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:40:54.684Z"
+      "recordedAt": "2026-10-03T01:38:42.747Z"
     },
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/approvals.json",
+      "startedAt": "2026-10-03T01:38:42.752Z",
+      "provenance": "executed",
       "suite": "approvals",
       "status": "pass",
       "command": "npm run test:approvals",
@@ -94,6 +122,26 @@
         "audit"
       ],
       "tests": [
+        {
+          "name": "[grants] disabled categories never call reviewers or dialogs and user routing skips the provider",
+          "status": "pass"
+        },
+        {
+          "name": "[grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials",
+          "status": "pass"
+        },
+        {
+          "name": "[grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[queue] concurrent denials interrupt once and cancel a still-running review before it can authorize",
+          "status": "pass"
+        },
+        {
+          "name": "[audit] structured review metadata is bounded and redacted without retaining requests",
+          "status": "pass"
+        },
         {
           "name": "[grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source",
           "status": "pass"
@@ -116,8 +164,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -126,23 +174,25 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:40:54.752Z"
+      "recordedAt": "2026-10-03T01:38:42.869Z"
     }
   ],
   "buildProof": {
     "command": "npm run build",
-    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-01T06:40:53.903Z"
+    "recordedAt": "2026-10-03T01:38:41.810Z"
   },
-  "decisionFallbacks": "malformed/provider-error/timeout: ask with eligible UI, deny without UI; caller/session cancellation denies; models never grant permission increases",
+  "decisionFallbacks": "Structured allow grants the reviewed invocation delta or command authority. Denied/timed-out/aborted/failed remain distinct; technical failures never become approvals or UI fallbacks. Legacy decision/reason providers cannot widen authority automatically.",
+  "context": "Trusted retained user/developer/AGENTS/confirmation sources remain distinct from visible assistant/tool evidence; no hidden reasoning",
+  "retry": "One exact user-selected denial is reviewed again; critical denials cannot be overridden",
   "grantScopes": [
     "once",
     "session",
     "persistent"
   ],
-  "redactionRules": "No command/argument/content/provider/worker payload in audit. Sensitive patterns and supplied synthetic markers redacted.",
+  "redactionRules": "No command/argument/content/provider/worker payload in audit. Bounded risk, authorization and rationale metadata is redacted.",
   "exports": [
     "reviewAction",
     "PiReviewProvider",
@@ -150,5 +200,7 @@
     "FileGrantPersistence",
     "AuditLog"
   ],
-  "recordedAt": "2026-10-01T06:41:15.656Z"
+  "recordedAt": "2026-10-03T01:39:18.396Z",
+  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/03-review.json"
 }

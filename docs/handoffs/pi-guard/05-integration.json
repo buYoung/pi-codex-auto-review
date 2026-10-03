@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -16,10 +16,10 @@
     "src/tools/controller.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "3a9ab75f45e20627e6a939dfe8194cec464f109e37d915b8a0babe978a0d99cd",
-    "src/startup.ts": "75c5f42927bea5760333da20edcc2cbdd1307a9582ece45241634dc2cb3cacab",
-    "src/cli.ts": "dd2909a16b308a09c2c9839d367805d6a452635d3eac68ad2b50892532fdde02",
-    "src/tools/controller.ts": "e616cd26a8bd817e00af055e0d29bcd8999ceb02cd641985cf4d23c020087768"
+    "src/index.ts": "5951442016ced034f4884d1337db97b446fa81c7a698c108e61825a428032c66",
+    "src/startup.ts": "2cadf8b6e9fbdc3707b044e5cbd4f1fb16d4fec1b04ddcd2a229c820cac4aa1a",
+    "src/cli.ts": "53611d2923b4aeb0dd220bf4cf99c2e16289dcec9f628e2b379f5cb9b313170b",
+    "src/tools/controller.ts": "de66da95143bff153d2deaba364f56ad78011b076bdcac23024baa24a3156301"
   },
   "testFiles": [
     "test/integration/pi-tools.test.mjs"
@@ -34,7 +34,11 @@
   ],
   "results": [
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T01:38:55.062Z",
+      "provenance": "executed",
       "suite": "integration",
       "status": "pass",
       "command": "npm run test:integration",
@@ -63,6 +67,26 @@
           "status": "pass"
         },
         {
+          "name": "[tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] explicit full-command approval and trusted rule authority reach the final shell while default stays confined",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] runtime network review sees original command and exact destination without replaying earlier effects",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] native reviewer investigation reads owned evidence while writes, network and protected paths are rejected",
+          "status": "pass"
+        },
+        {
           "name": "[user-bash] installed Pi session consumer records ! and !! with the guarded operations",
           "status": "pass"
         },
@@ -71,11 +95,19 @@
           "status": "pass"
         },
         {
-          "name": "[tools] approved outside write covers its mkdir helper without widening sibling permissions",
+          "name": "[tools] outside creation reviews its actual native scope and cannot approve a later sibling",
           "status": "pass"
         },
         {
           "name": "[startup] public guarded startup rejects discarded factories, missing backend and unknown tools",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery",
+          "status": "pass"
+        },
+        {
+          "name": "[startup] default permissions protect the complete explicitly selected agent credential directory",
           "status": "pass"
         },
         {
@@ -89,11 +121,23 @@
         {
           "name": "[tools] the host file queue waits for a cancelled worker to settle before admitting another mutation",
           "status": "pass"
+        },
+        {
+          "name": "[tools] three denied reviews interrupt the actual Pi turn before a fourth action",
+          "status": "pass"
+        },
+        {
+          "name": "[final-input] authorization changed during a pending review cannot reach native execution",
+          "status": "pass"
+        },
+        {
+          "name": "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -102,15 +146,15 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:41:10.343Z"
+      "recordedAt": "2026-10-03T01:39:10.860Z"
     }
   ],
   "buildProof": {
     "command": "npm run build",
-    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-01T06:40:53.903Z"
+    "recordedAt": "2026-10-03T01:38:41.810Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -137,5 +181,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-01T06:41:15.658Z"
+  "recordedAt": "2026-10-03T01:39:18.398Z",
+  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/05-integration.json"
 }

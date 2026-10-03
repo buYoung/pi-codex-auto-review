@@ -23,17 +23,18 @@ export async function cloudFixture({isLive, modelId, policy, onReview} = {}) {
   modelRuntime.streamSimple=(model,context,options={})=>{
     assert.equal(isLive,true,'Offline fixture attempted a model request');
     assert.equal(model.provider,'ollama-cloud');assert.equal(model.id,modelId);
+    assert.ok(!process.env.OLLAMA_API_KEY||!JSON.stringify(context).includes(process.env.OLLAMA_API_KEY),'Credential entered a model prompt');
     const isReview=context.systemPrompt?.includes('# Outcome Policy')===true;
     calls[isReview?'reviewer':'main']++;
     if(calls.main+calls.reviewer>24)throw new Error('Live model request budget exceeded');
     if(isReview)onReview?.(context);
-    return streamSimple(model,context,{...options,maxTokens:Math.min(options.maxTokens??2048,4096),reasoning:'low',timeoutMs:Math.min(options.timeoutMs??60000,60000)});
+    return streamSimple(model,context,{...options,maxTokens:Math.min(options.maxTokens??2048,4096),reasoning:'low',timeoutMs:Math.min(options.timeoutMs??60000,60000),maxRetries:0});
   };
   const profile=createProfile({mode:'workspace-write',readRoots:[workspace],writeRoots:[workspace],denyRead:[control],denyWrite:[control],allowedDomains:[],deniedDomains:[]});
   let runtime;
   try {
     runtime=await createGuardedRuntime({cwd:workspace,agentDir,modelRuntime,
-      settingsManager:pi.SettingsManager.inMemory({cacheWarming:'off',compaction:{enabled:false},quietStartup:true,defaultProvider:'ollama-cloud',defaultModel:modelId??'glm-5.3',defaultThinkingLevel:'low'}),
+      settingsManager:pi.SettingsManager.inMemory({cacheWarming:'off',compaction:{enabled:false},retry:{enabled:false,provider:{maxRetries:0}},quietStartup:true,defaultProvider:'ollama-cloud',defaultModel:modelId??'glm-5.3',defaultThinkingLevel:'low'}),
       sessionManager:pi.SessionManager.inMemory(workspace),profile,
       settings:{reviewTimeoutMs:60000,reviewMaxOutputTokens:2048,...(policy?{reviewPolicy:policy}:{})},
       trustedExtensionPaths:[resolve('node_modules/pi-ollama-cloud/index.ts')],

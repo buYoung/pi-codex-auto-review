@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -12,12 +12,16 @@
   "modulePaths": [
     "src/policy/index.ts",
     "src/policy/paths.ts",
-    "src/policy/shell.ts"
+    "src/policy/shell.ts",
+    "src/policy/rules.ts",
+    "src/policy/domains.ts"
   ],
   "moduleHashes": {
-    "src/policy/index.ts": "0ac6ed08d16bcdc6ff8571bd98be37b92bcfc32b9b51effca74f2e07a48d37e3",
+    "src/policy/index.ts": "b513494bae5ed7926f53a0c5dda8bb4a1c07e07140789ba6a3992c3f97bfe9e9",
     "src/policy/paths.ts": "6dd55f0f848857b287ab6e7a15c8776c544744df74bdb2d1edf5d845860bc868",
-    "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7"
+    "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7",
+    "src/policy/rules.ts": "364c530d83833b26cbda72b273296bb43be11d95d1389e4e3c5342807e43b0d3",
+    "src/policy/domains.ts": "eafb3b0b42d78fe0f02c04684e317198672925e12fe1e1f8b190d40b82333be0"
   },
   "testFiles": [
     "test/unit/policy.test.mjs"
@@ -30,7 +34,11 @@
   ],
   "results": [
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T01:38:42.503Z",
+      "provenance": "executed",
       "suite": "policy",
       "status": "pass",
       "command": "npm run test:policy",
@@ -53,7 +61,23 @@
           "status": "pass"
         },
         {
-          "name": "[shell] literal quotes are parsed but substitutions, interpreters, comments and expansions require review",
+          "name": "[shell] ordinary commands remain sandboxed and advanced syntax cannot borrow a prefix grant",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers",
+          "status": "pass"
+        },
+        {
+          "name": "[paths] write-protected metadata remains readable and scoped elevation differs from absolute denial",
+          "status": "pass"
+        },
+        {
+          "name": "[settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary",
+          "status": "pass"
+        },
+        {
+          "name": "[shell] wildcard domains agree with native rules and explicit elevation is action scoped",
           "status": "pass"
         },
         {
@@ -62,8 +86,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -72,18 +96,18 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:40:54.627Z"
+      "recordedAt": "2026-10-03T01:38:42.633Z"
     }
   ],
   "buildProof": {
     "command": "npm run build",
-    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-01T06:40:53.903Z"
+    "recordedAt": "2026-10-03T01:38:41.810Z"
   },
-  "supportedGrammar": "bounded literal words/quotes/redirections; all compound segments checked; substitutions, globbing, here-docs, assignments and interpreters require review",
-  "policyRevision": "sha256 of validated trusted settings and immutable permission profile",
+  "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters run inside the base sandbox unless an explicit boundary grant or rule prompts review.",
+  "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
   "exports": [
     "PolicyEngine",
     "validateSettings",
@@ -92,5 +116,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-01T06:41:15.655Z"
+  "recordedAt": "2026-10-03T01:39:18.395Z",
+  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/02-policy.json"
 }

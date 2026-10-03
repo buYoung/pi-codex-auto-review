@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-  "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+  "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -11,14 +11,18 @@
   },
   "modulePaths": [
     "src/sandbox/config.ts",
+    "src/sandbox/linux-read-paths.ts",
+    "src/sandbox/runtime-write-paths.ts",
     "src/sandbox/executor.ts",
     "src/sandbox/broker.ts",
     "src/sandbox/worker.ts"
   ],
   "moduleHashes": {
-    "src/sandbox/config.ts": "fe9e8da7bddca291f889dfbe247c204d9264720c8dcb8c39cb2af320632162d8",
-    "src/sandbox/executor.ts": "c97e4b6c95582da5c70a858bb6e6b1d530d67a1216c8d94359398431446cfcc0",
-    "src/sandbox/broker.ts": "e7581cfa80cc46d683ae05017d5dbf06e6681ae7c1ec6ae3437939b7808d968c",
+    "src/sandbox/config.ts": "2c09debdda248a5b60a301f5dbf0da5b723afd479e4961d18ad5e0cc8a6b8f2d",
+    "src/sandbox/linux-read-paths.ts": "f113ad9bd0a2e84e1f3f068a410849fc9bfebe318d8af708d811cf7340a1baf4",
+    "src/sandbox/runtime-write-paths.ts": "6961fd18c927fecef463d8b4490a2c2cc9031c5bfd0e893cf8046ab421278f1b",
+    "src/sandbox/executor.ts": "007815c4ab6a8676ec314e51efd0de48ed86c007e1f5d7b3ae3919a70b1a9b0a",
+    "src/sandbox/broker.ts": "5de40fcde2a90501853e05a3776d8d576d79df116cc3bf438f46fcc8779168ce",
     "src/sandbox/worker.ts": "94d36be732965d704832ea3df9c33d827a32e19debc29fa336ffc96ee1662c05"
   },
   "testFiles": [
@@ -33,7 +37,11 @@
   ],
   "results": [
     {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
+      "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T01:38:42.873Z",
+      "provenance": "executed",
       "suite": "native",
       "status": "pass",
       "command": "npm run test:native",
@@ -61,6 +69,18 @@
           "status": "pass"
         },
         {
+          "name": "[native-files] backend convenience write paths cannot override a read-only profile or borrow a narrow grant",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] reviewed metadata grant exposes only the named file and command authority keeps absolute denies",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] live broker approval is attributed and never shared with another invocation",
+          "status": "pass"
+        },
+        {
           "name": "[native-lifecycle] cancellation and seconds deadline terminate the final process group before return",
           "status": "pass"
         },
@@ -70,8 +90,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "a9365a0f73a67fdc5ffcd96134eee9934bcaec130bdbdf198e8a0107eab9961e",
-      "contractDigest": "af3cea2d2af2bf8153425ea61bb139375e1d5b0242df8dbf5db94b5db295a64d",
+      "sourceDigest": "a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19",
+      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -111,6 +131,42 @@
           "platform": "darwin-arm64"
         },
         {
+          "kind": "allow",
+          "effect": "explicitly disclosed runtime directory grant reached the named owned target",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "runtime convenience directory did not override read-only or broaden an exact-file grant",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "exact metadata file and one reviewed command changed their owned targets",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "metadata sibling, later unapproved write and absolute protected credential read remained blocked",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "broker-authorized dynamic destination reached owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "denied and subsequent invocation destinations did not reach service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
           "kind": "deny",
           "effect": "caller cancellation and seconds deadline terminated running process groups; no delayed descendant mutation",
           "isObserved": true,
@@ -130,15 +186,15 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-01T06:41:01.141Z"
+      "recordedAt": "2026-10-03T01:38:55.058Z"
     }
   ],
   "buildProof": {
     "command": "npm run build",
-    "cwd": "/Users/buyonglee/Documents/work/private/pi-guard/",
+    "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-01T06:40:53.903Z"
+    "recordedAt": "2026-10-03T01:38:41.810Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -153,16 +209,19 @@
     "no host fallback"
   ],
   "networkFixture": "Explicit trusted MITM Unix-socket transport to owned service, domain-filtered by the genuine runtime; default loopback/SSRF restrictions preserved",
+  "requiredPlatforms": [
+    "darwin-arm64",
+    "linux-x64"
+  ],
   "platformResults": [
     {
       "platform": "darwin-arm64",
-      "status": "pass"
-    },
-    {
-      "platform": "linux",
-      "status": "environment-blocked",
-      "reason": "No qualified alternate-OS runner in this workspace"
+      "status": "pass",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/native.json"
     }
   ],
-  "recordedAt": "2026-10-01T06:41:15.657Z"
+  "qualification": "Only this run is described here; final aggregate validates every required architecture",
+  "recordedAt": "2026-10-03T01:39:18.397Z",
+  "runId": "2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T01-38-38-870Z-58e6b235-a503-4c32-92e3-3360dea2dd94/darwin-arm64/04-sandbox.json"
 }

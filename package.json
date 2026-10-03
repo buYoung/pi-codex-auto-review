@@ -26,6 +26,7 @@
     "test:native": "node scripts/run-tests.mjs native",
     "test:integration": "node scripts/run-tests.mjs integration",
     "test:e2e": "node scripts/run-tests.mjs e2e",
+    "test:conformance": "node scripts/run-tests.mjs conformance",
     "verify:guard": "node scripts/verify-guard.mjs",
     "verify:docker": "node scripts/verify-docker.mjs"
   },
