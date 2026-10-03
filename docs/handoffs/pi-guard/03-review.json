@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -22,10 +22,10 @@
   "moduleHashes": {
     "src/reviewer.ts": "d90e21fcd2eb0c502d1d66094cc29bc982cc067458fb45e4bbb7cb03455e5852",
     "src/review/policy.ts": "1537cc7134ff0b9f7a5b95c901fa6d027658f0c03c3c57f805c5f204391cadae",
-    "src/review/context.ts": "06ecf58e896f5300ac70841edf8ca99a8900f7b24f85bd2553aeaa14b1c19e50",
+    "src/review/context.ts": "338fc54427f7b018392bed7e7c8727a1cbfafb20d4ecf7210f6637681bd78b91",
     "src/review/investigation.ts": "e829cd5eb32cae6b1224ed603d38acd6d44f7873e1239c53f0b019069da5c453",
     "src/review/lifecycle.ts": "36fca5d7726c7d870d10bb36b57578efb8be9c4c3a0233c75dda3b6969a62d6f",
-    "src/approvals.ts": "62f3c4f455fd9913c5e34fff4d89983fcb6a718fa4af65bbee7b7e41993b7648",
+    "src/approvals.ts": "27881a2a894a808878aa3dbefaf64bdac11b32d06ecd062ffd8b2debec8671d1",
     "src/audit.ts": "fbc4efa887910ccb25e1aec9d62c23d40ba7f8e1175bdc55f5801a287200a783",
     "src/signals.ts": "6821b3eb44e894357c71b9ea9d5bef4d8256d45d529e37f7440edd28aac02ad5"
   },
@@ -45,9 +45,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/reviewer.json",
-      "startedAt": "2026-10-03T02:52:05.239Z",
+      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/reviewer.json",
+      "startedAt": "2026-10-03T06:43:16.644Z",
       "provenance": "executed",
       "suite": "reviewer",
       "status": "pass",
@@ -91,8 +91,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -101,13 +101,13 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:52:05.409Z"
+      "recordedAt": "2026-10-03T06:43:16.778Z"
     },
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/approvals.json",
-      "startedAt": "2026-10-03T02:52:05.421Z",
+      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/approvals.json",
+      "startedAt": "2026-10-03T06:43:16.792Z",
       "provenance": "executed",
       "suite": "approvals",
       "status": "pass",
@@ -164,8 +164,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -174,7 +174,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:52:05.642Z"
+      "recordedAt": "2026-10-03T06:43:16.954Z"
     }
   ],
   "buildProof": {
@@ -182,7 +182,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:52:03.827Z"
+    "recordedAt": "2026-10-03T06:43:14.670Z"
   },
   "decisionFallbacks": "Structured allow grants the reviewed invocation delta or command authority. Denied/timed-out/aborted/failed remain distinct; technical failures never become approvals or UI fallbacks. Legacy decision/reason providers cannot widen authority automatically.",
   "context": "Trusted retained user/developer/AGENTS/confirmation sources remain distinct from visible assistant/tool evidence; no hidden reasoning",
@@ -200,7 +200,7 @@
     "FileGrantPersistence",
     "AuditLog"
   ],
-  "recordedAt": "2026-10-03T02:53:42.498Z",
-  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/03-review.json"
+  "recordedAt": "2026-10-03T06:46:19.906Z",
+  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/03-review.json"
 }

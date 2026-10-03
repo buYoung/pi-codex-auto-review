@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -19,11 +19,11 @@
     "src/sandbox/worker.ts"
   ],
   "moduleHashes": {
-    "src/sandbox/config.ts": "0cee7f28fb34a19af5c1756a27b78adf1e57044e1ac017d7080fe08017bd0351",
+    "src/sandbox/config.ts": "1db31b753b24aa6a816387df32175ea03ba82e7e1e60313f9f5f12f4584c4056",
     "src/sandbox/seccomp.ts": "0523e1c5c5e479d7809dcb1cea6c83c370b4002dbb7aa4cff610122041d6f2a2",
     "src/sandbox/linux-read-paths.ts": "f113ad9bd0a2e84e1f3f068a410849fc9bfebe318d8af708d811cf7340a1baf4",
     "src/sandbox/runtime-write-paths.ts": "6961fd18c927fecef463d8b4490a2c2cc9031c5bfd0e893cf8046ab421278f1b",
-    "src/sandbox/executor.ts": "4cf9d05b3ad81cea49a3d9da56e8094022c3caa5ee0ac43272ecd33e186e76d7",
+    "src/sandbox/executor.ts": "f82289c9fd698e3261a062ce079496bfa17b526e72b8c0e7953b27efa91829a8",
     "src/sandbox/broker.ts": "97a01873bcd2edd240c5a6485a9356a385bc25b0eaca768f1caed18b2a71aff3",
     "src/sandbox/worker.ts": "94d36be732965d704832ea3df9c33d827a32e19debc29fa336ffc96ee1662c05"
   },
@@ -40,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T02:52:05.666Z",
+      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T06:43:16.971Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -71,7 +71,31 @@
           "status": "pass"
         },
         {
+          "name": "[native-files] pre-existing hard-link aliases cannot read protected data or modify an outside inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] a narrow reviewed grant does not expose another name of a hard-linked inode",
+          "status": "pass"
+        },
+        {
+          "name": "[native-files] unsearchable subtrees stay inaccessible while searchable incomplete scans fail closed",
+          "status": "pass"
+        },
+        {
           "name": "[native-network] allowed proxy control reaches an owned service and denied proxy/direct traffic does not",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] HTTPS CONNECT preserves certificate validation and gates the exact destination",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] SOCKS5 TCP obeys allow and deny rules and direct UDP cannot reach an owned listener",
+          "status": "pass"
+        },
+        {
+          "name": "[native-network] IPv6 proxy grants and dynamic review work while direct and denied IPv6 stay isolated",
           "status": "pass"
         },
         {
@@ -148,8 +172,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -190,6 +214,42 @@
         },
         {
           "kind": "allow",
+          "effect": "pre-existing hard links wholly contained in admitted roots remain usable",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "pre-existing protected-read and outside-write aliases rejected before launch; runtime source link did not change outside inode",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "an exact-file grant cannot mutate a sibling alias of the same inode",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "a reviewed directory containing every link permits the disclosed shared-inode effect",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "ordinary files remain usable beside a natively masked unsearchable subtree",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "workload cannot reopen masked directory; searchable directories with unverified aliases block launch",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
           "effect": "one authorized proxy request reached owned Unix socket service",
           "isObserved": true,
           "platform": "darwin-arm64"
@@ -197,6 +257,42 @@
         {
           "kind": "deny",
           "effect": "domain-denied and direct requests did not reach owned service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "HTTPS CONNECT reached the owned TLS service using an explicitly trusted synthetic certificate",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "unapproved destination and untrusted certificate did not produce an HTTP service effect",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "SOCKS5 TCP through the native proxy and owned host UDP control reached their listeners",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "denied SOCKS5 destination and direct sandbox UDP produced no additional listener effects",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "allow",
+          "effect": "owned IPv6 host control, canonical IPv6 proxy grant and exact dynamic review reached the service",
+          "isObserved": true,
+          "platform": "darwin-arm64"
+        },
+        {
+          "kind": "deny",
+          "effect": "explicit IPv6 deny and direct IPv6 egress did not reach the service",
           "isObserved": true,
           "platform": "darwin-arm64"
         },
@@ -412,7 +508,7 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:52:38.298Z"
+      "recordedAt": "2026-10-03T06:43:58.081Z"
     }
   ],
   "buildProof": {
@@ -420,7 +516,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:52:03.827Z"
+    "recordedAt": "2026-10-03T06:43:14.670Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -443,11 +539,11 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/native.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/native.json"
     }
   ],
   "qualification": "Only this run is described here; final aggregate validates every required architecture",
-  "recordedAt": "2026-10-03T02:53:42.500Z",
-  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/04-sandbox.json"
+  "recordedAt": "2026-10-03T06:46:19.908Z",
+  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/04-sandbox.json"
 }

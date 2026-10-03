@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -16,13 +16,14 @@
     "src/tools/controller.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "5951442016ced034f4884d1337db97b446fa81c7a698c108e61825a428032c66",
-    "src/startup.ts": "2cadf8b6e9fbdc3707b044e5cbd4f1fb16d4fec1b04ddcd2a229c820cac4aa1a",
-    "src/cli.ts": "53611d2923b4aeb0dd220bf4cf99c2e16289dcec9f628e2b379f5cb9b313170b",
-    "src/tools/controller.ts": "de66da95143bff153d2deaba364f56ad78011b076bdcac23024baa24a3156301"
+    "src/index.ts": "f2d59c45646da2a3fef91c88c652fe8d4b63a57dfec53b63b63691799130ad0a",
+    "src/startup.ts": "39cd2baa4b203680a171f5376340564e71b0c0aa53a07f313964c676f19be8b3",
+    "src/cli.ts": "454d9ba421d269c1d5616d13aa2c62874128547c52e6b9f42dbce4208c142ba5",
+    "src/tools/controller.ts": "4afb60a793f21f7367f62bfa6cc17373bd8211c43358c9bda541445caeb3aa25"
   },
   "testFiles": [
-    "test/integration/pi-tools.test.mjs"
+    "test/integration/pi-tools.test.mjs",
+    "test/integration/mcp.test.mjs"
   ],
   "coveredBehavior": [
     "tools",
@@ -30,20 +31,24 @@
     "user-bash",
     "startup",
     "nested",
-    "options"
+    "options",
+    "context-files",
+    "external-tools",
+    "computer-use"
   ],
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/integration.json",
-      "startedAt": "2026-10-03T02:52:38.310Z",
+      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/integration.json",
+      "startedAt": "2026-10-03T06:43:58.093Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
       "command": "npm run test:integration",
       "testFiles": [
-        "test/integration/pi-tools.test.mjs"
+        "test/integration/pi-tools.test.mjs",
+        "test/integration/mcp.test.mjs"
       ],
       "coveredBehavior": [
         "tools",
@@ -51,7 +56,10 @@
         "user-bash",
         "startup",
         "nested",
-        "options"
+        "options",
+        "context-files",
+        "external-tools",
+        "computer-use"
       ],
       "tests": [
         {
@@ -80,6 +88,10 @@
         },
         {
           "name": "[tools] actual Pi follow-up review retains original user scope and untrusted tool evidence",
+          "status": "pass"
+        },
+        {
+          "name": "[context-files] discovered instructions reach Pi and review with provenance and refresh on reload",
           "status": "pass"
         },
         {
@@ -133,11 +145,59 @@
         {
           "name": "[tools] real Pi approve command gives one exact retry marker and the retry is reviewed before native execution",
           "status": "pass"
+        },
+        {
+          "name": "[external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] MCP denial, required human input and granular policy prevent effects",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] user reviewer honors read hints and requires UI for destructive tools",
+          "status": "pass"
+        },
+        {
+          "name": "[computer-use] nested sensitive request is independently reviewed and bound to its live origin",
+          "status": "pass"
+        },
+        {
+          "name": "[computer-use] spoofed origin, user-input requests and forms never borrow an ordinary CUA approval",
+          "status": "pass"
+        },
+        {
+          "name": "[computer-use] a nested request cannot downgrade the originating strict review requirement",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] changed registration and cancellation during review cannot execute a registered adapter",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] real MCP stdio server runs only an approved exact call and preserves structured results",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] explicit human-input flag uses a fresh human dialog without automatic inference",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload",
+          "status": "pass"
+        },
+        {
+          "name": "[external-tools] project MCP startup requires a recorded or explicit project trust decision",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -146,7 +206,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:53:05.899Z"
+      "recordedAt": "2026-10-03T06:44:46.670Z"
     }
   ],
   "buildProof": {
@@ -154,7 +214,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:52:03.827Z"
+    "recordedAt": "2026-10-03T06:43:14.670Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -181,7 +241,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-03T02:53:42.501Z",
-  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-03T06:46:19.909Z",
+  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/05-integration.json"
 }

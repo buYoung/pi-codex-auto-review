@@ -11,7 +11,7 @@
 - [x] `docs/briefs/2026-10-03-feat-auto-review-04-permissions.md` — Completed; `docs/handoffs/auto-review/04-permissions.json` records automatic scoped/command authority, rules, attributed live network approval, metadata/domain fixes and 44 passing checks; controller/native mandatory restrictions remain explicit compatibility limits.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-05-denials.md` — Completed; `docs/handoffs/auto-review/05-denials.json` records actual Pi interruption, exact one-use `/approve` re-review, stale-authorization rejection, structured feedback and 35 passing checks.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — 완료. `docs/handoffs/auto-review/06-docker-cloud.json`과 `09-live-cloud.json`: 같은 이미지에서 x64 오프라인 72개와 GLM5.3 실모델 4개 시나리오 통과. 환경변수 인증, 실제 주 에이전트 8회·검토자 2회 호출, 허용·거부 효과, 키 비노출과 소유 컨테이너 정리를 확인했다.
-- [x] `docs/briefs/2026-10-03-test-auto-review-07-conformance.md` — 완료. `docs/handoffs/auto-review/07-conformance.json`: 같은 소스의 필수 macOS·Docker x64 각각 72개와 GLM5.3 실모델 결과 통과, 17개 차이 항목의 증거 연결 완료. `npm run verify:guard`는 종료 코드 0, 상태 `complete`, 차단 항목 없음으로 완료했다.
+- [x] `docs/briefs/2026-10-03-test-auto-review-07-conformance.md` — 완료. 후속 확장까지 반영한 `docs/handoffs/auto-review/07-conformance.json`: 같은 소스의 macOS·실제 Linux x64·Docker 각각 142개와 GLM5.3 실모델 4개 사례 통과. Windows의 규칙·승인 정책·미지원 실행 사전 거부도 확인했다. `npm run verify:guard`는 종료 코드 0, 상태 `complete`, 차단 항목 없음으로 완료했다.
 
 ## Execution Order
 - Wave 1 — `docs/briefs/2026-10-03-fix-auto-review-01-evidence.md`: Start: preserve the current checkout and existing report files before verification writes; Deliverable: immutable run storage and compatible evidence readers; Location: `docs/handoffs/auto-review/01-evidence.json` (proposed); Done: the handoff records passing preservation and stale/platform rejection proofs; Handoff: contracts and Docker work receive the run layout and required-platform contract.
@@ -57,7 +57,7 @@
 
 ## Shared Constraints
 - The user's approved scope is current Pi execution/approval behavior: automatic elevation, security policy/context, denial/reapproval, command rules, and the corresponding native boundary.
-- [deferred] New MCP/app/Computer Use implementations, enterprise administration services, Windows qualification, unrestricted full-access operation, and identical outputs from proprietary Codex models remain outside this initiative.
+- 후속 요청으로 기존 MCP·Computer Use 도구의 승인 연결과 Windows 실환경 검증을 범위에 포함했다. 새 브라우저·화면 실행기, 기업 관리 서비스, 무제한 전체 접근, 독점 Codex 모델의 동일 판단은 여전히 범위 밖이다.
 - Use installed `pi-ollama-cloud` from the exact package named by the user, provider ID `ollama-cloud`, and runtime Docker `OLLAMA_API_KEY`. Do not provision a local Ollama daemon.
 - Use `PI_OLLAMA_WEB_TOOLS=0`, disable usage polling in the fixture, and keep model choice a runtime harness input rather than a guessed account-specific constant.
 - Keep real credentials out of source, image layers/build arguments, generated `auth.json`, workloads, prompts, logs, and exported reports. Do not inspect host credentials to populate the container.
@@ -107,3 +107,13 @@
 - 확장 실행에서 Docker PID 1 아래 좀비 프로세스 131개와 병렬 `grep`의 스레드 생성 실패를 재현했다. `--init`과 실제 고아 회수 사전 검사로 수정했으며 PID 한도 256개와 내부 보안 경계는 유지했다. 초기 실패와 중단 기록을 별도 보존했다.
 - 최종 소스 `10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624`에서 macOS·Docker x64 각각 112개, 감사 기록 168건, 같은 이미지의 GLM5.3 실모델 4개 사례가 통과했다. 주 에이전트 8회·검토자 2회 실제 호출을 확인했고 `npm run verify:guard`는 종료 코드 0과 `complete`를 기록했다.
 - 출처·추가 사례·실행 증거는 `docs/handoffs/auto-review/10-protection-matrix.json`, 보호되는 경우와 허용되는 경우 및 미검증 범위는 `docs/testing/auto-review-protection.md`에 정리했다.
+
+## 후속 요청 — 남은 네 가지 작업
+
+- 의존성 취약점을 조치하고, 기존 패키지 이름 변경을 별도 커밋으로 보존했다. 상류 미병합 수정의 고정 사용과 Pi 설치 범위는 `docs/security/dependencies.md`에 명시했다.
+- 공개 Codex의 실제 Starlark 규칙 엔진, 지침 파일 자동 탐색, MCP·Computer Use 승인 연결을 반영했다. 일반 승인과 엄격 검토의 구분은 `docs/handoffs/auto-review/19-mcp-routing.json`을 따른다.
+- 사전 생성 하드링크, HTTPS CONNECT, SOCKS5 TCP, IPv6, 직접 UDP 차단을 추가했다. 프로젝트 신뢰 결정 전에 MCP 서버가 시작되는 문제도 수정했다.
+- 실제 Linux x64·Windows 실행과 Docker 이미지 반출을 GitHub Actions에 추가했다. Windows는 규칙·승인 정책과 미지원 네이티브 실행의 사전 거부를 검증하며, 네이티브 격리 지원을 주장하지 않는다.
+- 최종 소스의 실행 상태와 재현 근거는 `docs/handoffs/auto-review/17-platform-qualification.json`, 모든 필수 결과를 결합한 판정은 `docs/handoffs/auto-review/07-conformance.json`에서 확인한다. 이전 72개·112개 기록은 당시 소스의 역사적 증거로 유지한다.
+- 최종 소스 `3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030`에서 macOS·실제 Linux x64·네이티브/에뮬레이션 Docker 각각 142개, GLM5.3 네 사례, 감사 기록 217건이 통과했다. 주 에이전트 8회·검토자 2회 호출, 로그·보고서 7개의 키 비노출, 소유 컨테이너 정리를 확인했다.
+- 초기 macOS 집계의 패키지 검사 시간 초과도 보존했다. 진단 복사본은 12.6초에 정상 완료됐고, 소스와 원본 20초 제한을 유지한 최종 집계는 통과했다. 세부 원인이 확인되지 않은 첫 지연과 후속 관찰을 `docs/handoffs/auto-review/24-macos-package-timing.json`에서 구분한다.

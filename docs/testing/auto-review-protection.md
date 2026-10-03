@@ -2,7 +2,9 @@
 
 이 검증은 **정책 판단, 실제 Pi 도구 결과, 파일·네트워크 효과**를 함께 확인한다. 허용 대조군이 먼저 성공해야 차단 결과도 유효하다. 예외나 오류 메시지만 확인하고 보호 성공으로 판정하지 않는다.
 
-현재 추가 범위는 Pi 시나리오 26개·하네스 자체 검증 1개와 OS 격리 사례 13개다. 기존 검증을 포함하면 플랫폼마다 112개이며, 별도의 GLM5.3 실모델 검증은 4개 시나리오다. Docker는 이에 앞서 고아 프로세스 회수도 검사한다. 실행별 결과와 소스·이미지 식별자는 [검증 인계](../handoffs/auto-review/10-protection-matrix.json)에 기록한다.
+현재 검증 구성은 플랫폼별 142개 사례이며, GLM5.3 실모델 검증은 별도의 4개 시나리오다. Docker는 이에 앞서 고아 프로세스 회수도 검사한다. 구성에 포함됐다는 사실과 실제 통과는 구분한다. 최신 소스의 운영체제별 상태·실행 링크·이미지 식별자는 [운영체제 검증 인계](../handoffs/auto-review/17-platform-qualification.json), 최종 결합 결과는 [정합성 인계](../handoffs/auto-review/07-conformance.json)에 기록한다. 이전 112개 검증은 [이전 보호 경계 인계](../handoffs/auto-review/10-protection-matrix.json)에 보존한다.
+
+2026-10-03 최종 실행에서는 같은 소스의 macOS·실제 Linux x64·네이티브 및 에뮬레이션 Docker가 각각 142개를 통과했다. GLM5.3 네 사례와 Windows의 별도 규칙·사전 거부 검증도 통과했고, `npm run verify:guard`는 `complete`로 종료됐다. 감사 기록 217건과 실모델 로그·보고서 7개의 키 비노출을 확인했다.
 
 ## 보호되는 경우와 허용되는 경우
 
@@ -22,10 +24,20 @@
 | HTTP 리다이렉트 | 허용 호스트의 최초 요청 | 거부 호스트로의 리다이렉트 | 최초 요청만 도착하고 거부 대상은 미도달 |
 | 환경변수 | 명시적인 일반 값이 자식 인터프리터에 전달 | 인증·로더·사용자 프록시 변수의 합성 비밀 값 | 자식 환경에 비밀 값 부재, 일반 값 보존 |
 | Docker 프로세스 정리 | `--init`이 종료된 고아 프로세스를 회수 | PID 1이 고아를 회수하지 못하는 컨테이너 | 제한 시간 내 `/proc/<pid>` 소멸, 실패 시 본 검증 진입 차단 |
+| 사전 생성 하드링크 | 모든 이름이 허용 범위 안에 있는 같은 inode | 보호 파일 별칭, 범위 밖 쓰기 별칭, 좁은 승인 파일의 형제 별칭 | 실행 전 차단, 외부 내용 불변; 모든 별칭을 포함한 디렉터리 승인은 허용 |
+| 탐색 불가 디렉터리 | 접근 불가 하위 트리 옆의 정상 파일 쓰기 | 하위 트리의 권한 변경·읽기, 이름을 알면 접근 가능한 미검증 트리 | 접근 불가 트리는 OS 경계에서도 차단; 불완전한 검색 가능 범위는 시작 거부 |
+| HTTPS CONNECT | 합성 인증서를 검증한 소유 서버 요청 | 허용하지 않은 목적지, 신뢰하지 않은 인증서 | 실제 HTTPS 응답과 서버 수신 횟수, 인증 실패 시 HTTP 효과 없음 |
+| SOCKS5·UDP | 허용 SOCKS5 TCP, 호스트의 UDP 대조 요청 | 명시적으로 거부한 SOCKS5 목적지, 샌드박스의 직접 UDP | 허용 TCP만 도달, 직접 UDP 추가 수신 없음 |
+| IPv6 | 동등한 IPv6 표기의 프록시 허용, 실행 중 정확한 목적지 승인 | 명시적 IPv6 거부, 직접 IPv6 통신 | 주소·포트가 검토에 전달되고 허용 요청만 서버 도달 |
+| 원본 `.rules` | Starlark 함수·문자열 보간·대안 인자·실행 파일 경로·네트워크 규칙 | 틀린 예제, 경로 제약 위반, 잘못된 규칙, 취소 | 고정 Codex 엔진의 결과가 실제 정책과 네이티브 설정에 전달 |
+| 자동 컨텍스트 | 신뢰한 루트부터 현재 위치까지의 지침, 전역·파일 우선순위 | 비신뢰 프로젝트, 보호 경로 별칭, 초과 바이트 | 출처와 내용이 Pi·검토자에 전달되며 새로고침 후 갱신 |
+| MCP 최종 실행 | 일반 읽기 전용·설정상 허용, 검토로 승인된 정확한 호출 | 엄격 요청에서 표시·이전 승인으로 검토 생략, 거부, 등록 변경, 검토 취소 | 실제 Pi 클라이언트와 stdio 서버의 호출·파일 효과 일치 |
+| 프로젝트 MCP 시작 | 저장된 신뢰 또는 명시적인 신뢰 선택 | 결정 없는 프로젝트, 명시적인 비신뢰 선택 | 도구 호출 전 서버 시작 효과도 신뢰 결정에 의해 제한 |
+| Computer Use 추가 승인 | 살아 있는 호출에 연결된 별도 요청 | 위조된 호출 ID, 민감 작업 거부, 필수 사용자 입력의 자동 처리 | 중첩 요청을 별도로 검토하고 승인되지 않은 효과 차단 |
 
 ## Codex에서 반영한 하네스 방식
 
-기준은 공개 소스 `rust-v0.160.0`, 커밋 `a956835d020762cb2b570053af06f643a11c0ecc`다. Rust 테스트를 이 저장소에서 실행하거나 그대로 복사하지 않고, 공개된 검증 계약을 Pi의 스트림·도구 경로에 맞게 구현했다. 추가 외부 의존성은 없다.
+기준은 공개 소스 `rust-v0.160.0`, 커밋 `a956835d020762cb2b570053af06f643a11c0ecc`다. 공개된 하네스의 검증 계약을 Pi의 스트림·도구 경로에 맞게 구현했다. `.rules`는 이 리비전의 `codex-execpolicy`를 실제 Rust 의존성으로 연결해 평가한다. 상류의 전체 Rust 테스트 스위트를 실행했다는 의미는 아니다.
 
 | Codex 기준 | 반영한 검증 |
 | --- | --- |
@@ -33,10 +45,23 @@
 | [`exec_policy.rs::execpolicy_blocks_shell_invocation`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/tests/suite/exec_policy.rs#L517) | 정책 거부 결과가 다음 주 모델 요청에 도구 결과로 전달되는지 확인한다. |
 | [`request_permissions.rs`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/tests/suite/request_permissions.rs#L834) | 읽기 전용 상태의 추가 권한이 승인하지 않은 작업 공간·임시 경로 쓰기로 넓어지지 않는지 확인한다. |
 | [`guardian_review_cancellation.rs`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/tests/suite/guardian_review_cancellation.rs#L39) | 직접 도구와 중첩 코드 실행의 검토를 취소한 뒤 늦은 승인이 실행으로 이어지지 않는지 확인한다. |
+| [`execpolicy`](https://github.com/openai/codex/tree/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/execpolicy) | 원본 Starlark 엔진과 예제 검증·실행 파일 경로·네트워크 규칙 변환을 연결한다. |
+| [`agents_md.rs`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/agents_md.rs) | 프로젝트 루트·지침 우선순위·바이트 한도·신뢰 상태를 확인한다. |
+| [`mcp_tool_call.rs`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/mcp_tool_call.rs), [`session/mcp.rs`](https://github.com/openai/codex/blob/a956835d020762cb2b570053af06f643a11c0ecc/codex-rs/core/src/session/mcp.rs) | annotation 우선순위, 엄격한 자동 검토, 민감한 중첩 승인과 호출 출처 결합을 확인한다. |
 
 Pi 구현은 [`test/harness/scenarios.mjs`](../../test/harness/scenarios.mjs), 시나리오는 [`test/conformance/protection.test.mjs`](../../test/conformance/protection.test.mjs)에 있다. OS 격리 검사는 [`test/native/sandbox.test.mjs`](../../test/native/sandbox.test.mjs)에 있다. 하네스 자체도 호출 누락·초과, 이미 취소된 요청을 검사한다. 하네스 내부 assertion이 공급자 오류로 변환돼 조용히 통과하지 못하도록 별도로 보존한다.
 
 확장 검증 중 Docker PID 1 아래 좀비 프로세스 131개가 누적되고 `grep`의 스레드 생성이 실패하는 문제를 재현했다. 하네스의 `--init`과 고아 회수 사전 검증으로 수정하며, PID 한도 256개와 내부 파일·네트워크·seccomp 제한을 유지한다.
+
+후속 검증에서는 실행 전에 만든 하드링크가 macOS의 보호 파일 읽기와 외부 파일 쓰기를 우회하는 것을 재현했다. 실행 전 링크 수와 허용 범위의 이름을 대조해 수정했다. 또 Pi의 기본 신뢰값을 그대로 사용하면 새 프로젝트의 MCP 서버가 승인 도구 호출 전에 시작되는 것을 재현해, 저장된 신뢰와 명시적 선택으로 제한했다. 재현·수정 근거는 [하드링크 인계](../handoffs/auto-review/15-hard-links.json)와 [운영체제 후속 인계](../handoffs/auto-review/18-platform-followups.json)에 있다.
+
+실제 Ubuntu Docker에서는 내부 `bwrap`의 마운트가 외부 AppArmor 정책에 차단됐다. 하네스는 AppArmor 지원 여부를 확인하고 소유한 검증 컨테이너에만 `apparmor=unconfined`를 지정한다. 요청값과 실제 프로필을 실행 보고서에 기록하며, 내부 샌드박스의 파일·네트워크·seccomp 검증은 그대로 수행한다. 이는 [Docker의 컨테이너별 프로필 선택](https://docs.docker.com/engine/security/apparmor/)을 사용하는 검증 환경 설정이다. 수정 전후 실행은 [AppArmor 인계](../handoffs/auto-review/20-docker-apparmor.json)에 보존했다.
+
+ARM64 커널에서 x64 프로그램을 실행한 추가 검증에서는 142개 중 정상 셸 출력 사례 하나가 3초 제한을 넘겼다. 해당 기능 검사의 호출자 지정 제한을 15초로 보정했다. 별도 생명주기 검사는 실제 2초 제한, 3.5초 반환 상한, 지연된 파일 변경 차단을 계속 확인한다. 실행기의 제한 처리 코드는 변경하지 않았다. 최초 실패와 집중 검사 결과는 [에뮬레이션 시간 인계](../handoffs/auto-review/22-emulated-shell-timing.json)에 있다.
+
+macOS의 첫 최종 집계에서는 패키지 검사의 20초 관찰 시간이 초과됐다. 관찰 시간을 늘린 진단 복사본은 12.6초에 정상 완료됐으며, 원본 검사와 20초 제한을 유지한 재집계도 통과했다. 최초 지연의 세부 원인은 특정하지 못했다. [패키지 시간 관찰 인계](../handoffs/auto-review/24-macos-package-timing.json)에 초기 실패와 후속 성공을 함께 보존했다.
+
+일반 MCP 승인과 엄격 검토는 구분한다. Codex의 일반 경로는 검토자가 자동 모델이어도 annotation과 승인 모드를 따르며, 엄격 검토는 이런 생략 조건을 허용하지 않는다. 중첩 요청은 원래 호출의 엄격 검토 요구를 낮출 수 없다. 정정한 동작과 회귀 검증은 [MCP 승인 경로 인계](../handoffs/auto-review/19-mcp-routing.json)에 기록했다.
 
 ## 검증이 보장하는 범위
 
@@ -44,8 +69,12 @@ Pi 구현은 [`test/harness/scenarios.mjs`](../../test/harness/scenarios.mjs), �
 - 기본 임시 디렉터리 쓰기와 일반 외부 파일 읽기는 기본 프로필이 허용하는 동작이다. 작업 공간 밖이라는 이유만으로 항상 차단된다고 가정하지 않는다.
 - 셸 실행은 트랜잭션이 아니다. 허용된 첫 번째 쓰기 뒤 두 번째 쓰기가 거부되어도 첫 번째 변경은 남는다. 이 부분 효과도 테스트에서 명시적으로 확인한다.
 - Linux에서 새 파일 생성은 승인할 부모 디렉터리 범위가 필요할 수 있다. 좁은 기존 파일 승인과 새 파일 생성의 범위를 구분한다.
-- 하드 링크 검사는 샌드박스 안에서 새 링크를 생성하려는 경우다. 실행 전에 외부에서 만들어 둔 모든 별칭·하드 링크 조합까지 검증한 것은 아니다.
-- Linux x64 결과는 ARM64 커널의 x64 에뮬레이션이다. 물리 x64 호스트·Windows·모든 네트워크 프로토콜, 독점 Codex 모델과의 판단 동일성은 검증 범위에 포함하지 않는다.
+- 사전 생성 하드링크와 좁은 승인 파일의 다른 이름을 검사한다. 실행 중 격리 밖의 호스트 프로그램이 동시에 링크 구조를 바꾸는 공격까지 보장하지 않는다. 검사 실패·한도 초과는 실행 차단으로 처리한다.
+- Linux x64 호스트 실행과 ARM64 커널의 x64 실행은 기록을 분리한다. 최종 집계에는 같은 소스의 실제 Linux x64 호스트 결과가 필요하다.
+- Windows는 실제 운영체제에서 원본 규칙 엔진·승인 정책과 미지원 네이티브 실행의 사전 거부를 확인하는 별도 검증이다. Windows 네이티브 격리의 성공을 뜻하지 않는다.
+- 외부 MCP·Computer Use 실행기는 신뢰한 통합 계층이다. 이미 외부 서버에 전송된 요청의 취소 효과나 모든 공급자의 계정 식별·부수 효과를 보장하지 않는다. 비어 있는 승인 폼은 처리하지만 일반 입력 폼·URL elicitation은 거부하며, 실제 브라우저·화면 도구 자체를 제공하지 않는다.
+- HTTPS CONNECT·SOCKS5 TCP·IPv6와 직접 UDP 차단을 검사한다. SOCKS5 UDP 및 모든 네트워크 프로토콜을 지원·검증했다고 주장하지 않는다.
+- 독점 Codex 모델과의 모든 판단 동일성은 보장하지 않는다. 공개 정책·흐름과 선택한 GLM5.3의 관찰 결과를 구분한다.
 
 ## 실행
 
@@ -64,6 +93,15 @@ npm run verify:docker -- --mode offline --platform linux/amd64
 export OLLAMA_API_KEY
 npm run verify:docker -- --mode conformance --platform linux/amd64 --model glm-5.3 --image <imageDigest>
 npm run verify:guard
+```
+
+`verify:platform`은 실행한 운영체제의 전체 결과를 남기고, Windows의 `verify:windows`는 이식 가능한 엔진과 사전 거부 결과만 남긴다. GitHub Actions에는 Ollama 키를 보내지 않는다. 검증한 Docker 이미지를 가져온 뒤 로컬 환경변수로 실모델 검증을 수행한다.
+
+Docker 엔진에 따라 이미지를 내보낼 때와 불러온 뒤의 ID가 다를 수 있다. 이번 실행에서는 CI의 설정 해시를 로컬 매니페스트가 참조하고, 19개 레이어가 모두 같음을 확인했다. 이 경우에는 `docker image load`가 반환한 ID로 오프라인 검증을 다시 실행하고, 같은 ID로 실모델 검증을 실행한다.
+
+```sh
+npm run verify:docker -- --mode offline --platform linux/amd64 --image <loadedImageID>
+npm run verify:docker -- --mode conformance --platform linux/amd64 --model glm-5.3 --image <loadedImageID>
 ```
 
 `verify:guard`는 같은 소스·플랫폼·이미지의 결과만 합친다. 이번 작업의 초기 실패와 후속 성공 기록도 `.reports/pi-guard/runs/`에 별도로 남긴다.

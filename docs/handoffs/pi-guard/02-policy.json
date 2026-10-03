@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-  "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+  "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+  "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -17,39 +17,49 @@
     "src/policy/domains.ts"
   ],
   "moduleHashes": {
-    "src/policy/index.ts": "b513494bae5ed7926f53a0c5dda8bb4a1c07e07140789ba6a3992c3f97bfe9e9",
+    "src/policy/index.ts": "2049dfbd5baac915632738bd585edf1fab96686d3e17808c7a51ad2aaae245c0",
     "src/policy/paths.ts": "6dd55f0f848857b287ab6e7a15c8776c544744df74bdb2d1edf5d845860bc868",
     "src/policy/shell.ts": "8b20aea9afa6de0bfed216a2cd0d7eb25f1a255b2a278437f36063a390ea4da7",
-    "src/policy/rules.ts": "364c530d83833b26cbda72b273296bb43be11d95d1389e4e3c5342807e43b0d3",
-    "src/policy/domains.ts": "eafb3b0b42d78fe0f02c04684e317198672925e12fe1e1f8b190d40b82333be0"
+    "src/policy/rules.ts": "2586150308fb7e95f5ba56ef2a8acee0be5d384b5c7b77a8f68786beab6bfd7b",
+    "src/policy/domains.ts": "fab600c362a75e94ed15c1d302d666bcc73efed4408850fab4520208112675db"
   },
   "testFiles": [
-    "test/unit/policy.test.mjs"
+    "test/unit/policy.test.mjs",
+    "test/unit/execpolicy.test.mjs",
+    "test/unit/context-files.test.mjs",
+    "test/unit/external.test.mjs"
   ],
   "coveredBehavior": [
     "paths",
     "rules",
     "shell",
-    "settings"
+    "settings",
+    "context-files",
+    "external-policy"
   ],
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T02:52:05.011Z",
+      "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T06:43:15.696Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
       "command": "npm run test:policy",
       "testFiles": [
-        "test/unit/policy.test.mjs"
+        "test/unit/policy.test.mjs",
+        "test/unit/execpolicy.test.mjs",
+        "test/unit/context-files.test.mjs",
+        "test/unit/external.test.mjs"
       ],
       "coveredBehavior": [
         "paths",
         "rules",
         "shell",
-        "settings"
+        "settings",
+        "context-files",
+        "external-policy"
       ],
       "tests": [
         {
@@ -83,11 +93,43 @@
         {
           "name": "[settings] corrupt or weakening settings fail closed and read-only file writes require permission",
           "status": "pass"
+        },
+        {
+          "name": "[rules] Codex Starlark functions, comprehensions, f-strings and tuple examples reach actual matching",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] host executable constraints reject aliases and preserve exact-path precedence",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] all network_rule protocols and overlay ordering reach policy and native config",
+          "status": "pass"
+        },
+        {
+          "name": "[rules] malformed rules, cancelled evaluation and oversized requests fail closed",
+          "status": "pass"
+        },
+        {
+          "name": "[context-files] nearest project root, override precedence and configured fallback follow Codex discovery",
+          "status": "pass"
+        },
+        {
+          "name": "[context-files] absent markers, empty markers, untrusted projects and UTF-8 byte limits stay bounded",
+          "status": "pass"
+        },
+        {
+          "name": "[context-files] permitted symlinks work while protected targets and hard-link aliases cannot enter prompts",
+          "status": "pass"
+        },
+        {
+          "name": "[external-policy] Codex MCP annotation precedence and four approval modes",
+          "status": "pass"
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "10b993a084c6be763943b9bf6ef01804db9e69c2c58ec90efb977cc05c5e1624",
-      "contractDigest": "7c16ec541fca790264aca75860a393e675013c8f273ed60516a80f93c9f44379",
+      "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
+      "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -96,7 +138,7 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:52:05.220Z"
+      "recordedAt": "2026-10-03T06:43:16.630Z"
     }
   ],
   "buildProof": {
@@ -104,7 +146,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:52:03.827Z"
+    "recordedAt": "2026-10-03T06:43:14.670Z"
   },
   "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters run inside the base sandbox unless an explicit boundary grant or rule prompts review.",
   "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
@@ -116,7 +158,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-03T02:53:42.496Z",
-  "runId": "2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-51-59-088Z-a034f127-03cb-4329-a5d2-6a35127a5bbf/darwin-arm64/02-policy.json"
+  "recordedAt": "2026-10-03T06:46:19.904Z",
+  "runId": "2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-43-09-842Z-24f65c75-aabd-4cad-9a0a-db94df383980/darwin-arm64/02-policy.json"
 }

@@ -1,5 +1,5 @@
 {
-  "status": "local-verified-remote-pending",
+  "status": "verified",
   "sourceDigest": "3caadb996f7de930cf1f5c19af8f6e5b943e21ee01fac1010e28d88e55b12030",
   "contractDigest": "a11f4c3f5597b471d254b713560e208af55e2df58199c54cc531603d41f9310a",
   "reproduction": {
@@ -25,5 +25,13 @@
   },
   "limitations": [
     "최종 동일 소스의 전체 운영체제·Docker·실모델 판정은 최종 인계에서 확인한다."
-  ]
+  ],
+  "finalDockerVerification": {
+    "artifactPath": ".reports/pi-guard/runs/2026-10-03T06-23-37-187Z-a95ef323-818c-4d00-8c28-421f94243405/linux-x64/docker-offline.json",
+    "status": "pass",
+    "tests": 142,
+    "integration": "pass",
+    "native": "pass",
+    "usesArchitectureEmulation": true
+  }
 }
