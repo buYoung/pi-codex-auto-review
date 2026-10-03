@@ -3,6 +3,8 @@ import { spawn } from 'node:child_process';
 import { access, readFile, writeFile, mkdir, stat, readdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { constants as osConstants } from 'node:os';
+import { isAbsolute } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { TOOL_NAMES, GuardError, type Json, type WorkerFrame, type WorkerJob } from '../contracts.js';
 
 const send = (frame: WorkerFrame) => process.stdout.write(JSON.stringify(frame) + '\n');
@@ -41,7 +43,9 @@ async function execute(job: WorkerJob): Promise<Json> {
   if (!TOOL_NAMES.includes(job.tool)) throw new GuardError('INVALID_IPC','Unknown local tool');
   // Running the public Pi definition inside the boundary also confines grep's rg process,
   // image MIME reads, find globbing, edit matching, access, mkdir and stat helpers.
-  const pi = await import('@earendil-works/pi-coding-agent');
+  const piSDKEntryPath = process.argv[2];
+  if (!piSDKEntryPath || !isAbsolute(piSDKEntryPath) || piSDKEntryPath.includes('\0')) throw new GuardError('INVALID_IPC','Expected a trusted absolute Pi SDK entry');
+  const pi = await import(pathToFileURL(piSDKEntryPath).href) as typeof import('@earendil-works/pi-coding-agent');
   const definitions = {
     bash: pi.createBashToolDefinition,
     read: pi.createReadToolDefinition,

@@ -4,16 +4,17 @@ import { fileURLToPath } from 'node:url';
 import { createAgentSessionRuntime, createAgentSessionServices, createAgentSessionFromServices, createCodemodeExtension, SessionManager, SettingsManager, ProjectTrustStore, type ModelRuntime, type InlineExtension, type CreateAgentSessionOptions } from '@earendil-works/pi-coding-agent';
 import { GuardError } from './contracts.js';
 import { createGuardExtension, type GuardOptions } from './index.js';
+import { getPiSDKEntryPath } from './pi-host.js';
 import { loadContextFiles } from './context-files.js';
 import { guardedExternalExtension, type ExternalExtension } from './tools/mcp.js';
 
 export async function assertSupportedPi(): Promise<string> {
-  let path = dirname(fileURLToPath(import.meta.resolve('@earendil-works/pi-coding-agent')));
+  let path = dirname(getPiSDKEntryPath());
   for (let i = 0; i < 8; i++) {
     try {
       const pkg = JSON.parse(await readFile(join(path,'package.json'),'utf8'));
       if (pkg.name === '@earendil-works/pi-coding-agent') {
-        if (pkg.version !== '0.99.1') throw new GuardError('UNSUPPORTED_PI','Pi APIs are not qualified for this version');
+        if (!['0.99.1','1.0.0'].includes(pkg.version)) throw new GuardError('UNSUPPORTED_PI','Pi APIs are not qualified for this version');
         return pkg.version as string;
       }
     } catch (error) { if (error instanceof GuardError) throw error; }

@@ -26,9 +26,11 @@ COPY test ./test
 COPY scripts ./scripts
 COPY native ./native
 COPY .github ./.github
-COPY tsconfig.json README.md ./
-COPY --from=execpolicy /build/target/release/pi-guard-execpolicy ./dist/native/pi-guard-execpolicy
-RUN ./node_modules/.bin/tsc && node test/docker/package.mjs \
+COPY tsconfig.json README.md LICENSE NOTICE ./
+COPY docs ./docs
+COPY --from=execpolicy /build/target/release/pi-guard-execpolicy ./tmp/pi-guard-execpolicy
+RUN node --input-type=module -e 'import {stageNativeArtifact} from "./scripts/native-artifact.mjs"; await stageNativeArtifact("./tmp/pi-guard-execpolicy");' \
+    && ./node_modules/.bin/tsc && node test/docker/package.mjs \
     && mkdir -p .reports/pi-guard docs/handoffs/pi-guard \
     && chown -R node:node /opt/pi-guard
 ARG SOURCE_DIGEST

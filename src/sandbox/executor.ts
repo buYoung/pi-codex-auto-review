@@ -7,6 +7,7 @@ import { nativeConfig, workloadEnvironment } from './config.js';
 import { assertHardLinkBoundaries } from './hard-links.js';
 import { withSignal } from '../signals.js';
 import { matchesDomain, isNetworkHost, normalizeHost } from '../policy/domains.js';
+import { getPiSDKEntryPath } from '../pi-host.js';
 
 export interface SandboxExecutor {
   execute(job: WorkerJob, profile: PermissionProfile, delta: PermissionDelta, options?: ExecutionOptions): Promise<Json>;
@@ -31,14 +32,15 @@ export class NativeExecutor implements SandboxExecutor {
     const lifetime = new AbortController();
     const signal = AbortSignal.any([lifetime.signal, this.stop.signal, ...(options.signal ? [options.signal] : [])]);
     signal.throwIfAborted();
-    const config = await nativeConfig(profile, delta, job.cwd, options.authority);
+    const piSDKEntryPath = getPiSDKEntryPath();
+    const config = await nativeConfig(profile, delta, job.cwd, options.authority, piSDKEntryPath);
     await assertHardLinkBoundaries(profile, delta, config, signal);
     if (options.onNetworkRequest) config.network.strictAllowlist = false;
     if (this.transport) config.network.mitmProxy = { socketPath: await realpath(this.transport.socketPath), domains: [...this.transport.domains] };
     const timeoutSeconds = options.timeoutSeconds ?? (job.kind === 'shell' ? job.timeoutSeconds : undefined) ?? 120;
     if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) throw new GuardError('INVALID_TIMEOUT', 'Execution timeout must be positive seconds');
     signal.throwIfAborted();
-    const child = fork(fileURLToPath(new URL('./broker.js', import.meta.url)), [], {
+    const child = fork(fileURLToPath(new URL('./broker.js', import.meta.url)), [piSDKEntryPath], {
       execArgv: [], serialization: 'json', env: workloadEnvironment(), stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
     });
     // Broker owns the workload process group and is never itself a workload child.

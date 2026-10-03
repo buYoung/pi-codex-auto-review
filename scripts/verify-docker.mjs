@@ -45,7 +45,7 @@ try{
   if(!imageDigest){
     await mkdir(context,{recursive:true});
     // Explicit allowlist: no host credentials, .env, .git, node_modules or old reports enter the build context.
-    for(const path of ['src','test','scripts','vendor','native','.github','package.json','package-lock.json','tsconfig.json','README.md'])await cp(join(repository,path),join(context,path),{recursive:true,errorOnExist:true,force:false});
+    for(const path of ['src','test','scripts','vendor','native','.github','docs','package.json','package-lock.json','tsconfig.json','README.md','LICENSE','NOTICE'])await cp(join(repository,path),join(context,path),{recursive:true,errorOnExist:true,force:false});
     const imageTag=`pi-codex-auto-review-test:${run.runId.toLowerCase()}`;
     console.log(`Building ${options.platform}; evidence ${run.artifactPath}`);
     await docker(['build','--platform',options.platform,'--file',join(context,'test/docker/Dockerfile'),'--build-arg',`SOURCE_DIGEST=${source}`,'--tag',imageTag,context],{log:'build.log'});

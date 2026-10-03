@@ -26,7 +26,7 @@ export interface CompiledRules {
   readonly hostExecutables: Readonly<Record<string, readonly string[]>>;
 }
 const MAX_BYTES = 8 * 1024 * 1024;
-const helper = fileURLToPath(new URL(`../native/pi-guard-execpolicy${process.platform === 'win32' ? '.exe' : ''}`, import.meta.url));
+const helper = fileURLToPath(new URL(`../native/${process.platform}-${process.arch}/pi-guard-execpolicy${process.platform === 'win32' ? '.exe' : ''}`, import.meta.url));
 const helperEnvironment = process.platform === 'win32' ? {SystemRoot: process.env.SystemRoot} : {};
 const execute = promisify(execFile);
 function request(sources: readonly RuleSource[], commands: readonly (readonly string[])[]): string {
