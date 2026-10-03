@@ -10,8 +10,8 @@
 - [x] `docs/briefs/2026-10-03-feat-auto-review-03-reviewer.md` — Completed; `docs/handoffs/auto-review/03-reviewer.json` records pinned policy, retained provenance, bounded native investigation, distinct failures, and 25 passing reviewer/approval/Pi integration checks.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-04-permissions.md` — Completed; `docs/handoffs/auto-review/04-permissions.json` records automatic scoped/command authority, rules, attributed live network approval, metadata/domain fixes and 44 passing checks; controller/native mandatory restrictions remain explicit compatibility limits.
 - [x] `docs/briefs/2026-10-03-feat-auto-review-05-denials.md` — Completed; `docs/handoffs/auto-review/05-denials.json` records actual Pi interruption, exact one-use `/approve` re-review, stale-authorization rejection, structured feedback and 35 passing checks.
-- [ ] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — 구현·오프라인 환경 검증 완료, 실모델 검증은 미완료. `docs/handoffs/auto-review/08-seccomp.json`: 커널에 맞는 seccomp 보조 프로그램을 선택해 x64 차단을 해소했고, 같은 소스에서 macOS·Docker x64 각각 72개 통과. GLM5.3 실모델 증거는 아직 없다.
-- [ ] `docs/briefs/2026-10-03-test-auto-review-07-conformance.md` — 검증 코드·집계·운영 안내 작성 완료, 실모델 완료 조건은 미완료. `docs/handoffs/auto-review/07-conformance.json`: 필수 macOS·Docker x64 각각 72개 통과, 17개 차이 항목의 증거 연결 완료. 전체 집계의 남은 차단 항목은 GLM5.3 실모델 증거다.
+- [x] `docs/briefs/2026-10-03-feat-auto-review-06-docker-cloud.md` — 완료. `docs/handoffs/auto-review/06-docker-cloud.json`과 `09-live-cloud.json`: 같은 이미지에서 x64 오프라인 72개와 GLM5.3 실모델 4개 시나리오 통과. 환경변수 인증, 실제 주 에이전트 8회·검토자 2회 호출, 허용·거부 효과, 키 비노출과 소유 컨테이너 정리를 확인했다.
+- [x] `docs/briefs/2026-10-03-test-auto-review-07-conformance.md` — 완료. `docs/handoffs/auto-review/07-conformance.json`: 같은 소스의 필수 macOS·Docker x64 각각 72개와 GLM5.3 실모델 결과 통과, 17개 차이 항목의 증거 연결 완료. `npm run verify:guard`는 종료 코드 0, 상태 `complete`, 차단 항목 없음으로 완료했다.
 
 ## Execution Order
 - Wave 1 — `docs/briefs/2026-10-03-fix-auto-review-01-evidence.md`: Start: preserve the current checkout and existing report files before verification writes; Deliverable: immutable run storage and compatible evidence readers; Location: `docs/handoffs/auto-review/01-evidence.json` (proposed); Done: the handoff records passing preservation and stale/platform rejection proofs; Handoff: contracts and Docker work receive the run layout and required-platform contract.
@@ -76,16 +76,16 @@
 - Implementation may add only verification cases directly needed for this requested compatibility/Docker work. Do not add unrelated linting, formatting, or general test infrastructure.
 
 ## Global Acceptance Criteria
-- [ ] `docs/handoffs/auto-review/02-contracts.json` pins the reference and maps every original in-scope finding to an implemented consumer and final proof.
-- [ ] The final matrix proves automatic boundary approval, ordinary allowed-action behavior, policy/risk evaluation, retained authorization, read-only investigation, distinct terminal outcomes, command-rule compatibility, filesystem/network enforcement, circuit breaking, and exact reviewed retry.
-- [ ] Wildcard domain handling and read-versus-write protection regressions are corrected at policy and final native consumers.
-- [ ] Existing package/SDK/CLI/tool/configuration/grant contracts remain usable with the explicitly documented migrations and policy invalidation.
-- [ ] The rebuilt Docker environment installs Pi, the exact `pi-ollama-cloud` package, and the current guard artifact with runtime-only API-key injection.
-- [ ] A bounded real `ollama-cloud` main-agent/reviewer workflow demonstrates the expected allowed and denied native effects using owned synthetic targets.
-- [ ] Existing affected suites, focused conformance coverage, and `npm run verify:guard` qualify the same final source for every required platform using nonempty allowed/denied controls.
+- [x] `docs/handoffs/auto-review/02-contracts.json` pins the reference and maps every original in-scope finding to an implemented consumer and final proof.
+- [x] The final matrix proves automatic boundary approval, ordinary allowed-action behavior, policy/risk evaluation, retained authorization, read-only investigation, distinct terminal outcomes, command-rule compatibility, filesystem/network enforcement, circuit breaking, and exact reviewed retry.
+- [x] Wildcard domain handling and read-versus-write protection regressions are corrected at policy and final native consumers.
+- [x] Existing package/SDK/CLI/tool/configuration/grant contracts remain usable with the explicitly documented migrations and policy invalidation.
+- [x] The rebuilt Docker environment installs Pi, the exact `pi-ollama-cloud` package, and the current guard artifact with runtime-only API-key injection.
+- [x] A bounded real `ollama-cloud` main-agent/reviewer workflow demonstrates the expected allowed and denied native effects using owned synthetic targets.
+- [x] Existing affected suites, focused conformance coverage, and `npm run verify:guard` qualify the same final source for every required platform using nonempty allowed/denied controls.
 - [x] Every retained run keeps its own source, platform/architecture, provider/model, image/package identity, outcome, and retrieval path after later runs and container cleanup. 실행 전 차단된 경우 아직 생성되지 않은 이미지·컨테이너는 기록하지 않는다.
 - [x] `docs/handoffs/auto-review/07-conformance.json` distinguishes deterministic compatibility, native isolation, live-model observations, historical recovery, reconstruction, and remaining limitations.
-- [x] README operator commands reproduce installation/loading, runtime variable injection, offline/live execution, result retrieval, and owned cleanup without exposing credentials. 실모델은 키 미전달로 아직 실행하지 못했음을 명시했다.
+- [x] README operator commands reproduce installation/loading, runtime variable injection, offline/live execution, result retrieval, and owned cleanup without exposing credentials. 환경변수 수정 후 실제 실행 결과와 남은 호환성 한계를 반영했다.
 
 ## Open Questions
 - None — the user approved the Pi-only parity boundary and explicitly selected `pi-ollama-cloud`; credentials and model values are operator-supplied runtime inputs.
@@ -93,8 +93,10 @@
 ## 실행 중 조정 — 2026-10-03
 
 - Docker에서 재현된 Linux 권한·프록시 결함은 04 담당 범위로 돌려 수정하고 ARM64 네이티브 효과를 재검증했다. 필수 x64 대상을 ARM64로 대체하지 않는다.
-- `.zshrc`를 다시 불러오고 이름으로 export해도 `OLLAMA_API_KEY`가 비어 있어 실모델 요청은 보내지 않았다. 사용자 지정 모델은 `glm-5.3`이다.
-- 06의 외부 전제조건이 충족될 때까지 최종 완료 판정은 보류한다. 07의 검증표·고정 시나리오·보고서 검증기·운영 안내 작성은 확정된 구현 계약을 사용해 진행한다. 실모델 실행과 전체 통과 판정의 선행 조건은 유지한다.
+- 초기에는 `.zshrc`를 다시 불러오고 이름으로 export해도 `OLLAMA_API_KEY`가 비어 있어 실모델 요청을 보내지 않았다. 사용자 지정 모델은 `glm-5.3`이다.
+- 당시 06의 외부 전제조건이 충족될 때까지 최종 완료 판정을 보류하고, 07의 검증표·고정 시나리오·보고서 검증기·운영 안내 작성은 확정된 구현 계약을 사용해 진행했다.
 - 최종 점검에서 읽기 전용 프로필 밖의 런타임 기본 임시 경로 쓰기를 실제로 재현했다. 04 담당 범위에서 승인되지 않은 기본 경로를 차단하고, 필요한 실제 디렉터리 범위를 검토에 전달하도록 수정했다. 03 담당 범위에서는 낮은 위험이라도 명시적 정책이 거부하는 경우를 출력 지침에 보존했다.
 - 최종 소스 `a9472e6027c7866d1c6e524511018ef0ef88abe14a43fac90bed1ff3110f2f19`: macOS·Docker ARM64 각각 71개, 감사 기록 109건 검증 통과. `npm run verify:guard`는 필수 x64와 실모델 증거 부재로 종료 코드 1과 `environment-blocked`를 기록했다. 보안을 약화하거나 다른 아키텍처·모델 대역으로 미충족 조건을 대체하지 않았다.
-- 후속 seccomp 수정 소스 `d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69`: Docker 엔진의 실제 ARM64 커널에 맞는 보조 프로그램으로 x64 워크로드의 필터를 적용한다. 필터 활성화·Unix 소켓 거부·취소 경합 보정을 포함해 macOS·Docker x64 각각 72개 통과했다. 에뮬레이션 사실과 프로그램·커널·보조 프로그램 아키텍처를 별도로 기록하며, 물리 x64 호스트 검증으로 표시하지 않는다. 전체 집계는 GLM5.3 실모델 증거만 미충족으로 남긴다.
+- 후속 seccomp 수정 소스 `d974186a8bc5188c366702e701e5acc852bf21b4b1e83493735e4249ff8a2c69`: Docker 엔진의 실제 ARM64 커널에 맞는 보조 프로그램으로 x64 워크로드의 필터를 적용한다. 필터 활성화·Unix 소켓 거부·취소 경합 보정을 포함해 macOS·Docker x64 각각 72개 통과했다. 에뮬레이션 사실과 프로그램·커널·보조 프로그램 아키텍처를 별도로 기록하며, 물리 x64 호스트 검증으로 표시하지 않는다. 이 시점에는 GLM5.3 실모델 증거만 미충족이었다.
+- 사용자가 `.zshrc`의 환경변수 오타를 수정한 뒤 같은 소스·이미지에서 GLM5.3 실모델 4개 시나리오가 통과했다. 주 에이전트 8회·검토자 2회 호출과 실제 파일 변경·거부 효과를 확인했다. 보존한 실모델 보고서·로그 7개에서 키 값이 발견되지 않았으며 소유 컨테이너를 정리했다.
+- 최종 `npm run verify:guard`는 macOS·Docker x64 각각 72개, 감사 기록 109건, 실모델 증거를 종합해 종료 코드 0과 `complete`를 기록했다. 최종 인계는 `docs/handoffs/auto-review/07-conformance.json`, 실모델 세부 기록은 `docs/handoffs/auto-review/09-live-cloud.json`이다. 문서화한 호환성 범위 밖의 기능과 독점 Codex 모델의 판단 동일성은 완료 주장에 포함하지 않는다.

@@ -40,9 +40,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/native.json",
-      "startedAt": "2026-10-03T02:06:02.934Z",
+      "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/native.json",
+      "startedAt": "2026-10-03T02:14:38.271Z",
       "provenance": "executed",
       "suite": "native",
       "status": "pass",
@@ -204,7 +204,7 @@
         }
       ],
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:06:16.788Z"
+      "recordedAt": "2026-10-03T02:14:52.445Z"
     }
   ],
   "buildProof": {
@@ -212,7 +212,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:06:01.934Z"
+    "recordedAt": "2026-10-03T02:14:37.243Z"
   },
   "runtimeVersion": "0.0.78",
   "workerProtocol": {
@@ -235,11 +235,11 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/native.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/native.json"
     }
   ],
   "qualification": "Only this run is described here; final aggregate validates every required architecture",
-  "recordedAt": "2026-10-03T02:06:40.603Z",
-  "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/04-sandbox.json"
+  "recordedAt": "2026-10-03T02:15:15.496Z",
+  "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/04-sandbox.json"
 }

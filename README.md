@@ -134,6 +134,6 @@ npm run verify:docker -- --mode conformance --platform linux/amd64
 
 이미지는 재사용을 위해 남겨 둡니다. 정리가 필요하면 해당 보고서에서 확인한 `imageDigest` 하나만 `docker image rm <imageDigest>`로 삭제합니다. 컨테이너 정리가 실패했다면 보고서의 `containerId`가 그 실행의 소유 컨테이너인지 확인한 뒤 `docker rm -f <containerId>`로 제거합니다.
 
-현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
+현재 실행 결과와 차이 목록은 [최종 인계](docs/handoffs/auto-review/07-conformance.json), GLM5.3 호출·허용·거부 효과는 [실모델 검증 인계](docs/handoffs/auto-review/09-live-cloud.json), 환경 복구 경위는 [Docker 인계](docs/handoffs/auto-review/06-docker-cloud.json), 고정 기준과 담당 검증은 [기준 계약](docs/handoffs/auto-review/02-contracts.json)에 있습니다. 과거 Docker 코드는 확인되지 않아 하네스를 재구성했으며, 새 검증 성공을 과거 실행의 증거로 사용하지 않습니다.
 
-이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. 최신 결과는 최종 인계 보고서에 기록합니다. GLM5.3 실모델 검증은 이전 실행에서 키가 전달되지 않아 아직 확인하지 못했습니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.
+이전 ARM 호스트의 x64 실행에서 발생한 `apply-seccomp: prctl(PR_SET_SECCOMP): Invalid argument`는 프로그램 기준으로 보조 프로그램을 고르던 문제였습니다. 현재는 커널 기준으로 선택하고, 실제 필터 활성화와 Unix 소켓 차단을 검증합니다. ARM 커널 위의 x64 워크로드 검증과 물리 x64 호스트의 검증은 구분합니다. GLM5.3 실모델 검증은 환경변수 수정 후 일반 실행 허용·범위 밖 쓰기 자동 승인·보호 경로 거부·검토자 정책 거부의 4개 시나리오가 통과했습니다. 같은 소스의 macOS·Docker x64 각각 72개 검증과 실모델 결과를 합친 `verify:guard`의 최종 상태는 `complete`입니다. 공개 정책·흐름의 호환성 검증은 독점 Codex 모델과 모든 판단이 같다는 뜻이 아닙니다.

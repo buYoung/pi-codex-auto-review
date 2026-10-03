@@ -35,9 +35,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/policy.json",
-      "startedAt": "2026-10-03T02:06:02.595Z",
+      "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/policy.json",
+      "startedAt": "2026-10-03T02:14:37.917Z",
       "provenance": "executed",
       "suite": "policy",
       "status": "pass",
@@ -96,7 +96,7 @@
       },
       "evidenceKind": "unit-doubles",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T02:06:02.713Z"
+      "recordedAt": "2026-10-03T02:14:38.037Z"
     }
   ],
   "buildProof": {
@@ -104,7 +104,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T02:06:01.934Z"
+    "recordedAt": "2026-10-03T02:14:37.243Z"
   },
   "supportedGrammar": "Literal prefix_rule subset with alternatives and match/not_match assertions; strongest compound rule wins. Unsupported shell syntax and interpreters run inside the base sandbox unless an explicit boundary grant or rule prompts review.",
   "policyRevision": "sha256 of validated settings, immutable profile, loaded rules and review policy",
@@ -116,7 +116,7 @@
     "canonicalPath",
     "analyzeShell"
   ],
-  "recordedAt": "2026-10-03T02:06:40.601Z",
-  "runId": "2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-05-59-276Z-8c5b0d6a-173c-495e-8017-23b4818ed07e/darwin-arm64/02-policy.json"
+  "recordedAt": "2026-10-03T02:15:15.494Z",
+  "runId": "2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T02-14-34-627Z-3dff3dc7-fc36-4f8e-8503-91a206c31aea/darwin-arm64/02-policy.json"
 }
