@@ -37,7 +37,7 @@
     "@earendil-works/pi-coding-agent": "0.99.1"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-coding-agent": "file:vendor/pi-coding-agent-0.99.1-security.1.tgz",
     "@sinclair/typebox": "0.34.52",
     "@types/node": "24.0.0",
     "pi-ollama-cloud": "0.12.2",
@@ -46,7 +46,9 @@
   "overrides": {
     "@earendil-works/pi-ai": "0.99.1",
     "@earendil-works/pi-agent-core": "0.99.1",
-    "@earendil-works/pi-tui": "0.99.1"
+    "@earendil-works/pi-tui": "0.99.1",
+    "brace-expansion": "5.0.12",
+    "node-forge": "https://codeload.github.com/digitalbazaar/forge/tar.gz/ceba34402e329f0365134f23fe19898756527d65"
   },
   "engines": {
     "node": ">=22.19.0"

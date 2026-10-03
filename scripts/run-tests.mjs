@@ -17,7 +17,7 @@ export async function sourceDigest() {
       else { hash.update(path); hash.update(await readFile(join(root, path))); }
     }
   }
-  for (const dir of ['src', 'test', 'scripts']) await add(dir);
+  for (const dir of ['src', 'test', 'scripts', 'vendor']) await add(dir);
   for (const path of ['package.json', 'package-lock.json', 'tsconfig.json']) hash.update(await readFile(join(root, path)));
   return hash.digest('hex');
 }

@@ -1,0 +1,23 @@
+{
+  "upstream": {
+    "package": "@earendil-works/pi-coding-agent",
+    "version": "0.99.1",
+    "tarball": "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-0.99.1.tgz",
+    "integrity": "sha512-cWUrTOqA5M73cOYMgsh9PlhDrsBhavd+n5kVY6F7BGbGl1RjqCteVCoeVMVqhngoGACVDyw1tbLjajL8l9jrHg=="
+  },
+  "patch": {
+    "file": "npm-shrinkwrap.json",
+    "packagePath": "node_modules/brace-expansion",
+    "from": "5.0.9",
+    "to": "5.0.12",
+    "tarball": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz",
+    "integrity": "sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ=="
+  },
+  "artifact": {
+    "path": "vendor/pi-coding-agent-0.99.1-security.1.tgz",
+    "sha256": "e34aa7641a8f622a843030538680f27b72cea618627f34cc76c21ace90ecd0b5",
+    "integrity": "sha512-sHR8hyaClcKqeE6I5H+XNva04LDhAK6Y6N0fi8FBUFGo2IxxAIC7CLLtfigUXJskS84bfoeqOdfIhyWDOHE5Rg=="
+  },
+  "unchanged": "All SDK source, compiled assets, package version and licenses",
+  "reproduce": "python3 scripts/vendor-pi-sdk.py"
+}

@@ -14,6 +14,7 @@ RUN case "$TARGETARCH" in \
     && rm -rf /tmp/fd.tar.gz "/tmp/fd-v10.3.0-${FD_ARCH}-unknown-linux-musl"
 WORKDIR /opt/pi-guard
 COPY package.json package-lock.json ./
+COPY vendor ./vendor
 RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
 COPY src ./src
 COPY test ./test

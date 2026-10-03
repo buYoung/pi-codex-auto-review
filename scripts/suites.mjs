@@ -1,5 +1,5 @@
 export const suites = {
-  contracts: { files: ['test/unit/contracts.test.mjs'], kind: 'unit-doubles', behavior: ['identity', 'profiles', 'ipc', 'evidence', 'public-api'] },
+  contracts: { files: ['test/unit/contracts.test.mjs', 'test/unit/dependency-security.test.mjs'], kind: 'unit-doubles', behavior: ['identity', 'profiles', 'ipc', 'evidence', 'public-api', 'dependency-security'] },
   policy: { files: ['test/unit/policy.test.mjs'], kind: 'unit-doubles', behavior: ['paths', 'rules', 'shell', 'settings'] },
   reviewer: { files: ['test/unit/reviewer.test.mjs'], kind: 'simulated-provider-ui', behavior: ['review', 'deadlines', 'cancellation'] },
   approvals: { files: ['test/unit/approvals.test.mjs'], kind: 'simulated-provider-ui', behavior: ['grants', 'queue', 'persistence', 'audit'] },
