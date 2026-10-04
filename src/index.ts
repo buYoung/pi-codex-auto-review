@@ -8,7 +8,7 @@ import { PiExecutor, type ToolExecutor } from './tools/executor.js';
 import { GuardController } from './tools/controller.js';
 import type { PermissionProfile } from './contracts.js';
 import type { ReviewProvider } from './reviewer.js';
-import { AUTHORIZATION_ENTRY, safeEvidence } from './review/context.js';
+import { AUTHORIZATION_ENTRY, REVIEW_CONTEXT_ENTRY, safeEvidence } from './review/context.js';
 import { createProfile } from './contracts.js';
 import { createGuardedMcpExtension, type McpToolPolicies } from './tools/mcp.js';
 import { ApprovalSettingsStore } from './approval-settings.js';
@@ -47,7 +47,9 @@ export function createGuardExtension(options: GuardOptions = {}) {
     }) : baseline;
     const audit = new AuditLog(join(controlDir, 'audit.jsonl'));
     const approvals = new ApprovalManager({ reviewTimeoutMs: settings.reviewTimeoutMs, approvalTimeoutMs: settings.approvalTimeoutMs, approvalPolicy: settings.approvalPolicy, approvalsReviewer: settings.approvalsReviewer, audit, persistence: new FileGrantPersistence(join(controlDir, 'grants.json')) });
-    controller = new GuardController({ profile, settings, executor: options.executor ?? new PiExecutor(), approvals, audit, provider: options.provider, shellPath: options.bashOptions?.shellPath });
+    controller = new GuardController({ profile, settings, executor: options.executor ?? new PiExecutor(), approvals, audit, provider: options.provider, shellPath: options.bashOptions?.shellPath,
+      persistContext:item=>pi.appendEntry(REVIEW_CONTEXT_ENTRY,item),
+    });
     try { await controller.initialize(cwd); } catch (error) { await controller.close(); controller = undefined; throw error; }
     const guard = controller;
     pi.registerTool(guard.wrapTool(createBashToolDefinition(cwd, options.bashOptions), options.bashOptions));
@@ -55,6 +57,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
     for (const create of [createEditToolDefinition, createWriteToolDefinition, createGrepToolDefinition, createFindToolDefinition, createLsToolDefinition]) pi.registerTool(guard.wrapTool(create(cwd)));
     pi.on('session_start', (_event, context) => { guard.assertReady(); guard.reset(context.sessionManager.getSessionId(), context.sessionManager); });
     pi.on('session_tree', (_event, context) => { guard.reset(context.sessionManager.getSessionId(), context.sessionManager); });
+    pi.on('session_compact', event => { guard.reviewContext.summary(event.compactionEntry.summary,event.compactionEntry.id); });
     pi.on('input', event => {
       if (event.source === 'interactive' || event.source === 'rpc') {
         guard.authorizeUser(event.text);
@@ -62,14 +65,19 @@ export function createGuardExtension(options: GuardOptions = {}) {
       }
     });
     pi.on('before_agent_start', event => { guard.reviewContext.instructions(event); });
-    pi.on('agent_start', () => { guard.startTurn(); });
+    pi.on('agent_start', (_event,context) => { guard.startTurn(context); });
     pi.on('message_end', event => { guard.reviewContext.message(event.message); });
     pi.on('tool_call', event => {
       guard.assertReady(); guard.noteCall(event);
       if (!['bash','read','edit','write','grep','find','ls','codemode',...guard.options.settings.trustedTools].includes(event.toolName) && !guard.isExternalTool(event.toolName)) return { block:true, reason:'Unknown tool needs an explicit trusted adapter' };
     });
-    pi.on('tool_result', event => {
-      guard.reviewContext.toolResult({tool: event.toolName, content: event.content.filter(item => item.type === 'text').map(item => ({type:'text',text:item.text}))}, event.toolCallId);
+    pi.on('tool_execution_end', event => {
+      const result = event.result ?? {}, callIdentity = guard.reviewContext.callIdentity(event.toolCallId);
+      guard.reviewContext.toolResult({tool:event.toolName,toolCallId:event.toolCallId,callIdentity,isError:event.isError,
+        content:(result.content ?? []).filter((item: {type:string}) => item.type === 'text').map((item: {text:string}) => ({type:'text',text:item.text})),
+        ...(result.structuredContent !== undefined ? {structuredContent:JSON.parse(JSON.stringify(result.structuredContent))} : {}),
+        ...(event.parentToolCallId ? {parentToolCallId:event.parentToolCallId,parentCallIdentity:guard.reviewContext.callIdentity(event.parentToolCallId)} : {}),
+      },callIdentity);
       guard.completeCall(event.toolCallId);
     });
     pi.on('user_bash', (event, context) => { guard.assertReady(); return { operations: guard.userBashOperations(context, event.command) }; });

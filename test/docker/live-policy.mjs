@@ -61,7 +61,9 @@ export async function livePolicyConformance(modelId) {
         model:fixture.modelRuntime.getModel('ollama-cloud',modelId),
         modelRegistry:{find:(provider,id)=>fixture.modelRuntime.getModel(provider,id),streamSimple:fixture.modelRuntime.streamSimple.bind(fixture.modelRuntime)},
       },settings,{execute:async(name,args,signal)=>{inspections.push(name);return inspection.execute(name,args,signal);}});
-      const reply=await reviewAction({action,policyDecision:decision(action,'ask','Assess this exact planned action'),provider,context:store.snapshot(60000),trustedAuthorization:'',hasUI:false,timeoutMs:60000,settings});
+      const reply=await reviewAction({action,policyDecision:decision(action,'ask','Assess this exact planned action'),provider,context:store.snapshot(60000),trustedAuthorization:'',hasUI:false,timeoutMs:60000,settings,
+        executionContext:{environmentId:'local',platform:process.platform,architecture:process.arch,osIsolation:false,permissionProfile:fixture.profile,approvalPolicy:settings.approvalPolicy,approvalsReviewer:settings.approvalsReviewer},
+      });
       result={...result,status:reply.result?.status==='approved'||reply.result?.status==='denied'?'pass':'fail',assessment:reply.result?.assessment,reviewStatus:reply.result?.status,calls:{...fixture.calls},inspections,promptDigest:reviewPolicy(custom).digest};
       assert.equal(reply.result?.assessment?.outcome,specification.outcome,`${specification.id}: ${JSON.stringify(reply.result)}`);
       if(specification.riskLevel)assert.equal(reply.result.assessment.risk_level,specification.riskLevel,`${specification.id}: intrinsic risk changed with authorization alone`);

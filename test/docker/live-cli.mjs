@@ -32,10 +32,13 @@ export async function liveCli(modelId) {
     assert.ok(calls.every(call=>call.provider==='ollama-cloud'&&call.model===modelId));
     const main=calls.filter(call=>!call.isReview).length,reviewer=calls.filter(call=>call.isReview).length;
     assert.ok(main>0&&reviewer>0&&main+reviewer<=24);
+    const expected=calls.filter(call=>call.isReview).map(call=>call.reviewInput);
+    const transmitted=(await readFile(`${trace}.wire`,'utf8')).trim().split('\n').map(JSON.parse);
+    assert.deepEqual(transmitted,expected,'The CLI provider changed the review input during transport');
     const audit=(await readFile(join(agentDir,'guard/audit.jsonl'),'utf8')).trim().split('\n').map(JSON.parse);
     const approvedReviews=audit.filter(row=>row.review?.status==='approved').length;
     assert.ok(approvedReviews>0);assert.ok(audit.some(row=>row.event==='execution'&&row.outcome==='settled'));
-    Object.assign(result,{status:'pass',calls:{main,reviewer},effectObserved:true,auditRecords:audit.length,approvedReviews,entrypoint:'packed-cli'});
+    Object.assign(result,{status:'pass',calls:{main,reviewer},effectObserved:true,auditRecords:audit.length,approvedReviews,entrypoint:'packed-cli',wire:{status:'pass',expected,transmitted}});
   } catch(error) {result.reason=safe(error.message);}
   finally {
     try {

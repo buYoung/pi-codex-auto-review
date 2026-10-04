@@ -9,6 +9,7 @@ import { suites } from '../../scripts/suites.mjs';
 import { cloudFixture } from './runtime.mjs';
 import { liveSmoke } from './live-smoke.mjs';
 import { executionPreflight } from './preflight.mjs';
+import { observeReviewFetch, reviewWireEvidence } from './review-wire.mjs';
 
 const mode=process.argv[2]??'offline';
 if(!['offline','live','conformance'].includes(mode))throw new Error('Expected offline, live or conformance mode');
@@ -21,7 +22,7 @@ const tests=[],results={};
 let startup,live,blockedReason,preflight;
 const originalFetch=globalThis.fetch;
 let networkRequests=0;
-globalThis.fetch=(...args)=>{networkRequests++;if(!isLive)throw new Error('Offline provider attempted network access');return originalFetch(...args);};
+globalThis.fetch=async(...args)=>{networkRequests++;if(!isLive)throw new Error('Offline provider attempted network access');await observeReviewFetch(...args);return originalFetch(...args);};
 try{
   preflight=await executionPreflight();
   assert.equal(identity.packages['pi-ollama-cloud'],'0.12.2');
@@ -37,7 +38,10 @@ try{
   }finally{await fixture.dispose();}
   tests.push({name:'[provider-loading] exact installed cloud provider and packaged guard survive reload',status:'pass'});
   if(!isLive){assert.equal(networkRequests,0);for(const name of Object.keys(suites))results[name]=await runSuite(name,run);}
-  else live=mode==='live'?await liveSmoke(model):await (await import('./live-review.mjs')).liveConformance(model);
+  else {
+    live=mode==='live'?await liveSmoke(model):await (await import('./live-review.mjs')).liveConformance(model);
+    live.wire=reviewWireEvidence();
+  }
   if(live?.status&&live.status!=='pass')throw new Error(`${live.status==='environment-blocked'?'ENVIRONMENT_BLOCKED: ':''}Live conformance scenario did not pass; see retained live.cases and live.cli`);
   if(isLive)tests.push({name:'[live-provider] real main-agent and reviewer complete bounded owned workflow',status:'pass'});
 }catch(error){

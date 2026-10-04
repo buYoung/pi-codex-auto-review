@@ -1,17 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import { createBashToolDefinition, type BashToolOptions, type BashOperations, type ExtensionContext, type ToolDefinition, type ToolCallEvent, type ReadToolOptions } from '@earendil-works/pi-coding-agent';
 import { pathToFileURL } from 'node:url';
-import { createAction, canonicalJson, digest, decision, GuardError, TOOL_NAMES, type ActionSource, type GuardAction, type Json, type PermissionProfile, type WorkerJob, type ExecutionOptions, type PolicyDecision } from '../contracts.js';
+import { createAction, canonicalJson, digest, decision, GuardError, TOOL_NAMES, type ActionSource, type GuardAction, type Json, type PermissionProfile, type WorkerJob, type ExecutionOptions, type PolicyDecision, type ReviewContextItem } from '../contracts.js';
 import { PolicyEngine, canonicalPath, resolveToolPath, type GuardSettings } from '../policy/index.js';
 import { ApprovalManager, type ApprovalUI, type Admission } from '../approvals.js';
-import { PiReviewProvider, type ReviewProvider } from '../reviewer.js';
+import { PiReviewProvider, type ReviewProvider, type ReviewExecutionContext } from '../reviewer.js';
 import { AuditLog, redact } from '../audit.js';
 import type { ToolExecutor } from './executor.js';
-import { reviewEnvironment } from './environment.js';
+import { reviewEnvironment, redactedEnvironmentNames } from './environment.js';
 import { withApprovalMutationQueue } from './mutation-queue.js';
 import { ReviewContextStore, safeEvidence } from '../review/context.js';
 import { LocalInvestigation } from '../review/investigation.js';
 import { reviewFeedback } from '../review/lifecycle.js';
+import { observeToolUserInput } from '../review/user-input.js';
 import { externalInvocations, externalPolicy, type ExternalToolIdentity } from './external.js';
 
 export class GuardController {
@@ -23,12 +24,13 @@ export class GuardController {
   private stopped = new AbortController();
   private sessionId = 'not-started';
   private isReady = false;
-  readonly reviewContext = new ReviewContextStore();
+  readonly reviewContext: ReviewContextStore;
   private activeReviews = new Set<string>();
   private settingsUpdates: Promise<void> = Promise.resolve();
   private retryArguments = new Map<string, Readonly<Record<string, Json>>>();
   private externalTools = new Map<string, {token: string; isEnabled: boolean}>();
-  constructor(readonly options: { profile: PermissionProfile; settings: GuardSettings; executor: ToolExecutor; approvals: ApprovalManager; audit: AuditLog; provider?: ReviewProvider; shellPath?: string }) {
+  constructor(readonly options: { profile: PermissionProfile; settings: GuardSettings; executor: ToolExecutor; approvals: ApprovalManager; audit: AuditLog; provider?: ReviewProvider; shellPath?: string; persistContext?: (item: ReviewContextItem) => void }) {
+    this.reviewContext = new ReviewContextStore(options.persistContext);
     this.currentPolicy = new PolicyEngine(options.settings, options.profile);
     this.approvals = options.approvals;
   }
@@ -72,7 +74,11 @@ export class GuardController {
     this.sources.clear();
     this.activeReviews.clear(); this.retryArguments.clear();
   }
-  startTurn(): void { this.reviewContext.startTurn(); this.approvals.lifecycle.startTurn(); this.activeReviews.clear(); }
+  startTurn(context?: ExtensionContext): void {
+    this.reviewContext.startTurn(); this.reviewContext.finalizeInstructions();
+    if (context?.getSystemPrompt) this.reviewContext.mainPrompt(context.getSystemPrompt());
+    this.approvals.lifecycle.startTurn(); this.activeReviews.clear();
+  }
   async authorizeRetry(id: string, context: ExtensionContext) {
     this.assertReady();
     const denial = this.approvals.lifecycle.authorizeRetry(id, {sessionId:context.sessionManager.getSessionId(),contextId:this.reviewContext.identity,cwd:await canonicalPath(context.cwd,context.cwd),policyRevision:this.policy.revision,permissionDigest:digest(this.policy.profile)});
@@ -88,7 +94,10 @@ export class GuardController {
   authorizeUser(text: string): void { this.reviewContext.authorize(text); this.approvals.lifecycle.invalidateRetries(); }
   noteCall(event: ToolCallEvent): void {
     this.sources.set(event.toolCallId, event.parentToolCallId ? 'nested' : 'model');
-    this.reviewContext.toolCall({tool: event.toolName, args: JSON.parse(canonicalJson(event.input))}, event.toolCallId);
+    const callIdentity = this.reviewContext.callIdentity(event.toolCallId);
+    this.reviewContext.toolCall({tool:event.toolName,toolCallId:event.toolCallId,callIdentity,args:JSON.parse(canonicalJson(event.input)),
+      ...(event.parentToolCallId ? {parentToolCallId:event.parentToolCallId,parentCallIdentity:this.reviewContext.callIdentity(event.parentToolCallId)} : {}),
+    },callIdentity);
   }
   completeCall(toolCallId: string): void { this.sources.delete(toolCallId); }
   async close(): Promise<void> {
@@ -102,23 +111,35 @@ export class GuardController {
     return { select: async (action, delta, options) => {
       const text = `Tool: ${action.tool}\nWorking directory: ${action.cwd}\nInput: ${canonicalJson(action.args)}\nRequested scope: ${canonicalJson(delta)}`;
       const selected = await context.ui.select(`Approve this action?\n${text}`, isOnceOnly ? ['Allow once','Deny'] : Object.keys(scopes), { signal: options.signal, timeout: options.timeoutMs });
-      if (selected) this.reviewContext.confirm({actionDigest: action.digest, choice: selected});
+      if (selected && selected in scopes) this.reviewContext.confirm({
+        actionDigest:action.digest,action:JSON.parse(canonicalJson(action)),requestedScope:JSON.parse(canonicalJson(delta)),choice:selected,scope:scopes[selected as keyof typeof scopes],
+      });
       return selected ? scopes[selected as keyof typeof scopes] : undefined;
     } };
   }
   private async requestAdmission(action: GuardAction, policyDecision: PolicyDecision, context: ExtensionContext, signal: AbortSignal, trustedAuthorization = '') {
-    let reviewContext = policyDecision.kind === 'ask' ? this.reviewContext.snapshot(this.options.settings.reviewContextChars, canonicalJson(action).length + canonicalJson(policyDecision.delta).length + 1000) : undefined;
+    this.reviewContext.refreshInstructions();
+    if (context.getSystemPrompt) this.reviewContext.mainPrompt(context.getSystemPrompt());
+    this.reviewContext.preparedAction(action);
+    const executionContext: ReviewExecutionContext = {
+      environmentId:'local',platform:process.platform,architecture:process.arch,osIsolation:false,
+      permissionProfile:this.policy.profile,approvalPolicy:this.options.settings.approvalPolicy,approvalsReviewer:this.options.settings.approvalsReviewer,
+    };
+    let reviewContext = policyDecision.kind === 'ask' ? this.reviewContext.snapshot(this.options.settings.reviewContextChars, canonicalJson({action,delta:policyDecision.delta,executionContext,policyReason:policyDecision.reason}).length + 1000) : undefined;
     if (reviewContext && trustedAuthorization) {
-      const data = {...reviewContext, items: [...reviewContext.items, {id: 'direct-user-bash', source: 'user' as const, trust: 'authorization' as const, content: safeEvidence(trustedAuthorization)}]};
+      const {digest:previousDigest,...fields} = reviewContext;
+      const data = {...fields, items: [...reviewContext.items, {id: 'direct-user-bash', source: 'user' as const, trust: 'authorization' as const, content: safeEvidence(trustedAuthorization)}]};
       reviewContext = {...data, digest: digest(data)};
     }
     const turnIdentity = this.reviewContext.turnIdentity;
     return this.approvals.admit(action, policyDecision, {
-      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new LocalInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context, policyDecision.requiresFreshReview || policyDecision.requiresUserInput), trustedAuthorization, signal, reviewContext, settings: this.options.settings,
+      provider: this.options.provider ?? new PiReviewProvider(context, this.options.settings, new LocalInvestigation(this.options.executor, this.policy.profile, action.cwd)), ui: this.ui(context, policyDecision.requiresFreshReview || policyDecision.requiresUserInput), trustedAuthorization, signal, reviewContext, settings: this.options.settings, executionContext,
       onReviewStart: () => {this.activeReviews.add(action.digest);if(context.hasUI)context.ui.setStatus('auto-review',`Auto-review running (${this.activeReviews.size})`);},
       onReviewResult: result => {
         this.activeReviews.delete(action.digest);
-        if (turnIdentity !== this.reviewContext.turnIdentity || !context.hasUI) return;
+        if (turnIdentity !== this.reviewContext.turnIdentity) return;
+        if (result) this.reviewContext.assessment(action,result);
+        if (!context.hasUI) return;
         const labels = {'approved':'approved','denied':'denied','timed-out':'timed out','aborted':'cancelled','failed':'failed'};
         context.ui.setStatus('auto-review',this.activeReviews.size ? `Auto-review running (${this.activeReviews.size})` : result ? `Auto-review: ${labels[result.status]}` : undefined);
         if (result && result.status !== 'approved' && result.status !== 'aborted') context.ui.notify(`Auto-review ${labels[result.status]}: ${redact('assessment' in result ? result.assessment.rationale : result.reason).slice(0,1000)}`,'warning');
@@ -141,7 +162,7 @@ export class GuardController {
     if (TOOL_NAMES.includes(definition.name as never) || definition.name === 'codemode') throw new GuardError('RESERVED_TOOL', 'An external adapter cannot replace guarded local tools');
     const token = randomUUID(), execute = definition.execute;
     this.externalTools.set(definition.name, {token, isEnabled:definition.exposure !== 'hidden'});
-    const schema = JSON.parse(JSON.stringify({parameters:definition.parameters, description:definition.description, annotations:definition.annotations ?? {}})) as Json;
+    const schema = JSON.parse(JSON.stringify({parameters:definition.parameters, description:definition.description, annotations:definition.annotations ?? {},...(definition.namespace ? {namespace:definition.namespace} : {})})) as Json;
     return {...definition, execute: async (toolCallId, params, callerSignal, onUpdate, context) => {
       this.assertReady();
       const lifetime = new AbortController();
@@ -150,7 +171,9 @@ export class GuardController {
       const args = JSON.parse(canonicalJson(params ?? {})) as Record<string, Json>;
       const identity = JSON.parse(JSON.stringify(identify())) as ExternalToolIdentity;
       const identityDigest = digest(identity), cwd = await canonicalPath(context.cwd, context.cwd);
-      const action = createAction({toolCallId, tool:definition.name, args:{arguments:args, externalTool:JSON.parse(JSON.stringify(identity)), schema}, cwd, source:this.sources.get(toolCallId) ?? 'model', sessionId:context.sessionManager.getSessionId(), policyRevision:this.policy.revision}, this.policy.profile);
+      const action = createAction({toolCallId, tool:definition.name, args:{arguments:args, externalTool:JSON.parse(JSON.stringify(identity)), schema,
+        ...(identity.connectedAccountEmail ? {connected_account_email:identity.connectedAccountEmail} : {}),
+      }, cwd, source:this.sources.get(toolCallId) ?? 'model', sessionId:context.sessionManager.getSessionId(), policyRevision:this.policy.revision}, this.policy.profile);
       const authorizationVersion = this.reviewContext.scopeVersion, turn = this.reviewContext.turnIdentity;
       const checkCurrent = async () => {
         this.assertReady(); signal.throwIfAborted();
@@ -168,9 +191,11 @@ export class GuardController {
         await approve(action, identity);
         const result = await externalInvocations.run({toolCallId, identity, arguments:args, signal, checkCurrent, approveNested: async (nestedIdentity, nestedArgs) => {
           if (nestedIdentity.server !== identity.server || nestedIdentity.registration !== identity.registration) return false;
-          const nested = createAction({toolCallId:`${toolCallId}:elicitation:${randomUUID()}`,tool:definition.name,args:{arguments:nestedArgs, externalTool:JSON.parse(JSON.stringify(nestedIdentity)),originatingActionDigest:action.digest},cwd,source:'nested',sessionId:action.sessionId,policyRevision:action.policyRevision},this.policy.profile);
+          const nested = createAction({toolCallId:`${toolCallId}:elicitation:${randomUUID()}`,tool:definition.name,args:{arguments:nestedArgs, externalTool:JSON.parse(JSON.stringify(nestedIdentity)),schema,originatingActionDigest:action.digest,
+            ...(nestedIdentity.connectedAccountEmail ? {connected_account_email:nestedIdentity.connectedAccountEmail} : {}),
+          },cwd,source:'nested',sessionId:action.sessionId,policyRevision:action.policyRevision},this.policy.profile);
           try { await approve(nested,nestedIdentity); return true; } catch { return false; }
-        }}, () => execute.call(definition, toolCallId, args, signal, onUpdate, context));
+        }}, () => execute.call(definition, toolCallId, args, signal, onUpdate, observeToolUserInput(context,action,this.reviewContext,signal)));
         await this.options.audit.record(action,'execution','settled');
         return result;
       } catch (error) { await this.options.audit.record(action,'execution','failed'); throw error; }
@@ -217,7 +242,7 @@ export class GuardController {
         const delegate = createBashToolDefinition(cwd, { ...toolOptions as BashToolOptions, operations: { exec: async (command, finalCwd, options) => {
           const env = options.env;
           const shellPath = (toolOptions as BashToolOptions)?.shellPath ?? '/bin/bash';
-          const args = { command, shellPath, ...(options.timeout !== undefined ? { timeout: options.timeout } : {}), environment: reviewEnvironment(env), ...requested };
+          const args = { command, shellPath, ...(options.timeout !== undefined ? { timeout: options.timeout } : {}), environment: reviewEnvironment(env), redactedEnvironmentVariables:redactedEnvironmentNames(env), ...requested };
           const resolvedCwd = await canonicalPath(finalCwd, finalCwd);
           const action = createAction({ toolCallId, tool, args: JSON.parse(canonicalJson(args)), cwd: resolvedCwd, source: this.sources.get(toolCallId) ?? 'model', sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
           return await this.admitAndExecute(action, {kind:'shell',command,shellPath,cwd:resolvedCwd}, {...context,cwd:finalCwd}, {signal:options.signal,timeoutSeconds:options.timeout,env,onData:options.onData},'',JSON.parse(canonicalJson(params))) as unknown as {exitCode:number|null};
@@ -244,7 +269,7 @@ export class GuardController {
       const resolvedCwd = await canonicalPath(cwd, cwd);
       const env = options.env;
       const shellPath = this.options.shellPath ?? '/bin/bash';
-      const action = createAction({ toolCallId: randomUUID(), tool: 'bash', source: 'user-bash', args: JSON.parse(canonicalJson({ command, shellPath, environment: reviewEnvironment(env), ...(options.timeout !== undefined ? {timeout:options.timeout} : {}) })), cwd: resolvedCwd, sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
+      const action = createAction({ toolCallId: randomUUID(), tool: 'bash', source: 'user-bash', args: JSON.parse(canonicalJson({ command, shellPath, environment: reviewEnvironment(env),redactedEnvironmentVariables:redactedEnvironmentNames(env), ...(options.timeout !== undefined ? {timeout:options.timeout} : {}) })), cwd: resolvedCwd, sessionId: context.sessionManager.getSessionId(), policyRevision: this.policy.revision }, this.policy.profile);
       return await this.admitAndExecute(action, { kind: 'shell', command, shellPath, cwd: resolvedCwd }, context, { signal: options.signal, timeoutSeconds: options.timeout, env: options.env, onData: options.onData }, trustedCommand === undefined ? '' : `The user directly requested this shell command: ${trustedCommand}`,{command:trustedCommand??command}) as unknown as {exitCode:number|null};
     } };
     this.ownedOperations.add(operations);

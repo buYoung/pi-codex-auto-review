@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { expectReviewInput } from './review-wire.mjs';
 
 /** All runtime data is owned synthetic data; no host homes, credentials or socket mounts. */
 export async function cloudFixture({isLive, modelId, policy, onReview} = {}) {
@@ -27,7 +28,7 @@ export async function cloudFixture({isLive, modelId, policy, onReview} = {}) {
     const isReview=context.systemPrompt?.includes('# Outcome Policy')===true;
     calls[isReview?'reviewer':'main']++;
     if(calls.main+calls.reviewer>24)throw new Error('Live model request budget exceeded');
-    if(isReview)onReview?.(context);
+    if(isReview){expectReviewInput(context);onReview?.(context);}
     return streamSimple(model,context,{...options,maxTokens:Math.min(options.maxTokens??2048,4096),reasoning:'low',timeoutMs:Math.min(options.timeoutMs??60000,60000),maxRetries:0});
   };
   const profile=createProfile({mode:'workspace-write',readRoots:[workspace],writeRoots:[workspace],denyRead:[control],denyWrite:[control],allowedDomains:[],deniedDomains:[]});

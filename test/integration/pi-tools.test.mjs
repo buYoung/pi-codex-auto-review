@@ -42,7 +42,7 @@ test('[final-input] a later mutable hook is checked at the final consumer and ca
 });
 test('[user-bash] ! and !! return handled operations with native output and denial, never host fallback', async t => {
   const f=await fixture(t), handlers=new Map(), tools=[], reviews=[], extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,settings:{commandRules:[{prefix:[process.execPath],decision:'ask'}]},provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"decision":"allow","reason":"fixture"}';}}});
-  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler),appendEntry:()=>{}});
   t.after(()=>extension.assertReady().close()); const context={cwd:f.workspace,sessionManager:{getSessionId:()=> 'shell-session'},hasUI:false};
   handlers.get('session_start')({},context);
   // Check routing and effects with room for emulated process startup. The native
@@ -217,7 +217,7 @@ test('[startup] explicit installed cloud provider loads through public Pi TypeSc
 test('[startup] default permissions protect the complete explicitly selected agent credential directory',async t=>{
   const f=await fixture(t),authPath=join(f.agentDir,'auth.json'),tools=[];await writeFile(authPath,'owned-auth-fixture');
   const extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,provider:{complete:()=>assert.fail('Controller credentials reached review')}});
-  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{}});t.after(()=>extension.assertReady().close());
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{},appendEntry:()=>{}});t.after(()=>extension.assertReady().close());
   const sessionManager=pi.SessionManager.inMemory(f.workspace),context={cwd:f.workspace,sessionManager,mode:'print',hasUI:false};
   extension.assertReady().reset(sessionManager.getSessionId(),sessionManager);
   await assert.rejects(tools.find(tool=>tool.name==='read').execute('auth-read',{path:authPath},undefined,undefined,context),/Protected path/);
@@ -243,17 +243,17 @@ test('[nested] actual built-in codemode calls reach guarded local tools and reta
 test('[options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer', async t => {
   const f=await fixture(t), calls=[], reviews=[], executor={close:async()=>{},execute:async(job,profile,delta,options)=>{calls.push({job,profile,delta,options});options.onData?.(Buffer.from('streamed'));return {exitCode:9};}};
   const extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor,settings:{commandRules:[{prefix:['echo'],decision:'ask'}]},provider:{complete:async request=>{reviews.push(JSON.parse(request.data));return '{"outcome":"allow","risk_level":"low"}';}},bashOptions:{commandPrefix:'echo prefix',spawnHook:spawn=>({...spawn,env:{GUARD_OPTION:'provided',SECRET:f.secret}})}}), tools=[], handlers=new Map();
-  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(name,handler)=>handlers.set(name,handler)});t.after(()=>extension.assertReady().close());
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(name,handler)=>handlers.set(name,handler),appendEntry:()=>{}});t.after(()=>extension.assertReady().close());
   const context={cwd:f.workspace,sessionManager:pi.SessionManager.inMemory(f.workspace),hasUI:false},caller=new AbortController(); handlers.get('session_start')({},context);
   const updates=[],result=await tools.find(tool=>tool.name==='bash').execute('option-call',{command:'printf original',timeout:0.4},caller.signal,value=>updates.push(value),context);
-  assert.equal(calls[0].job.command,'echo prefix\nprintf original');assert.equal(calls[0].options.env.GUARD_OPTION,'provided');assert.equal(calls[0].options.env.SECRET,f.secret);assert.equal(reviews.length,1);assert.equal(reviews[0].untrustedAction.args.environment.GUARD_OPTION,'provided');assert.ok(!Object.hasOwn(reviews[0].untrustedAction.args.environment,'SECRET'));assert.equal(calls[0].options.timeoutSeconds,0.4);
+  assert.equal(calls[0].job.command,'echo prefix\nprintf original');assert.equal(calls[0].options.env.GUARD_OPTION,'provided');assert.equal(calls[0].options.env.SECRET,f.secret);assert.equal(reviews.length,1);assert.equal(reviews[0].untrustedAction.args.environment.GUARD_OPTION,'provided');assert.ok(!Object.hasOwn(reviews[0].untrustedAction.args.environment,'SECRET'));assert.deepEqual(reviews[0].untrustedAction.args.redactedEnvironmentVariables,['SECRET']);assert.equal(calls[0].options.timeoutSeconds,0.4);
   assert.equal(result.structuredContent.exit_code,9);assert.equal(result.structuredContent.output,'streamed');assert.ok(updates.length);caller.abort();assert.equal(calls[0].options.signal.aborted,true);
 });
 test('[tools] the host file queue waits for a cancelled invocation to settle before admitting another mutation',async t=>{
   const f=await fixture(t),calls=[];let releaseFirst,started;
   const startedPromise=new Promise(resolve=>started=resolve);
   const executor={qualify:async()=>{},close:async()=>{},execute:async(job,_profile,_delta,options)=>{calls.push({job,options});if(calls.length===1){started();return new Promise((_resolve,reject)=>releaseFirst=()=>reject(new GuardError('CANCELLED','settled cancellation')));}return {content:[{type:'text',text:'second settled'}]};}};
-  const extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor,provider:{complete:async()=> '{"outcome":"allow"}'}}),tools=[],handlers=new Map();await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler)});t.after(()=>extension.assertReady().close());
+  const extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,executor,provider:{complete:async()=> '{"outcome":"allow"}'}}),tools=[],handlers=new Map();await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:(event,handler)=>handlers.set(event,handler),appendEntry:()=>{}});t.after(()=>extension.assertReady().close());
   const context={cwd:f.workspace,sessionManager:pi.SessionManager.inMemory(f.workspace),mode:'print',hasUI:false},caller=new AbortController();handlers.get('session_start')({},context);const write=tools.find(tool=>tool.name==='write');
   const first=write.execute('first',{path:'serial.txt',content:'first'},caller.signal,undefined,context).then(()=>assert.fail('Cancelled worker succeeded'),error=>assert.equal(error.code,'CANCELLED'));
   await startedPromise;
@@ -274,7 +274,7 @@ test('[tools] three denied reviews interrupt the actual Pi turn before a fourth 
 test('[final-input] authorization changed during a pending review cannot reach native execution',async t=>{
   const f=await fixture(t),tools=[];let finish,started;const ready=new Promise(resolve=>started=resolve);
   const extension=createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,provider:{complete:()=>{started();return new Promise(resolve=>finish=resolve);}}});
-  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{}});t.after(()=>extension.assertReady().close());
+  await extension.factory({registerCommand:()=>{},registerTool:tool=>tools.push(tool),on:()=>{},appendEntry:()=>{}});t.after(()=>extension.assertReady().close());
   const sessionManager=pi.SessionManager.inMemory(f.workspace),context={cwd:f.workspace,sessionManager,mode:'print',hasUI:false};
   const controller=extension.assertReady();controller.reset(sessionManager.getSessionId(),sessionManager);controller.authorizeUser('Write only the owned sentinel.');
   const pending=tools.find(tool=>tool.name==='write').execute('pending',{path:join(f.outside,'sentinel.txt'),content:'must not happen'},undefined,undefined,context);

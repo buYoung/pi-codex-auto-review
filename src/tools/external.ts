@@ -10,6 +10,7 @@ export interface ExternalToolIdentity {
   readonly registration: string;
   readonly connectorId?: string;
   readonly account?: string;
+  readonly connectedAccountEmail?: string;
   readonly approvalMode?: 'auto' | 'prompt' | 'writes' | 'approve';
   readonly annotations?: ToolAnnotations;
   readonly requiresUserInput?: boolean;

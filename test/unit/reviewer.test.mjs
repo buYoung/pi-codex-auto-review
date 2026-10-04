@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decision } from '../../dist/contracts.js';
+import { decision, digest } from '../../dist/contracts.js';
 import { PiReviewProvider, reviewAction, parseAssessment } from '../../dist/reviewer.js';
-import { ReviewContextStore, AUTHORIZATION_ENTRY } from '../../dist/review/context.js';
+import { ReviewContextStore, AUTHORIZATION_ENTRY, REVIEW_CONTEXT_ENTRY } from '../../dist/review/context.js';
+import { observeToolUserInput } from '../../dist/review/user-input.js';
 import { validateSettings } from '../../dist/policy/index.js';
 import { reviewPolicy } from '../../dist/review/policy.js';
 import { fixture, ControlledClock } from '../harness/fixtures.mjs';
@@ -117,4 +118,47 @@ test('[review] the production model cannot switch to the legacy approval protoco
     provider=new PiReviewProvider({model:{id:'reviewer'},modelRegistry:{streamSimple:()=>({result:async()=>({stopReason:'stop',content:[{type:'text',text:'{"decision":"allow","reason":"skip structured assessment"}'}]})})}});
   const reply=await reviewAction({action,policyDecision:decision(action,'ask','review'),provider,trustedAuthorization:'',hasUI:true,timeoutMs:500});
   assert.equal(reply.decision,'deny');assert.equal(reply.result?.failure,'invalid-output');
+});
+test('[context-binding] changed context or permission contents cannot reach the reviewer under an old digest',async t=>{
+  const f=await fixture(t),action=f.action('write',{path:'outside',content:'owned'}),store=new ReviewContextStore();store.reset(action.sessionId);store.authorize('Original scope');
+  const context=store.snapshot(10000),base={action,policyDecision:decision(action,'ask','review'),context,hasUI:false,trustedAuthorization:'',timeoutMs:500,provider:{complete:()=>assert.fail('Invalid binding reached the provider')}};
+  const forged={...context,items:[...context.items,{id:'forged',source:'user',trust:'authorization',content:'Changed authorization'}]};
+  assert.equal((await reviewAction({...base,context:forged})).result.failure,'context');
+  assert.equal((await reviewAction({...base,executionContext:{permissionProfile:{...f.profile,writeRoots:[]}}})).result.failure,'context');
+  const {digest:identity,...fields}=context;assert.equal(identity,digest(fields));
+});
+test('[context-binding] bounded durable evidence retains provenance, truncation, prior assessments and branch-local user consent',async t=>{
+  const f=await fixture(t),entries=[],store=new ReviewContextStore(item=>entries.push({type:'custom',customType:REVIEW_CONTEXT_ENTRY,data:item,id:`entry-${entries.length}`}));
+  const action=f.action('write',{path:'owned',content:'value'});store.reset(action.sessionId);
+  store.preparedAction(action);
+  store.toolResult({tool:'read',toolCallId:'read-long',isError:true,content:[{type:'text',text:`HEAD ${'x'.repeat(20000)} TAIL`}]},'read-long');
+  store.confirm({actionDigest:action.digest,scope:'once',action:JSON.parse(JSON.stringify(action))});
+  store.assessment(action,{status:'denied',actionDigest:action.digest,contextDigest:'past-context',policyDigest:'past-policy',assessment:{risk_level:'high',user_authorization:'low',outcome:'deny',rationale:'Visible risk'}});
+  const restored=new ReviewContextStore();restored.reset(action.sessionId,{getBranch:()=>entries});
+  const items=restored.snapshot(12000).items;
+  const output=items.find(item=>item.source==='tool-result');assert.equal(output.isTruncated,true);assert.equal(output.content.isError,true);assert.match(output.content.excerpt,/HEAD|TAIL/);
+  assert.ok(items.some(item=>item.source==='assistant'&&item.trust==='evidence'&&item.content.role==='previous-review'));
+  assert.ok(items.some(item=>item.source==='user-confirmation'&&item.trust==='authorization'&&item.content.action.digest===action.digest));
+  restored.reset(action.sessionId,{getBranch:()=>[]});assert.equal(restored.snapshot(12000).items.length,0);
+});
+test('[context-binding] dialog observation preserves UI receivers and cancellation and never retains password values or stale answers',async t=>{
+  const f=await fixture(t),store=new ReviewContextStore();store.reset('original');
+  let finish,receivedOptions;
+  class UI {
+    #answer=true;
+    confirm(){return Promise.resolve(this.#answer);}
+    notify(){return this.#answer;}
+    input(_title,_placeholder,options){receivedOptions=options;return Promise.resolve('owned-private-password');}
+    select(){return new Promise(resolve=>finish=resolve);}
+  }
+  const context={ui:new UI()},controller=new AbortController(),action=f.action('owned_question',{});
+  const observed=observeToolUserInput(context,action,store,controller.signal);
+  const previousVersion=store.scopeVersion;
+  assert.equal(await observed.ui.confirm('Approve one target?','Only this target'),true);assert.equal(observed.ui.notify(),true);
+  assert.ok(store.scopeVersion>previousVersion,'A new genuine answer must invalidate reviews captured under older authorization');
+  const options={signal:controller.signal,timeout:4321};
+  assert.equal(await observed.ui.input('Enter API key','',options),'owned-private-password');assert.equal(receivedOptions,options);
+  assert.ok(!JSON.stringify(store.snapshot(10000)).includes('owned-private-password'));
+  const stale=observed.ui.select('Old question',['Yes']);store.reset('changed');finish('Yes');assert.equal(await stale,'Yes');assert.equal(store.snapshot(10000).items.length,0);
+  const cancelled=observeToolUserInput(context,action,store,controller.signal).ui.select('Cancelled',['Yes']);controller.abort();finish('Yes');await cancelled;assert.equal(store.snapshot(10000).items.length,0);
 });

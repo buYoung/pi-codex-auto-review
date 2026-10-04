@@ -3,3 +3,6 @@ const PRIVATE_ENV = /(?:TOKEN|SECRET|PASSWORD|CREDENTIAL|API_KEY|AUTH|^AWS_|^AZU
 export function reviewEnvironment(environment: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return Object.fromEntries(Object.entries(environment).filter(([key,value]) => !PRIVATE_ENV.test(key) && value !== undefined));
 }
+export function redactedEnvironmentNames(environment: NodeJS.ProcessEnv = {}): string[] {
+  return Object.keys(environment).filter(key => PRIVATE_ENV.test(key) && environment[key] !== undefined).sort();
+}

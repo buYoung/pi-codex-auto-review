@@ -26,6 +26,18 @@ test('[external-tools] strict MCP tools review exact final input despite read-on
   assert.ok(transport.calls.every(call=>typeof call.params._meta.callId==='string'));
   assert.ok(events.filter(event=>event.type==='tool_execution_end').every(event=>!event.isError));
 });
+test('[external-tools] connected-account evidence is copied only from the explicit registered MCP metadata field',async t=>{
+  const f=await fixture(t),requests=[];
+  const transport=new FixtureMcpTransport([
+    tool('identified',{_meta:{connected_account_email:'verified@example.test',account:'legacy-account'}}),
+    tool('unknown',{_meta:{account:'unverified@example.test'}}),
+  ],()=>assert.fail('Denied account fixture executed'));
+  const runtime=await guardedFixture(t,f,{mcp:mcpFixture('owned',transport),provider:{complete:async request=>{requests.push(JSON.parse(request.data));return '{"outcome":"deny"}';}}});
+  await invoke(runtime,'mcp__owned__identified');await invoke(runtime,'mcp__owned__unknown');
+  assert.equal(requests[0].untrustedAction.args.connected_account_email,'verified@example.test');
+  assert.equal(requests[1].untrustedAction.args.connected_account_email,undefined);
+  assert.equal(requests[1].untrustedAction.args.externalTool.account,'unverified@example.test');
+});
 test('[external-tools] MCP denial, required human input and granular policy prevent effects',async t=>{
   const f=await fixture(t);
   for(const [extra,settings] of [[{},{}],[{_meta:{codex_requires_user_input:true}},{}],[{}, {approvalPolicy:{sandbox:true,rules:true,mcp_elicitations:false}}]]) {

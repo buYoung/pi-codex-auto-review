@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, writeFile, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { canonicalJson, immutable, ruleDigest, approvalEligible, GuardError, EMPTY_DELTA, type Grant, type GuardAction, type PermissionDelta, type PolicyDecision, type ApprovalPolicy, type ReviewContext, type ReviewResult, type ExecutionAuthority } from './contracts.js';
 import { deadlineSignal, withSignal, type Clock } from './signals.js';
-import { reviewAction, type ReviewProvider } from './reviewer.js';
+import { reviewAction, type ReviewProvider, type ReviewExecutionContext } from './reviewer.js';
 import { AuditLog } from './audit.js';
 import type { GuardSettings } from './policy/index.js';
 import { ReviewLifecycle } from './review/lifecycle.js';
@@ -45,7 +45,7 @@ export class ApprovalManager {
     this.lifecycle.reset();
   }
   invalidate(): void { this.reset(this.sessionId); this.grants = []; }
-  async admit(action: GuardAction, policy: PolicyDecision, context: { provider: ReviewProvider; ui?: ApprovalUI; trustedAuthorization: string; signal?: AbortSignal; reviewContext?: ReviewContext; settings?: GuardSettings; onReviewStart?: () => void; onReviewResult?: (result?: ReviewResult) => void; onInterrupt?: () => void }): Promise<Admission> {
+  async admit(action: GuardAction, policy: PolicyDecision, context: { provider: ReviewProvider; ui?: ApprovalUI; trustedAuthorization: string; signal?: AbortSignal; reviewContext?: ReviewContext; settings?: GuardSettings; executionContext?: ReviewExecutionContext; onReviewStart?: () => void; onReviewResult?: (result?: ReviewResult) => void; onInterrupt?: () => void }): Promise<Admission> {
     this.sessionId ??= action.sessionId;
     const signal = AbortSignal.any([this.epoch.signal, ...(action.source === 'user-bash' ? [] : [this.lifecycle.signal]), ...(context.signal ? [context.signal] : [])]);
     const deny = (reason: string): Admission => ({ isAllowed: false, delta: EMPTY_DELTA, reason });
@@ -60,14 +60,15 @@ export class ApprovalManager {
     const retry = this.lifecycle.consumeRetry(action, contextId);
     let reviewContext = context.reviewContext;
     if (retry && reviewContext) {
-      const fields = {...reviewContext, items:[...reviewContext.items,{id:retry.id,source:'user-confirmation' as const,trust:'authorization' as const,content:{type:'exact-action-retry-approval',actionIdentity:retry.actionIdentity,denialId:retry.denialId,scope:'one retry; fresh policy review required'}}]};
+      const {digest:previousDigest,...previous} = reviewContext;
+      const fields = {...previous, items:[...reviewContext.items,{id:retry.id,source:'user-confirmation' as const,trust:'authorization' as const,content:{type:'exact-action-retry-approval',actionIdentity:retry.actionIdentity,denialId:retry.denialId,scope:'one retry; fresh policy review required'}}]};
       reviewContext = immutable({...fields,digest:digest(fields)});
       await this.options.audit.record(action, 'retry', 'consumed');
     }
     const cached = retry || policy.requiresFreshReview || policy.requiresUserInput || policy.authority?.kind === 'reviewed-command' ? undefined : this.grants.find(grant => grant.ruleDigest === ruleDigest(action) && grant.permissionDigest === action.permissionDigest && grant.policyRevision === action.policyRevision && (grant.scope === 'persistent' || grant.sessionId === action.sessionId));
     if (cached) { this.lifecycle.record(action,contextId); await this.options.audit.record(action, 'grant', cached.scope); return { isAllowed: true, delta: cached.delta, grant: cached, reason: 'Bound rule authorized the action' }; }
     context.onReviewStart?.();
-    const review = this.options.approvalsReviewer === 'user' || policy.requiresUserInput ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: reviewContext, settings: context.settings });
+    const review = this.options.approvalsReviewer === 'user' || policy.requiresUserInput ? { decision: 'ask', reason: 'User review requested', result: undefined } : await reviewAction({ action, policyDecision: policy, provider: context.provider, trustedAuthorization: context.trustedAuthorization, hasUI: Boolean(context.ui), signal, timeoutMs: this.options.reviewTimeoutMs, clock: this.options.clock, context: reviewContext, settings: context.settings, executionContext:context.executionContext });
     context.onReviewResult?.(review.result);
     if (signal.aborted) return {...deny('Call cancelled'),review:review.result};
     const recorded = this.lifecycle.record(action, contextId, review.result);

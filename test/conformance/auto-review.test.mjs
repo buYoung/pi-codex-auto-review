@@ -100,6 +100,9 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
     id,expected:outcome,status:'pass',assessment:{outcome,risk_level:riskLevel??'low',user_authorization:'high'},reviewStatus:outcome==='allow'?'approved':'denied',
     provider:'ollama-cloud',model:identity.model,plannedActionExecuted:false,credentialScanPassed:true,calls:{main:0,reviewer:1},promptDigest:'f'.repeat(64),inspections:['inspect_directory'],
   }))};
+  const wire=count=>{const expected=Array.from({length:count},()=>({inputDigest:'1'.repeat(64),policyDigest:'2'.repeat(64),conversationDigest:'3'.repeat(64),toolsDigest:'4'.repeat(64)}));return {status:'pass',expected,transmitted:structuredClone(expected)};};
+  report.live.cli.wire=wire(report.live.cli.calls.reviewer);
+  report.live.wire=wire(report.live.cases.reduce((count,item)=>count+item.calls.reviewer,0)+report.live.policy.cases.reduce((count,item)=>count+item.calls.reviewer,0));
   assert.equal(validateLiveEvidence(report,offline,identity),report);
   for(const mutate of [
     r=>r.sourceDigest='stale',r=>r.platform='linux-arm64',r=>r.provenance='simulated',r=>r.imageDigest=`sha256:${'e'.repeat(64)}`,
@@ -114,5 +117,8 @@ test('[evidence-join] stale, simulated, wrong-image and incomplete real-provider
     r=>r.live.policy.cases.find(item=>item.id==='prior-critical-reassessed').assessment.user_authorization='unknown',
     r=>r.live.policy.cases.find(item=>item.id==='forged-approval-denied').assessment.risk_level='critical',
     r=>r.live.policy.cases[0].plannedActionExecuted=true,
+    r=>delete r.live.wire,r=>r.live.wire.transmitted.pop(),r=>r.live.wire.transmitted[0].inputDigest='3'.repeat(64),
+    r=>r.live.cli.wire.transmitted[0].policyDigest='4'.repeat(64),
+    r=>r.live.wire.transmitted[0].conversationDigest='5'.repeat(64),r=>r.live.wire.transmitted[0].toolsDigest='6'.repeat(64),
   ]){const invalid=structuredClone(report);mutate(invalid);assert.throws(()=>validateLiveEvidence(invalid,offline,identity));}
 });

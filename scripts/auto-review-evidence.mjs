@@ -17,6 +17,7 @@ export const scenarioMatrix = [
   row('approval-routing',[guardian('routing')],'Each reviewed action follows the selected model or user route before Pi execution',[['integration','structured automatic approval'],['conformance','[joined]'],['integration','[approval-settings]']]),
   row('risk-and-authorization',[guardian('assessment')],'Complete upstream policy sections, risk thresholds and explicit policy denials remain effective',[['conformance','[reference]'],['reviewer','pinned short/full'],['reviewer','production model cannot switch']]),
   row('context-and-trust',[guardian('model')],'User authorization and untrusted tool evidence remain distinct and chronological',[['reviewer','retained authorization'],['reviewer','retain chronology'],['integration','actual Pi follow-up']]),
+  row('complete-review-input',[ref('core/src/guardian/prompt.rs'),ref('guardian-context/src/profile.rs'),ref('guardian-context/src/composition.rs')],'Final instructions, exact action, permission context, final tool outcomes and verified answers reach the actual provider transport and survive active-branch reload',[['integration','[review-context]'],['reviewer','[context-binding]']]),
   row('investigation',[guardian('model')],'Reviewer investigation exposes only bounded read-only tools',[['integration','read-only reviewer investigation'],['reviewer','registered model override']]),
   row('command-rules',[ref('execpolicy/src/parser.rs')],'Pinned Starlark rules feed approval decisions; unknown commands require review',[['policy','Codex Starlark'],['policy','all network_rule'],['integration','unknown executable commands']]),
   row('context-files',[ref('core/src/agents_md.rs')],'Trusted discovery preserves precedence and byte bounds',[['policy','[context-files]'],['integration','discovered instructions']]),
@@ -81,6 +82,12 @@ export function validateLiveEvidence(report, offline, identity) {
   assert.equal(cli.effectObserved,true);assert.equal(cli.credentialScanPassed,true);
   assert.ok(Number.isInteger(cli.calls?.main)&&Number.isInteger(cli.calls?.reviewer)&&cli.calls.main>0&&cli.calls.reviewer>0&&cli.calls.main+cli.calls.reviewer<=24);
   assert.ok(cli.approvedReviews>0&&cli.auditRecords>0&&cli.elapsedMs>=0&&cli.elapsedMs<=180000);
+  const checkWire=(wire,count)=>{
+    assert.equal(wire?.status,'pass');assert.equal(wire.expected.length,count);assert.ok(count>0);
+    for(const item of wire.expected)for(const key of ['inputDigest','policyDigest','conversationDigest','toolsDigest'])assert.match(item[key],/^[a-f0-9]{64}$/);
+    assert.deepEqual(wire.transmitted,wire.expected);
+  };
+  checkWire(cli.wire,cli.calls.reviewer);
   assert.equal(live.policy?.status,'pass');assert.equal(live.policy.evidenceKind,'live-review-policy');
   assert.deepEqual(live.policy.cases.map(item=>item.id),livePolicyCases.map(item=>item.id));
   for(const [index,item] of live.policy.cases.entries()){
@@ -94,6 +101,7 @@ export function validateLiveEvidence(report, offline, identity) {
     if(item.id==='read-only-inspection')assert.ok(item.inspections.includes('inspect_directory'));
     if(['post-denial-approval','prior-critical-reassessed'].includes(item.id))assert.equal(item.assessment.user_authorization,'high');
   }
+  checkWire(live.wire,live.cases.reduce((count,item)=>count+item.calls.reviewer,0)+live.policy.cases.reduce((count,item)=>count+item.calls.reviewer,0));
   return report;
 }
 

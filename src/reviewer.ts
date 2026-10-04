@@ -1,5 +1,5 @@
 import type { ExtensionContext } from '@earendil-works/pi-coding-agent';
-import { canonicalJson, digest, GuardError, immutable, type DecisionKind, type GuardAction, type PolicyDecision, type ReviewAssessment, type ReviewContext, type ReviewResult } from './contracts.js';
+import { canonicalJson, digest, GuardError, immutable, type DecisionKind, type GuardAction, type PolicyDecision, type ReviewAssessment, type ReviewContext, type ReviewResult, type PermissionProfile, type ApprovalPolicy } from './contracts.js';
 import { deadlineSignal, withSignal, type Clock } from './signals.js';
 import { reviewPolicy } from './review/policy.js';
 import { safeEvidence } from './review/context.js';
@@ -9,6 +9,15 @@ import { DEFAULT_SETTINGS, type GuardSettings } from './policy/index.js';
 export interface ReviewRequest { readonly systemPrompt: string; readonly data: string }
 export interface ReviewReply { readonly decision: DecisionKind; readonly reason: string; readonly result?: ReviewResult; readonly isLegacy?: boolean }
 export interface ReviewProvider { complete(request: ReviewRequest, options: { signal: AbortSignal; timeoutMs: number }): Promise<unknown> }
+export interface ReviewExecutionContext {
+  readonly environmentId: 'local';
+  readonly platform: string;
+  readonly architecture: string;
+  readonly osIsolation: false;
+  readonly permissionProfile: PermissionProfile;
+  readonly approvalPolicy: ApprovalPolicy;
+  readonly approvalsReviewer: 'auto_review' | 'user';
+}
 type ProviderContext = Parameters<ExtensionContext['modelRegistry']['streamSimple']>[1];
 export class PiReviewProvider implements ReviewProvider {
   constructor(private readonly context: Pick<ExtensionContext, 'model' | 'modelRegistry'>, private readonly settings: GuardSettings = DEFAULT_SETTINGS, private readonly investigation?: ReviewInvestigation) {}
@@ -68,7 +77,7 @@ export function parseReview(value: unknown): ReviewReply {
 export async function reviewAction(options: {
   action: GuardAction; policyDecision: PolicyDecision; provider: ReviewProvider; trustedAuthorization: string;
   hasUI: boolean; signal?: AbortSignal; timeoutMs: number; clock?: Clock;
-  context?: ReviewContext; settings?: GuardSettings;
+  context?: ReviewContext; settings?: GuardSettings; executionContext?: ReviewExecutionContext;
 }): Promise<ReviewReply> {
   const { action, policyDecision } = options;
   if (policyDecision.actionDigest !== action.digest || policyDecision.isHardDeny || policyDecision.kind === 'deny') return { decision: 'deny', reason: 'Deterministic policy denied the action' };
@@ -80,11 +89,19 @@ export async function reviewAction(options: {
   try {
     deadline.signal.throwIfAborted();
     if (context.sessionId !== action.sessionId) throw new GuardError('REVIEW_CONTEXT', 'Review context belongs to another session');
+    if (options.context) {
+      const {digest:contextDigest,...fields} = options.context;
+      if (contextDigest !== digest(fields)) throw new GuardError('REVIEW_CONTEXT', 'Review context digest does not match its actual contents');
+    }
+    if (options.executionContext && digest(options.executionContext.permissionProfile) !== action.permissionDigest) throw new GuardError('REVIEW_CONTEXT', 'Review permission context differs from the bound action');
     // The action must remain exact: refusing a credential-bearing request is safer than silently rewriting it.
     if (canonicalJson(safeEvidence(action as unknown as import('./contracts.js').Json)) !== canonicalJson(action)) throw new GuardError('REVIEW_CONTEXT', 'Exact action contains credential material that cannot enter the reviewer prompt');
     const request = {
       systemPrompt: policy.text,
-      data: canonicalJson({ context, untrustedAction: action, requestedPermissionDelta: policyDecision.delta, policyReason: policyDecision.reason }),
+      data: canonicalJson({ context, untrustedAction: action, requestedPermissionDelta: policyDecision.delta, policyReason: policyDecision.reason,
+        ...(options.executionContext ? {executionContext:options.executionContext} : {}),
+        approvalRequest:{category:policyDecision.approvalCategory ?? 'sandbox',requiresFreshReview:policyDecision.requiresFreshReview ?? false,requiresUserInput:policyDecision.requiresUserInput ?? false},
+      }),
     };
     if (request.data.length > (options.settings?.reviewContextChars ?? DEFAULT_SETTINGS.reviewContextChars)) throw new GuardError('REVIEW_CONTEXT_OVERFLOW', 'Exact request exceeds review context capacity');
     const value = await withSignal(options.provider.complete(request, { signal: deadline.signal, timeoutMs: options.timeoutMs }), deadline.signal);

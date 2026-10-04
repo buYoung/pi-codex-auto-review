@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "aa492ce02281e88ea2ffc896e6229b0458919f9b74d31aa96a140bbe095cae6f",
+  "sourceDigest": "5f784a666e256c9913fdea2d92b84a860639a74f8db2db1fc68ffed8f01ec28d",
   "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
   "runtimeVersions": {
     "node": "v24.14.0",
@@ -15,7 +15,7 @@
   ],
   "moduleHashes": {
     "src/tools/executor.ts": "19b8e1a217189d1f88072498a9987ad1aae92785cddf3c4739c1f10c37087230",
-    "src/tools/environment.ts": "7ee0125018d03abecc56d4d507aa60383253aa6066a4622dd2d6208f71adea37",
+    "src/tools/environment.ts": "3e9bf43e9a137d04676cfa0f45c2ae386e27b6889ca06d0b7340162d4d7a2c34",
     "src/tools/mutation-queue.ts": "61b5679d4da5aa4f36563666cfbc9cc766e70c9475736f6b091ca1f988ac4228"
   },
   "testFiles": [
@@ -28,9 +28,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/execution.json",
-      "startedAt": "2026-10-03T23:48:33.462Z",
+      "runId": "2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/execution.json",
+      "startedAt": "2026-10-04T00:55:06.205Z",
       "provenance": "executed",
       "suite": "execution",
       "status": "pass",
@@ -69,7 +69,7 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "aa492ce02281e88ea2ffc896e6229b0458919f9b74d31aa96a140bbe095cae6f",
+      "sourceDigest": "5f784a666e256c9913fdea2d92b84a860639a74f8db2db1fc68ffed8f01ec28d",
       "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
       "runtimeVersions": {
         "node": "v24.14.0",
@@ -78,7 +78,7 @@
       },
       "evidenceKind": "workflow",
       "blockedReasons": [],
-      "recordedAt": "2026-10-03T23:48:34.624Z"
+      "recordedAt": "2026-10-04T00:55:07.312Z"
     }
   ],
   "buildProof": {
@@ -86,7 +86,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-03T23:48:32.048Z"
+    "recordedAt": "2026-10-04T00:55:04.926Z"
   },
   "executor": "Pi public SDK in the host process",
   "osIsolation": false,
@@ -101,10 +101,10 @@
     {
       "platform": "darwin-arm64",
       "status": "pass",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/execution.json"
+      "artifactPath": ".reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/execution.json"
     }
   ],
-  "recordedAt": "2026-10-03T23:48:43.430Z",
-  "runId": "2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/04-execution.json"
+  "recordedAt": "2026-10-04T00:55:16.582Z",
+  "runId": "2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/04-execution.json"
 }

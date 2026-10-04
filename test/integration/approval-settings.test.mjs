@@ -18,7 +18,7 @@ const modeChoice = (choices,mode) => choices.find(choice=>choice.startsWith(`${m
 async function setup(t,options = {}) {
   const f = await fixture(t), commands = new Map(), tools = new Map(), requests = [], notifications = [];
   const extension = createGuardExtension({mcp:false,cwd:f.workspace,agentDir:f.agentDir,profile:f.profile,...options});
-  const api = {registerCommand:(name,command)=>commands.set(name,command),registerTool:tool=>tools.set(tool.name,tool),on:()=>{}};
+  const api = {registerCommand:(name,command)=>commands.set(name,command),registerTool:tool=>tools.set(tool.name,tool),on:()=>{},appendEntry:()=>{}};
   await extension.factory(api);
   t.after(()=>extension.assertReady().close());
   const sessionManager = SessionManager.inMemory(f.workspace);
