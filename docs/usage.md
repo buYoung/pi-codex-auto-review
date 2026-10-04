@@ -6,10 +6,10 @@ pi-codex-auto-review를 Pi 확장으로 등록하는 방법과 CLI·SDK·정책 
 
 npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 배포 대상은 macOS ARM64와 Linux x64이며, 패키지에 두 플랫폼의 규칙 엔진을 포함하므로 설치할 때 Rust가 필요하지 않습니다.
 
-`0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 버전입니다. 이 문서에서 설명하는 영문 도움말, `/scoped-models` 연동, `/approve retry`와 검토 문맥 보정은 그 이후의 소스 개선이며 `0.1.3`에는 포함되지 않습니다. 후속 변경은 소스 빌드 후 로컬 등록으로 확인합니다.
+`0.1.4`에는 영문 승인 설명, `/scoped-models` 연동, `/approve retry`, 일반 사용자 메시지에 따른 재승인 판단과 검토 문맥 전달·복원 보정이 포함됩니다. `0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 이전 버전입니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.3
+pi install npm:pi-codex-auto-review@0.1.4
 pi list
 pi remove npm:pi-codex-auto-review
 ```

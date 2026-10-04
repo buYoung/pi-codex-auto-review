@@ -81,16 +81,16 @@ git ls-remote origin refs/heads/master 'refs/tags/v*'
 
 ## 게시 결과와 Pi 설치 확인
 
-`0.1.3` 게시 후 다음 명령으로 확인합니다.
+`0.1.4` 게시 후 다음 명령으로 확인합니다.
 
 ```sh
-npm view pi-codex-auto-review@0.1.3 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.1.3
+npm view pi-codex-auto-review@0.1.4 version --registry=https://registry.npmjs.org/
+pi install npm:pi-codex-auto-review@0.1.4
 pi list
 pi
 ```
 
-다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. 설치 후 `/approve`와 `/approve-model`이 표시되고 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.md)을 따릅니다.
+다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.md)을 따릅니다.
 
 ## 로컬에서 압축 패키지만 준비
 
