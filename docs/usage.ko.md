@@ -6,12 +6,12 @@ pi-codex-auto-review를 Pi 확장으로 등록하는 방법과 CLI·SDK·정책 
 
 ## npm에서 설치
 
-npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 게시된 `0.1.4`에는 macOS ARM64와 Linux x64용 규칙 실행 파일이 포함돼 있습니다. 아래 TypeScript 엔진은 `0.1.4` 이후 소스 변경이며 다음 배포 대상입니다.
+npm 패키지는 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. `0.2.0`은 `0.1.4`까지 포함됐던 네이티브 실행 파일을 교체하고 규칙 엔진을 JavaScript로 배포합니다. 이 확장에는 Rust 컴파일러나 플랫폼별 규칙 바이너리가 필요하지 않으며, Pi 자체의 네이티브 모듈은 별개입니다.
 
 `0.1.4`에는 영문 승인 설명, `/scoped-models` 연동, `/approve retry`, 일반 사용자 메시지에 따른 재승인 판단과 검토 문맥 전달·복원 보정이 포함됩니다. `0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 이전 버전입니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.4
+pi install npm:pi-codex-auto-review@0.2.0
 pi list
 pi remove npm:pi-codex-auto-review
 ```

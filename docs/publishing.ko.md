@@ -2,7 +2,7 @@
 
 [English](publishing.md) | **한국어**
 
-`pnpm release`에서 버전을 선택하고 커밋·태그·푸시를 확인하면 GitHub Actions가 JavaScript 패키지를 빌드·검증하고 npm에 게시합니다. 로컬 명령은 npm 자격 증명을 사용하지 않습니다. 이 절차는 `0.1.4` 이후 소스에 적용되며, 게시된 `0.1.4`에는 이전 네이티브 실행 파일이 남아 있습니다.
+`pnpm release`에서 버전을 선택하고 커밋·태그·푸시를 확인하면 GitHub Actions가 JavaScript 패키지를 빌드·검증하고 npm에 게시합니다. 로컬 명령은 npm 자격 증명을 사용하지 않습니다. `0.2.0`은 JavaScript만 배포하는 이 절차를 사용하며, 게시된 `0.1.4`에는 이전 네이티브 실행 파일이 남아 있습니다.
 
 ## 처음 한 번 설정
 
@@ -83,16 +83,16 @@ git ls-remote origin refs/heads/master 'refs/tags/v*'
 
 ## 게시 결과와 Pi 설치 확인
 
-`0.1.4` 게시 후 다음 명령으로 확인합니다.
+`0.2.0` 게시 후 다음 명령으로 확인합니다.
 
 ```sh
-npm view pi-codex-auto-review@0.1.4 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.1.4
+npm view pi-codex-auto-review@0.2.0 version --registry=https://registry.npmjs.org/
+pi install npm:pi-codex-auto-review@0.2.0
 pi list
 pi
 ```
 
-다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.ko.md)을 따릅니다.
+다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. `0.2.0`은 Rust 규칙 엔진을 JavaScript로 컴파일하는 TypeScript 구현으로 교체하고 개발용 SDK 재포장을 제거합니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.ko.md)을 따릅니다.
 
 ## 로컬에서 압축 패키지만 준비
 

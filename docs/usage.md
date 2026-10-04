@@ -6,12 +6,12 @@ This guide covers registering pi-codex-auto-review as a Pi extension and configu
 
 ## Installing from npm
 
-Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. Published `0.1.4` includes macOS ARM64 and Linux x64 rule executables. The TypeScript engine described below is a source change after `0.1.4` and awaits the next release.
+Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. Version `0.2.0` distributes the rule engine as JavaScript, replacing the native executables included through `0.1.4`. The extension requires no Rust compiler or platform-specific rule binary; Pi's own native modules are separate.
 
 `0.1.4` includes English approval descriptions, `/scoped-models` integration, `/approve retry`, reapproval through ordinary user messages, and fixes for passing and restoring review context. The earlier `0.1.3` removed the sandbox and added the `/approve` and `/approve-model` settings commands.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.4
+pi install npm:pi-codex-auto-review@0.2.0
 pi list
 pi remove npm:pi-codex-auto-review
 ```

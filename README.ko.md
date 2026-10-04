@@ -6,10 +6,10 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 
 ## 설치
 
-설치 예시는 게시된 `0.1.4`이며, 이 버전에는 아직 네이티브 규칙 실행 파일이 포함돼 있습니다. 현재 소스는 이를 TypeScript 규칙 엔진으로 교체하고 `vendor`의 재포장 Pi SDK를 제거했으며, 이 변경은 다음 배포 대상입니다. 현재 구현을 사용하려면 [소스에서 빌드](docs/usage.ko.md#소스에서-빌드)를 따릅니다.
+`0.2.0`은 네이티브 규칙 실행 파일을 TypeScript 엔진으로 교체해 JavaScript로 배포하고, `vendor`의 재포장 Pi SDK를 제거합니다. 이 확장에는 Rust 컴파일러나 플랫폼별 규칙 바이너리가 필요하지 않습니다. Node.js와 Pi 호스트는 계속 필요하며, Pi 자체의 네이티브 모듈은 별개입니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.1.4
+pi install npm:pi-codex-auto-review@0.2.0
 pi list
 ```
 

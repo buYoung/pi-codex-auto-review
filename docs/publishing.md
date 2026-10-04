@@ -2,7 +2,7 @@
 
 **English** | [한국어](publishing.ko.md)
 
-Choose a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies the JavaScript package and publishes to npm. The local command does not use npm credentials. This workflow describes the source after `0.1.4`; the published `0.1.4` still contains the earlier native executables.
+Choose a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies the JavaScript package and publishes to npm. The local command does not use npm credentials. Version `0.2.0` uses this JavaScript-only workflow; the published `0.1.4` still contains the earlier native executables.
 
 ## One-time setup
 
@@ -83,16 +83,16 @@ If Actions fails after the tag push, inspect that run's logs and rerun the faile
 
 ## Checking publication and Pi installation
 
-After publishing `0.1.4`, verify with these commands.
+After publishing `0.2.0`, verify with these commands.
 
 ```sh
-npm view pi-codex-auto-review@0.1.4 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.1.4
+npm view pi-codex-auto-review@0.2.0 version --registry=https://registry.npmjs.org/
+pi install npm:pi-codex-auto-review@0.2.0
 pi list
 pi
 ```
 
-For later releases, replace the version with the one selected. `0.1.2` uses the earlier sandbox structure; `0.1.3` removes the sandbox and adds approval settings commands. `0.1.4` improves English approval descriptions, model scope integration, user reapproval, and review context passing and restoration. After installation, check `/approve`'s English descriptions, `/approve-model`'s `/scoped-models` integration, and that saved choices survive a restart. See the [usage guide](usage.md) for settings files and the SDK entry point.
+For later releases, replace the version with the one selected. `0.1.2` uses the earlier sandbox structure; `0.1.3` removes the sandbox and adds approval settings commands. `0.1.4` improves English approval descriptions, model scope integration, user reapproval, and review context passing and restoration. `0.2.0` replaces the Rust rule engine with TypeScript compiled to JavaScript and removes the repackaged development SDK. After installation, check `/approve`'s English descriptions, `/approve-model`'s `/scoped-models` integration, and that saved choices survive a restart. See the [usage guide](usage.md) for settings files and the SDK entry point.
 
 ## Preparing an archive locally
 
