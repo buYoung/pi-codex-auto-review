@@ -1,29 +1,31 @@
-# 의존성 보안 수정
+# Dependency security fixes
 
-현재 소스는 `@anthropic-ai/sandbox-runtime`, 그 하위 `node-forge`, `bundleDependencies`를 제거했다. 배포 패키지에 `node_modules`를 포함하지 않으며 Pi 호스트는 peer dependency로 사용한다. 설치된 Pi의 의존성을 이 확장이 교체하지 않는다.
+**English** | [한국어](dependencies.ko.md)
 
-## 0.1.3 배포 전 감사
+The current source removes `@anthropic-ai/sandbox-runtime`, its transitive `node-forge` dependency, and `bundleDependencies`. The distribution does not include `node_modules` and uses the Pi host as a peer dependency. This extension does not replace dependencies in an installed Pi host.
 
-2026-10-04 잠금 파일 기준으로 `npm audit --omit=dev --audit-level=high`는 취약점 0건이다. 개발 의존성을 포함한 `npm audit --audit-level=high`는 `release-it 21.0.1`의 `basic-ftp`·`undici` 하위 의존성과 그 상위 경로에서 높은 심각도 6건을 보고했다. 이 개발 도구들은 배포 압축 파일에 포함되지 않는다.
+## Audit before the 0.1.3 release
 
-`npm audit fix --force`가 제안하는 조치는 `release-it 20.2.0`으로의 주요 버전 변경이므로 이번 릴리스에서 적용하지 않았다. 개발 도구의 감사 항목은 미해결로 남기며, 배포 의존성의 감사 통과와 구분한다.
+For the lockfile dated 2026-10-04, `npm audit --omit=dev --audit-level=high` reported zero vulnerabilities. Including development dependencies, `npm audit --audit-level=high` reported six high-severity findings in `release-it 21.0.1`'s transitive `basic-ftp` and `undici` dependencies and their parent paths. These development tools are not included in the distribution archive.
 
-## 이전 샌드박스 버전의 조치 기록
+The action proposed by `npm audit fix --force` changes the major version to `release-it 20.2.0`, so it was not applied in this release. Development tool findings remain unresolved and are separate from the passing production dependency audit.
 
-아래는 샌드박스 제거 전의 기록이다. 당시 높은 심각도 3개 감사 항목을 조치했고, 설치된 `node-forge 1.4.1-0`, `brace-expansion 5.0.12`와 감사 0건을 기록했다. 현재 개발 의존성 전체의 감사 결과를 뜻하지 않는다. 원래 근거는 [보안 인계](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/handoffs/auto-review/11-dependency-security.json)에 보존한다.
+## Remediation record for the earlier sandbox version
 
-| 항목 | 적용한 수정 | 배포 상태 |
+The following record predates sandbox removal. At that time, three high-severity audit findings were addressed, with installed versions `node-forge 1.4.1-0` and `brace-expansion 5.0.12` and zero audit findings recorded. It does not describe the current audit of all development dependencies. The original evidence is preserved in the [security handoff](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/docs/handoffs/auto-review/11-dependency-security.json).
+
+| Item | Applied fix | Release status |
 | --- | --- | --- |
-| `node-forge` 및 이를 사용하는 `sandbox-runtime` | RSA `DigestAlgorithm`의 추가 요소를 거부하는 [수정 PR](https://github.com/digitalbazaar/forge/pull/1152)의 커밋 `ceba34402e329f0365134f23fe19898756527d65`을 고정 | **미병합 개발 버전**이다. 공식 수정 릴리스로 표현하지 않는다. 기존 1.4.0 대비 라이브러리 코드 변경은 RSA 검증부 한 곳이다. |
-| `brace-expansion` | 공식 수정 버전 `5.0.12` 사용 | [공식 보안 공지](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr)에 기재된 수정 버전이다. |
+| `node-forge` and its `sandbox-runtime` consumer | Pinned commit `ceba34402e329f0365134f23fe19898756527d65` from the [fix PR](https://github.com/digitalbazaar/forge/pull/1152), which rejects extra RSA `DigestAlgorithm` elements | An **unmerged development version**, not an official fixed release. Compared with 1.4.0, library code changed only in RSA verification. |
+| `brace-expansion` | Used official fixed version `5.0.12` | Listed as a fixed version in the [official security advisory](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr). |
 
-`node-forge`는 [공식 공지](https://github.com/advisories/GHSA-86w9-cpqp-85rv)에 수정 릴리스가 없다고 표시돼 있다. 버전 문자열을 임의로 올리거나 감사를 억제하지 않았다. 실제 패치 소스를 고정하고 정상 PKCS#1·PSS 서명, 네이티브 암호 모듈이 거부하는 변형 서명을 함께 검사했다.
+At the time of that record, the [official `node-forge` advisory](https://github.com/advisories/GHSA-86w9-cpqp-85rv) listed no fixed release. The version was not arbitrarily increased, and audit findings were not suppressed. The actual patch source was pinned and checked with valid PKCS#1 and PSS signatures and malformed signatures rejected by the native crypto module.
 
-## Pi 패키지의 잠금 보정
+## Pi package lock adjustment
 
-Pi 0.99.1의 `npm-shrinkwrap.json`은 취약한 `brace-expansion 5.0.9`를 고정한다. 루트 `overrides`, 일반 업데이트, 감사 자동 수정으로는 바뀌지 않았고, 루트 잠금만 수정해도 깨끗한 설치 시 5.0.9가 다시 설치되는 것을 확인했다. 확인한 Pi 1.0.0 배포에도 같은 잠금이 있었다.
+Pi 0.99.1's `npm-shrinkwrap.json` pins vulnerable `brace-expansion 5.0.9`. Root `overrides`, ordinary updates, and automatic audit fixes did not change it. Changing only the root lockfile also reinstalled 5.0.9 on a clean installation. The inspected Pi 1.0.0 distribution had the same lock entry.
 
-따라서 공식 Pi 0.99.1 아카이브의 **잠금 항목 한 곳만** 수정한 개발 의존성을 사용한다. SDK 파일 1,227개를 대조했으며 소스·컴파일 결과·버전·라이선스는 동일하다. 아카이브와 변경 내역은 `vendor/`에 있으며, 이 아카이브도 검증 소스 해시에 포함된다. SDK API를 새 버전으로 바꾸지 않았다.
+The development dependency therefore uses the official Pi 0.99.1 archive with **one lock entry changed**. A comparison of 1,227 SDK files found identical source, compiled output, version, and license. The archive and change record are under `vendor/`, and the archive is included in the verification source hash. The SDK API was not upgraded.
 
 ```sh
 python3 scripts/vendor-pi-sdk.py
@@ -34,20 +36,20 @@ npm run test:contracts
 npm audit --json
 ```
 
-생성기는 공식 원본 아카이브의 SHA-512 무결성을 확인한다. 생성 파일의 SHA-256·SHA-512와 수정한 잠금 항목은 [`vendor/pi-sdk-security.json`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/vendor/pi-sdk-security.json)에 기록한다. Docker도 같은 아카이브와 잠금 파일로 설치한다.
+The generator verifies the official original archive's SHA-512 integrity. Generated file SHA-256 and SHA-512 hashes and the modified lock entry are recorded in [`vendor/pi-sdk-security.json`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/vendor/pi-sdk-security.json). Docker installs from the same archive and lockfile.
 
-## 확인한 결과
+## Recorded results
 
-- 수정 전 정상 서명은 통과했으나 변형 서명이 `true`로 승인됐다. 중괄호 확장 입력은 5초 제한으로 중단됐다.
-- 수정 후 정상 서명은 유지되고 변형 서명은 거부됐다. 같은 중괄호 입력도 제한 안에 완료됐다.
-- 기존 계약·Pi 통합·네이티브 격리·패키지 실행을 합친 로컬 검증 58개가 통과했다. 플랫폼 전체 집계와 실모델 재검증은 후속 기능 변경을 합친 최종 소스에서 수행한다.
+- Before the fix, valid signatures passed, but a malformed signature was accepted as `true`. Brace expansion input was stopped by a five-second limit.
+- After the fix, valid signatures still passed and the malformed signature was rejected. The same brace input completed within the limit.
+- Fifty-eight local checks covering contracts, Pi integration, native isolation, and package execution passed. Full platform aggregation and live model revalidation were deferred to the final source incorporating later feature changes.
 
-이 보정은 저장소의 잠금 파일로 설치한 환경에 적용된다. 별도로 설치된 Pi 호스트나 다른 프로젝트의 의존성을 자동으로 바꾸지는 않는다. 다른 환경에서는 실제로 해석되는 의존성과 해당 환경의 감사 결과를 별도로 확인해야 한다.
+This adjustment applies to environments installed with this repository's lockfile. It does not automatically change dependencies in separately installed Pi hosts or other projects. In other environments, inspect the dependencies actually resolved and that environment's audit results separately.
 
-## 현재 npm 배포
+## Current npm distribution
 
-설치된 의존성의 `overrides`는 소비자 프로젝트에 적용되지 않고 `package-lock.json`도 게시되지 않는다. 이전 패키지에 묶었던 샌드박스 런타임은 현재 소스에서 제거했다. 게시 전 검사는 샌드박스 코드와 `node_modules`가 압축 파일에 남지 않는지 확인한다.
+An installed dependency's `overrides` do not apply to the consumer project, and `package-lock.json` is not published. The sandbox runtime bundled in the earlier package has been removed from the current source. Prepack checks ensure that sandbox code and `node_modules` are absent from the archive.
 
-Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. 개발용 `vendor/pi-coding-agent-0.99.1-security.1.tgz`도 배포하지 않으므로 별도로 설치된 Pi의 `brace-expansion` 보정은 이 패키지의 보장 범위에 포함되지 않는다.
+The Pi host remains in `peerDependencies` and is not bundled. The development archive `vendor/pi-coding-agent-0.99.1-security.1.tgz` is not distributed either, so this package does not guarantee the `brace-expansion` adjustment for a separately installed Pi.
 
-플랫폼 실행 파일을 준비한 뒤 저장소 루트에서 `npm pack`을 실행하면 게시 전 검사가 적용된다. 소비자 설치에는 Rust 컴파일이나 보안 보정을 위한 설치 스크립트를 요구하지 않는다. 두 플랫폼의 실행 파일 취합은 [배포 안내](../publishing.md)를 따른다.
+After preparing platform executables, run `npm pack` from the repository root to apply prepack checks. Consumer installation requires neither Rust compilation nor an installation script for security adjustments. See the [publishing guide](../publishing.md) for collecting both platforms' executables.

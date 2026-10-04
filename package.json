@@ -86,12 +86,17 @@
     "dist/native/*/pi-guard-execpolicy*",
     "dist/native/*/artifact.json",
     "README.md",
+    "README.ko.md",
     "LICENSE",
     "NOTICE",
     "docs/usage.md",
+    "docs/usage.ko.md",
     "docs/publishing.md",
+    "docs/publishing.ko.md",
     "docs/security/dependencies.md",
+    "docs/security/dependencies.ko.md",
     "docs/testing/auto-review-protection.md",
+    "docs/testing/auto-review-protection.ko.md",
     "native/execpolicy/LICENSE",
     "native/execpolicy/NOTICE"
   ]
