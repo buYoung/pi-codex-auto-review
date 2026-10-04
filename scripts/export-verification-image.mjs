@@ -1,16 +1,56 @@
-import assert from 'node:assert/strict';
-import { execFile, spawn } from 'node:child_process';
-import { promisify } from 'node:util';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
-import { createGzip } from 'node:zlib';
-import { pipeline } from 'node:stream/promises';
-import { sourceDigest } from './run-tests.mjs';
-const source=await sourceDigest();
-const {stdout}=await promisify(execFile)('docker',['image','ls','--filter',`label=org.pi-codex-auto-review.source=${source}`,'--format','{{.ID}}','--no-trunc'],{maxBuffer:10000});
-const images=[...new Set(stdout.trim().split('\n').filter(Boolean))];assert.equal(images.length,1);assert.match(images[0],/^sha256:[a-f0-9]{64}$/);
-await mkdir('tmp/ci',{recursive:true});
-const child=spawn('docker',['image','save',images[0]],{stdio:['ignore','pipe','inherit']});
-const exited=new Promise((resolve,reject)=>{child.on('error',reject);child.on('close',code=>code===0?resolve():reject(new Error(`docker save exited ${code}`)));});
-await Promise.all([pipeline(child.stdout,createGzip({level:1}),createWriteStream('tmp/ci/verification-image.tar.gz',{flags:'wx'})),exited]);
-await writeFile('tmp/ci/image.json',JSON.stringify({imageDigest:images[0],sourceDigest:source,arch:process.arch,platform:process.platform})+'\n',{flag:'wx'});
+import assert from "node:assert/strict";
+import { execFile, spawn } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import { pipeline } from "node:stream/promises";
+import { promisify } from "node:util";
+import { createGzip } from "node:zlib";
+import { sourceDigest } from "./run-tests.mjs";
+
+const source = await sourceDigest();
+const { stdout } = await promisify(execFile)(
+    "docker",
+    [
+        "image",
+        "ls",
+        "--filter",
+        `label=org.pi-codex-auto-review.source=${source}`,
+        "--format",
+        "{{.ID}}",
+        "--no-trunc",
+    ],
+    { maxBuffer: 10000 },
+);
+const images = [...new Set(stdout.trim().split("\n").filter(Boolean))];
+assert.equal(images.length, 1);
+assert.match(images[0], /^sha256:[a-f0-9]{64}$/);
+await mkdir("tmp/ci", { recursive: true });
+const child = spawn("docker", ["image", "save", images[0]], {
+    stdio: ["ignore", "pipe", "inherit"],
+});
+const exited = new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", (code) =>
+        code === 0
+            ? resolve()
+            : reject(new Error(`docker save exited ${code}`)),
+    );
+});
+await Promise.all([
+    pipeline(
+        child.stdout,
+        createGzip({ level: 1 }),
+        createWriteStream("tmp/ci/verification-image.tar.gz", { flags: "wx" }),
+    ),
+    exited,
+]);
+await writeFile(
+    "tmp/ci/image.json",
+    `${JSON.stringify({
+        imageDigest: images[0],
+        sourceDigest: source,
+        arch: process.arch,
+        platform: process.platform,
+    })}\n`,
+    { flag: "wx" },
+);
