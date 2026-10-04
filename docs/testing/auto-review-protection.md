@@ -17,13 +17,16 @@ The current source is an approval assistance extension. It does not enforce OS i
 | Startup | Execution without an exhaustive scan even when unrelated directories cannot be traversed |
 | Protection and denial | Direct protected paths and deny rules rejected before review; failures, cancellation, and timeouts never lead to execution |
 | Network review before execution | curl requests with omitted schemes, configuration files, or both allowed URLs and configuration files pass through automatic or user review. Only the allowed control reaches the owned HTTP server |
-| Distribution package | Startup through the actual Pi loader; absence of sandbox build output and bundled dependencies |
+| TypeScript rules | Replay 280 actual results captured from the pinned Codex helper; preserve rule outputs and rejected inputs, cancellation, budgets, and strict request validation |
+| Distribution package | Startup through the actual Pi loader; synchronous and worker-based rule evaluation from the archive; absence of Rust artifacts, `.node` files, sandbox output, and bundled dependencies |
 
 Checks that replay the reviewer and UI use actual Pi and file results, but do not establish the judgment accuracy of a live model. The OS does not restrict indirect file access inside approved shells, hard links, or network changes during execution. Caller environment values are preserved for execution; authentication variables are excluded only from review evidence.
 
 `verify:guard` saves the current operating system's results, source hash, and audit records. Other operating systems and live models require separate results. Unexecuted scopes are not marked as passed.
 
 Approval descriptions follow the [official approval picker](https://learn.chatgpt.com/docs/security-administration). Reviewer separation, denial feedback, stopping after three consecutive denials or ten in the latest fifty reviews, and cancellation are compared with the [official Auto-review documentation](https://learn.chatgpt.com/docs/sandboxing/auto-review). The current implementation does not enforce OS boundaries; this does not guarantee security equivalent to Codex's sandbox.
+
+The reference corpus is [`test/fixtures/execpolicy-reference.json`](../../test/fixtures/execpolicy-reference.json). It records the original executable's revision and SHA-256 hash and contains 201 accepted and 79 rejected cases, including Unicode whitespace, invalid Unicode escapes, and numeric conversion boundaries. The TypeScript implementation is checked through its public asynchronous API; the original binary is no longer required by tests or builds. POSIX-specific path cases are excluded from Windows replay, where the existing platform-specific path tests still run. This is a recorded compatibility corpus, not proof of equivalence for every possible Starlark program.
 
 ## Historical OS isolation verification
 
@@ -74,7 +77,7 @@ The changes from that comprehensive improvement, final execution evidence, and r
 
 ### Codex-based harness in the earlier structure
 
-The baseline is public source `rust-v0.160.0`, commit `a956835d020762cb2b570053af06f643a11c0ecc`. The public harness's verification contracts were adapted to Pi's stream and tool paths. `.rules` files are evaluated using `codex-execpolicy` from that revision as an actual Rust dependency. This does not mean the entire upstream Rust test suite was run.
+The baseline is public source `rust-v0.160.0`, commit `a956835d020762cb2b570053af06f643a11c0ecc`. The public harness's verification contracts were adapted to Pi's stream and tool paths. The earlier versions evaluated `.rules` with the actual Rust `codex-execpolicy` dependency; the current source uses the TypeScript port and reference corpus described above. Neither record means that the entire upstream Rust test suite was run.
 
 | Codex baseline | Adapted verification |
 | --- | --- |

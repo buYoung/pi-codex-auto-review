@@ -1,15 +1,19 @@
-import { execFile, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
+import { Worker } from "node:worker_threads";
 import { GuardError, immutable } from "../contracts.js";
+import { evaluateRuleSources } from "./rule-engine.js";
+import type { CompiledRules, PrefixRule, RuleSource } from "./rule-types.js";
 import { analyzeShell } from "./shell.js";
 
-export interface PrefixRule {
-    readonly pattern: readonly (string | readonly string[])[];
-    readonly decision: "allow" | "prompt" | "forbidden";
-    readonly justification?: string;
-}
+export type {
+    CompiledRules,
+    PrefixRule,
+    RuleMatch,
+    RuleSource,
+} from "./rule-types.js";
+export { CODEX_EXECPOLICY_REVISION } from "./rule-types.js";
 export function matchesRule(
     argv: readonly string[],
     rule: PrefixRule,
@@ -24,42 +28,15 @@ export function matchesRule(
         })
     );
 }
-export const CODEX_EXECPOLICY_REVISION =
-    "a956835d020762cb2b570053af06f643a11c0ecc";
-export interface RuleSource {
-    readonly name: string;
-    readonly source: string;
-}
-export interface RuleMatch {
-    readonly decision: PrefixRule["decision"];
-    readonly justification?: string | null;
-    readonly matchedPrefix: readonly string[];
-    readonly resolvedProgram?: string | null;
-}
-export interface CompiledRules {
-    readonly revision: string;
-    readonly rules: readonly PrefixRule[];
-    readonly matches: readonly (readonly RuleMatch[])[];
-    readonly allowedDomains: readonly string[];
-    readonly deniedDomains: readonly string[];
-    readonly networkRules: readonly {
-        host: string;
-        protocol: string;
-        decision: PrefixRule["decision"];
-        justification?: string | null;
-    }[];
-    readonly hostExecutables: Readonly<Record<string, readonly string[]>>;
-}
 const MAX_BYTES = 8 * 1024 * 1024;
-const helper = fileURLToPath(
-    new URL(
-        `../native/${process.platform}-${process.arch}/pi-guard-execpolicy${process.platform === "win32" ? ".exe" : ""}`,
-        import.meta.url,
-    ),
-);
-const helperEnvironment =
-    process.platform === "win32" ? { SystemRoot: process.env.SystemRoot } : {};
-const execute = promisify(execFile);
+function isScalarString(value: unknown): value is string {
+    if (typeof value !== "string") return false;
+    for (const char of value) {
+        const point = char.codePointAt(0) ?? 0;
+        if (point >= 0xd800 && point <= 0xdfff) return false;
+    }
+    return true;
+}
 function request(
     sources: readonly RuleSource[],
     commands: readonly (readonly string[])[],
@@ -70,64 +47,143 @@ function request(
             "INVALID_RULES",
             "Rule request exceeds the supported size",
         );
+    const data = JSON.parse(input) as { sources: unknown; commands: unknown };
+    if (
+        !Array.isArray(data.sources) ||
+        !Array.isArray(data.commands) ||
+        data.sources.some(
+            (source) =>
+                source === null ||
+                typeof source !== "object" ||
+                !isScalarString(source.name) ||
+                !isScalarString(source.source) ||
+                Object.keys(source).some(
+                    (key) => key !== "name" && key !== "source",
+                ),
+        ) ||
+        data.commands.some(
+            (command) =>
+                !Array.isArray(command) ||
+                command.some((argument) => !isScalarString(argument)),
+        )
+    ) {
+        throw new GuardError("INVALID_RULES", "Invalid rule request schema");
+    }
     return input;
 }
-function decode(stdout: string): CompiledRules {
-    const result = JSON.parse(stdout) as CompiledRules;
-    if (
-        result.revision !== CODEX_EXECPOLICY_REVISION ||
-        !Array.isArray(result.rules) ||
-        !Array.isArray(result.matches) ||
-        !Array.isArray(result.allowedDomains) ||
-        !Array.isArray(result.deniedDomains)
-    )
-        throw new GuardError(
-            "INVALID_RULES",
-            "Unexpected Codex rule engine response",
-        );
-    return immutable(result);
-}
-/** Compatibility reader; parsing and example validation run in Codex's actual Starlark engine. */
+/** Preserve the synchronous API and its deadline without running rules on the host event loop. */
 export function parseRules(source: string): readonly PrefixRule[] {
-    const result = spawnSync(helper, [], {
-        input: request([{ name: "inline.rules", source }], []),
-        encoding: "utf8",
-        timeout: 10000,
-        killSignal: "SIGKILL",
-        maxBuffer: MAX_BYTES,
-        env: helperEnvironment,
-    });
-    if (result.error || result.status !== 0)
+    const sources = [{ name: "inline.rules", source }];
+    const input = request(sources, []);
+    try {
+        const result = spawnSync(
+            process.execPath,
+            [
+                "--max-old-space-size=64",
+                fileURLToPath(new URL("./rules-sync.js", import.meta.url)),
+            ],
+            {
+                input,
+                encoding: "utf8",
+                timeout: 10000,
+                killSignal: "SIGKILL",
+                maxBuffer: MAX_BYTES,
+                env:
+                    process.platform === "win32"
+                        ? { SystemRoot: process.env.SystemRoot }
+                        : {},
+            },
+        );
+        if (result.error || result.status !== 0)
+            throw (
+                result.error ??
+                new Error(
+                    result.stderr.slice(0, 4000) ||
+                        "Rule process exited without a result",
+                )
+            );
+        return immutable((JSON.parse(result.stdout) as CompiledRules).rules);
+    } catch (error) {
         throw new GuardError(
             "INVALID_RULES",
-            `Codex rule engine failed: ${result.stderr?.slice(0, 4000) || result.error?.message || result.signal}`,
-            { cause: result.error },
+            `Codex-compatible rule engine failed: ${error instanceof Error ? error.message : String(error)}`,
+            { cause: error },
         );
-    return decode(result.stdout).rules;
+    }
 }
 export async function evaluateRules(
     sources: readonly RuleSource[],
     commands: readonly (readonly string[])[] = [],
     signal?: AbortSignal,
 ): Promise<CompiledRules> {
-    const input = request(sources, commands);
+    const data = JSON.parse(request(sources, commands)) as {
+        sources: RuleSource[];
+        commands: string[][];
+    };
     try {
-        const running = execute(helper, [], {
-            encoding: "utf8",
-            timeout: 10000,
-            killSignal: "SIGKILL",
-            maxBuffer: MAX_BYTES,
-            env: helperEnvironment,
-            signal,
+        signal?.throwIfAborted();
+        if (!data.sources.length)
+            return immutable(evaluateRuleSources([], data.commands));
+        const result = await new Promise<CompiledRules>((resolve, reject) => {
+            const worker = new Worker(
+                new URL("./rules-worker.js", import.meta.url),
+                {
+                    workerData: data,
+                    execArgv: [],
+                    env:
+                        process.platform === "win32"
+                            ? { SystemRoot: process.env.SystemRoot }
+                            : {},
+                    resourceLimits: {
+                        maxOldGenerationSizeMb: 64,
+                        stackSizeMb: 4,
+                    },
+                },
+            );
+            let isSettled = false;
+            const finish = (error?: Error, value?: CompiledRules) => {
+                if (isSettled) return;
+                isSettled = true;
+                clearTimeout(timer);
+                signal?.removeEventListener("abort", abort);
+                worker.removeAllListeners();
+                void worker.terminate();
+                if (error) reject(error);
+                else if (value) resolve(value);
+                else reject(new Error("Rule worker produced no result"));
+            };
+            const abort = () =>
+                finish(
+                    new Error("Rule evaluation cancelled", {
+                        cause: signal?.reason,
+                    }),
+                );
+            const timer = setTimeout(
+                () => finish(new Error("Rule evaluation timed out")),
+                10000,
+            );
+            worker.once(
+                "message",
+                (message: { result?: CompiledRules; error?: string }) =>
+                    finish(
+                        message.error ? new Error(message.error) : undefined,
+                        message.result,
+                    ),
+            );
+            worker.once("error", (error) => finish(error));
+            worker.once("exit", (code) =>
+                finish(
+                    new Error(`Rule worker exited without a result (${code})`),
+                ),
+            );
+            signal?.addEventListener("abort", abort, { once: true });
+            if (signal?.aborted) abort();
         });
-        running.child.stdin?.end(input);
-        // A failed spawn can close stdin before its queued input has been delivered.
-        running.child.stdin?.on("error", () => {});
-        return decode((await running).stdout);
+        return immutable(result);
     } catch (error) {
         throw new GuardError(
             "INVALID_RULES",
-            "Codex rule engine could not evaluate the trusted rules",
+            "Codex-compatible rule engine could not evaluate the trusted rules",
             { cause: error },
         );
     }

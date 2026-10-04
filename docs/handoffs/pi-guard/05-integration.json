@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "state": "ready",
-  "sourceDigest": "5f784a666e256c9913fdea2d92b84a860639a74f8db2db1fc68ffed8f01ec28d",
-  "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
+  "sourceDigest": "53b927482747a5ce3b4a517f69b4b4ba49f6f39e47886819dbdf22293225bd76",
+  "contractDigest": "a21607fbe065593e3fdb78321d7b34cf299134e9854ad257953d538d46518165",
   "runtimeVersions": {
     "node": "v24.14.0",
     "@earendil-works/pi-coding-agent": "0.99.1",
@@ -17,12 +17,12 @@
     "src/approval-settings.ts"
   ],
   "moduleHashes": {
-    "src/index.ts": "2703d32dc9ddfbd1f812cad941d0bcd3ede6fcf4f62727b5e026bcfa19fecd9a",
-    "src/startup.ts": "4e8233c2d71e148b959a88bc0a925e2aaa499398e25cc075a379d9d5acaead0f",
-    "src/cli.ts": "fb3d4f4c9f49f6425d29329883397e53ef6dbd9dfe1467b71efa73b83c852c3f",
-    "src/tools/controller.ts": "0a51858f8dc58a7217dbf90894e7050710058f9d48a533a255d769a3af50aa3f",
-    "src/approval-commands.ts": "ad488974f90fc84b7941e4c8ba304abd70c0460ddf48a7e09d4b994afda06e40",
-    "src/approval-settings.ts": "c03a555c86a42572d41a23bf475c2951958791bc53ad1ea58f64c5194bf7317b"
+    "src/index.ts": "729e339be565c2509f4bf744fa83c6363d49b0ea8c5a254aff4d978b4f7d42d1",
+    "src/startup.ts": "37e8c27c84c9f955a991981f20e6139632af0a1533673e6ad42a654b7ecf77f8",
+    "src/cli.ts": "579d8181afd61b791769a90f25c0de130f1a5bc221554d9ba9affb644d23c26f",
+    "src/tools/controller.ts": "fb6552c9e883be0ba777d8a7f8ffa71fd27c1e3956784ce3c19cd29a00d99df0",
+    "src/approval-commands.ts": "262e37acd2a112f39ceb247c1b98ebc888a9cb91df3231b8cab684975bca4b3b",
+    "src/approval-settings.ts": "58cfa8fd8a82cfc4888e601a1c16204f8b5f84fbbb9e73174590030a8d5a6059"
   },
   "testFiles": [
     "test/integration/pi-tools.test.mjs",
@@ -45,9 +45,9 @@
   "results": [
     {
       "schemaVersion": 2,
-      "runId": "2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592",
-      "artifactPath": ".reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/integration.json",
-      "startedAt": "2026-10-04T00:55:07.324Z",
+      "runId": "2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0",
+      "artifactPath": ".reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/integration.json",
+      "startedAt": "2026-10-04T06:14:27.683Z",
       "provenance": "executed",
       "suite": "integration",
       "status": "pass",
@@ -305,8 +305,8 @@
         }
       ],
       "platform": "darwin-arm64",
-      "sourceDigest": "5f784a666e256c9913fdea2d92b84a860639a74f8db2db1fc68ffed8f01ec28d",
-      "contractDigest": "ede66fb780ef4d61e1c6cbe17f7945cfd340fd33c8f39ac91f370bcfc1b884f3",
+      "sourceDigest": "53b927482747a5ce3b4a517f69b4b4ba49f6f39e47886819dbdf22293225bd76",
+      "contractDigest": "a21607fbe065593e3fdb78321d7b34cf299134e9854ad257953d538d46518165",
       "runtimeVersions": {
         "node": "v24.14.0",
         "@earendil-works/pi-coding-agent": "0.99.1",
@@ -314,7 +314,7 @@
       },
       "evidenceKind": "simulated-provider-ui",
       "blockedReasons": [],
-      "recordedAt": "2026-10-04T00:55:10.117Z"
+      "recordedAt": "2026-10-04T06:14:30.340Z"
     }
   ],
   "buildProof": {
@@ -322,7 +322,7 @@
     "cwd": "/Users/buyong/workspace/private-opensource/pi-codex-permission/",
     "status": "pass",
     "exitCode": 0,
-    "recordedAt": "2026-10-04T00:55:04.926Z"
+    "recordedAt": "2026-10-04T06:14:20.547Z"
   },
   "guardedStartup": [
     "dist/cli.js",
@@ -349,7 +349,7 @@
   "qualifiedPlatforms": [
     "darwin-arm64"
   ],
-  "recordedAt": "2026-10-04T00:55:16.583Z",
-  "runId": "2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592",
-  "artifactPath": ".reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/05-integration.json"
+  "recordedAt": "2026-10-04T06:14:34.672Z",
+  "runId": "2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/05-integration.json"
 }

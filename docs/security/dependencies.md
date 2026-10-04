@@ -51,4 +51,4 @@ An installed dependency's `overrides` do not apply to the consumer project, and 
 
 The Pi host remains in `peerDependencies` and is not bundled. This repository's development lockfile does not change or guarantee the `brace-expansion` version of a separately installed Pi.
 
-After preparing platform executables, run `npm pack` from the repository root to apply prepack checks. Consumer installation requires neither Rust compilation nor an installation script for security adjustments. See the [publishing guide](../publishing.md) for collecting both platforms' executables.
+Run `npm pack` from the repository root to apply prepack checks. The current source builds and packages JavaScript without a Rust compiler or platform executable. Consumer installation needs no security patch script. See the [publishing guide](../publishing.md).

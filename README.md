@@ -6,7 +6,7 @@ A Pi extension for automatic execution approval review, inspired by Codex's “A
 
 ## Installation
 
-The installation example targets `0.1.4`. The package includes rule engines for macOS ARM64 and Linux x64, so installation does not require a Rust build. To use a local checkout, see [Building from source](docs/usage.md#building-from-source).
+The installation example targets the published `0.1.4`, which still contains native rule executables. The current source replaces them with a TypeScript rule engine and removes the repackaged Pi SDK under `vendor`; these changes await the next release. Use [Building from source](docs/usage.md#building-from-source) for the current implementation.
 
 ```sh
 pi install npm:pi-codex-auto-review@0.1.4
@@ -35,8 +35,8 @@ Selections are saved to `<agentDir>/guard/settings.json` and persist across runs
 | --- | --- |
 | Node.js | 22.19 or later |
 | Pi | 0.99.1 or 1.0.0 |
-| Rust | 1.95 or later, only for source builds |
-| Distributed rule engines | macOS ARM64 and Linux x64 |
+| Current source build | TypeScript; no Rust compiler or platform-specific rule executable |
+| Rule runtime | Node.js worker for asynchronous evaluation; Node.js child process for the synchronous API |
 
 ## Protection boundaries
 
@@ -82,4 +82,4 @@ npm run verify:guard
 
 ## License
 
-[Apache-2.0](LICENSE). Attribution for included Codex code and policies is preserved in [NOTICE](NOTICE) and the LICENSE and NOTICE files under `native/execpolicy/`.
+[Apache-2.0](LICENSE). Attribution for the TypeScript port of Codex rule contracts and the included policies is preserved in [NOTICE](NOTICE).

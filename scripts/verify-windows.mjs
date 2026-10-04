@@ -85,6 +85,7 @@ try {
         [
             "--test",
             "test/unit/execpolicy.test.mjs",
+            "test/unit/execpolicy-parity.test.mjs",
             "test/unit/external.test.mjs",
         ],
         { maxBuffer: 2_000_000, windowsHide: true },
@@ -119,7 +120,7 @@ try {
         portableTests: {
             status: "pass",
             command:
-                "node --test test/unit/execpolicy.test.mjs test/unit/external.test.mjs",
+                "node --test test/unit/execpolicy.test.mjs test/unit/execpolicy-parity.test.mjs test/unit/external.test.mjs",
             artifactPath: `${run.artifactPath}/portable-tests.log`,
         },
         recordedAt: new Date().toISOString(),

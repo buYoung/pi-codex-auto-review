@@ -20,9 +20,6 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.14.0
-      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d
-        with:
-          toolchain: 1.95.0
       - name: Prepare isolated runner
         run: |
           sudo apt-get update
@@ -51,8 +48,6 @@ jobs:
     name: Windows x64 규칙 및 파일 실행 검증
     runs-on: windows-2025
     timeout-minutes: 30
-    env:
-      CARGO_HOME: 'D:\c'
     steps:
       - run: |
           git config --global core.autocrlf false
@@ -63,9 +58,6 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24.14.0
-      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d
-        with:
-          toolchain: 1.95.0
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm run verify:windows

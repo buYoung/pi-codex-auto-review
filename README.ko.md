@@ -6,7 +6,7 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 
 ## 설치
 
-설치 예시는 `0.1.4`를 기준으로 합니다. 배포 패키지는 macOS ARM64와 Linux x64용 규칙 엔진을 포함하며, 설치할 때 Rust 빌드가 필요하지 않습니다. 로컬 소스를 사용하려면 [소스에서 빌드](docs/usage.ko.md#소스에서-빌드)를 따릅니다.
+설치 예시는 게시된 `0.1.4`이며, 이 버전에는 아직 네이티브 규칙 실행 파일이 포함돼 있습니다. 현재 소스는 이를 TypeScript 규칙 엔진으로 교체하고 `vendor`의 재포장 Pi SDK를 제거했으며, 이 변경은 다음 배포 대상입니다. 현재 구현을 사용하려면 [소스에서 빌드](docs/usage.ko.md#소스에서-빌드)를 따릅니다.
 
 ```sh
 pi install npm:pi-codex-auto-review@0.1.4
@@ -35,8 +35,8 @@ pi list
 | --- | --- |
 | Node.js | 22.19 이상 |
 | Pi | 0.99.1 또는 1.0.0 |
-| Rust | 소스 빌드에만 1.95 이상 필요 |
-| 규칙 엔진 배포 | macOS ARM64와 Linux x64 |
+| 현재 소스 빌드 | TypeScript 사용. Rust 컴파일러와 플랫폼별 규칙 실행 파일 불필요 |
+| 규칙 실행 | 비동기 평가는 Node.js 작업 스레드, 동기 API는 Node.js 자식 프로세스 |
 
 ## 보호 경계
 
@@ -82,4 +82,4 @@ npm run verify:guard
 
 ## 라이선스
 
-[Apache-2.0](LICENSE). 포함된 Codex 코드와 정책의 출처 표시는 [NOTICE](NOTICE)와 `native/execpolicy/`의 LICENSE·NOTICE에 유지합니다.
+[Apache-2.0](LICENSE). Codex 규칙 계약의 TypeScript 이식과 포함된 정책의 출처 표시는 [NOTICE](NOTICE)에 유지합니다.

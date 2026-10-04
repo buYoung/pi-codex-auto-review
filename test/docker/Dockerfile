@@ -1,8 +1,3 @@
-FROM rust:1.95-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 AS execpolicy
-WORKDIR /build
-COPY native/execpolicy ./
-RUN cargo build --locked --release
-
 FROM node:24.14.0-bookworm-slim@sha256:d8e448a56fc63242f70026718378bd4b00f8c82e78d20eefb199224a4d8e33d8
 RUN apt-get update && apt-get install -y --no-install-recommends ripgrep git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -23,13 +18,10 @@ RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
 COPY src ./src
 COPY test ./test
 COPY scripts ./scripts
-COPY native ./native
 COPY .github ./.github
 COPY tsconfig.json README.md LICENSE NOTICE ./
 COPY docs ./docs
-COPY --from=execpolicy /build/target/release/pi-guard-execpolicy ./tmp/pi-guard-execpolicy
-RUN node --input-type=module -e 'import {stageNativeArtifact} from "./scripts/native-artifact.mjs"; await stageNativeArtifact("./tmp/pi-guard-execpolicy");' \
-    && ./node_modules/.bin/tsc && node test/docker/package.mjs \
+RUN npm run build && node test/docker/package.mjs \
     && mkdir -p .reports/pi-guard docs/handoffs/pi-guard \
     && chown -R node:node /opt/pi-guard
 ARG SOURCE_DIGEST

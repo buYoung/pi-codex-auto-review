@@ -6,7 +6,7 @@ This guide covers registering pi-codex-auto-review as a Pi extension and configu
 
 ## Installing from npm
 
-Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. The distribution targets macOS ARM64 and Linux x64. Both rule engines are included, so installation does not require Rust.
+Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. Published `0.1.4` includes macOS ARM64 and Linux x64 rule executables. The TypeScript engine described below is a source change after `0.1.4` and awaits the next release.
 
 `0.1.4` includes English approval descriptions, `/scoped-models` integration, `/approve retry`, reapproval through ordinary user messages, and fixes for passing and restoring review context. The earlier `0.1.3` removed the sandbox and added the `/approve` and `/approve-model` settings commands.
 
@@ -26,7 +26,7 @@ The extension can read the code and dependencies needed to run even inside the d
 
 ## Building from source
 
-Source builds also require Rust 1.95 or later. Install development dependencies and build from the repository root. These commands create the executable for the current operating system and architecture under `dist/native/<platform>-<architecture>/`. Follow the [publishing guide](publishing.md) to prepare an npm release package.
+Source builds use TypeScript and require no Rust compiler or platform binary. Install development dependencies and build from the repository root. The official Pi SDK is installed from the committed npm lockfile; no `vendor` archive is needed. Follow the [publishing guide](publishing.md) to prepare an npm release package.
 
 ```sh
 npm ci --ignore-scripts
@@ -152,7 +152,9 @@ A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve
 
 ## Rule files
 
-Codex `codex-execpolicy` at a pinned revision directly evaluates `.rules` files in `ruleFiles`.
+The TypeScript engine evaluates `.rules` files in `ruleFiles` using contracts ported from Codex revision `a956835d020762cb2b570053af06f643a11c0ecc`. Captured outputs from the former native engine are replayed in the [parity tests](../test/unit/execpolicy-parity.test.mjs).
+
+Evaluation exposes only Starlark values and policy functions, with no host file or network functions or JavaScript `eval`. Input/output size, execution steps, collection size, nesting, and evaluation time are bounded. The asynchronous API uses a cancellable Node.js worker; the synchronous API uses a bounded Node.js process. Invalid or unsupported input and exhausted budgets reject the rules. Without rule files, startup needs neither an evaluation worker nor an external executable.
 
 - Supports Starlark functions, conditionals, comprehensions, string interpolation, `prefix_rule`, `host_executable`, `network_rule`, and `match` and `not_match` validation.
 - Applies the strongest matching rule to compound commands.

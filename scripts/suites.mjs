@@ -18,6 +18,7 @@ export const suites = {
         files: [
             "test/unit/policy.test.mjs",
             "test/unit/execpolicy.test.mjs",
+            "test/unit/execpolicy-parity.test.mjs",
             "test/unit/context-files.test.mjs",
             "test/unit/external.test.mjs",
         ],

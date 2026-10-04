@@ -2,7 +2,7 @@
 
 **English** | [한국어](publishing.ko.md)
 
-Choose a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds the macOS ARM64 and Linux x64 executables and publishes to npm. The local command does not use npm credentials.
+Choose a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies the JavaScript package and publishes to npm. The local command does not use npm credentials. This workflow describes the source after `0.1.4`; the published `0.1.4` still contains the earlier native executables.
 
 ## One-time setup
 
@@ -49,7 +49,7 @@ pnpm release
 
 Each confirmation defaults to approval. Entering `n` or pressing `Ctrl+C` stops that operation and all later steps. Skipping questions through `--ci`, version arguments, or automatic answers is unsupported.
 
-Version selection does not automatically apply a version such as `0.1.2`. release-it updates versions in `package.json` and `package-lock.json` without running npm version lifecycle scripts. The local process does not rebuild executables or publish to npm.
+Version selection does not automatically apply a version such as `0.1.2`. release-it updates versions in `package.json` and `package-lock.json` without running npm version lifecycle scripts. The local process does not rebuild the package or publish to npm.
 
 An npm version cannot be published again. If the currently prepared version has already been published, choose a higher version. Prereleases use npm's `next` tag; stable releases use `latest`.
 
@@ -57,15 +57,15 @@ An npm version cannot be published again. If the currently prepared version has 
 
 Pushing a `v*` tag starts `.github/workflows/npm-package.yml`.
 
-1. Build the Rust rule engine from the same commit on `macos-14` ARM64 and `ubuntu-22.04` x64 using Rust 1.95.0.
-2. Check that the tag matches the version in `package.json` and that the tagged commit is included in `origin/master`.
-3. Install dependencies with the npm lockfile and collect both executables. The `npm pack` prepack step checks TypeScript, executable format and CPU, source hashes, and required distribution files. It removes obsolete sandbox build output and checks that `dist/sandbox` and `node_modules` are absent from the archive.
+1. Install the official development dependencies from the npm lockfile on `ubuntu-22.04`.
+2. Check that the tag matches the version in `package.json` and that the tagged commit is included in `origin/master`, then build TypeScript and run policy tests, including the captured Codex result corpus.
+3. The `npm pack` prepack step compiles TypeScript, checks required files, and exercises the JavaScript rule worker. It removes obsolete sandbox/native output and rejects archives containing native binaries, `.node` or `.wasm` files, or bundled dependencies.
 4. Save the verified `pi-codex-auto-review-<version>.tgz` in the `npm-package` artifact.
 5. A separate publish job downloads that same artifact and publishes it to npm through OIDC.
 
 Running **Actions → npm 배포 → Run workflow** manually prepares the archive only and skips publishing. For tag publishing, use a tag-triggered run of the same workflow.
 
-The Linux rule engine is built in Ubuntu 22.04's GNU environment. The distributed rule engines do not support musl environments such as Alpine, macOS x64, or Linux ARM64. Follow the [verification guide](testing/auto-review-protection.md) for approval behavior checks.
+One JavaScript archive serves all platforms; it has no rule-engine CPU or libc dependency. Actual Pi availability, path behavior, and shell support still depend on the host. The separate OS workflow retains Linux and Windows execution checks without installing Rust. Follow the [verification guide](testing/auto-review-protection.md) for the executed scope.
 
 ## After cancellation or failure
 
@@ -96,7 +96,7 @@ For later releases, replace the version with the one selected. `0.1.2` uses the 
 
 ## Preparing an archive locally
 
-Use this when you need to inspect the publishable archive directly. TypeScript and executables with metadata for both platforms, built from the same native source, must be ready first.
+Use this when you need to inspect the publishable archive directly. Install the development dependencies first; no platform artifacts are required.
 
 ```sh
 npm run build
@@ -104,7 +104,7 @@ mkdir -p tmp/npm-release
 npm pack --pack-destination tmp/npm-release
 ```
 
-`npm run build` creates only the executable for the current operating system and architecture. Obtain the other platform's artifacts from Actions and place them under `dist/native/<platform>-<architecture>/`. Archive checks stop if executables are missing or source hashes differ. Do not skip prepack with `--ignore-scripts` when preparing an actual release.
+`npm run build` creates the JavaScript modules and rule evaluation entry points. Prepack verifies their inclusion and rejects leftover native artifacts. Do not skip prepack with `--ignore-scripts` when preparing an actual release.
 
 ## References
 

@@ -6,7 +6,7 @@ pi-codex-auto-review를 Pi 확장으로 등록하는 방법과 CLI·SDK·정책 
 
 ## npm에서 설치
 
-npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 배포 대상은 macOS ARM64와 Linux x64이며, 패키지에 두 플랫폼의 규칙 엔진을 포함하므로 설치할 때 Rust가 필요하지 않습니다.
+npm에 게시된 버전은 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합니다. 게시된 `0.1.4`에는 macOS ARM64와 Linux x64용 규칙 실행 파일이 포함돼 있습니다. 아래 TypeScript 엔진은 `0.1.4` 이후 소스 변경이며 다음 배포 대상입니다.
 
 `0.1.4`에는 영문 승인 설명, `/scoped-models` 연동, `/approve retry`, 일반 사용자 메시지에 따른 재승인 판단과 검토 문맥 전달·복원 보정이 포함됩니다. `0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 이전 버전입니다.
 
@@ -26,7 +26,7 @@ Pi는 관리하는 확장에 호스트 SDK의 물리적 복사본을 설치하�
 
 ## 소스에서 빌드
 
-소스 빌드에는 Rust 1.95 이상도 필요합니다. 저장소 루트에서 개발 의존성을 설치하고 빌드합니다. 이 명령은 현재 운영체제·아키텍처용 실행 파일을 `dist/native/<플랫폼>-<아키텍처>/`에 만듭니다. npm 게시용 패키지 준비는 [배포 안내](publishing.ko.md)를 따릅니다.
+소스 빌드는 TypeScript를 사용하며 Rust 컴파일러나 플랫폼별 바이너리가 필요하지 않습니다. 저장소 루트에서 개발 의존성을 설치하고 빌드합니다. 공식 Pi SDK는 커밋된 npm 잠금 파일로 설치하며 `vendor` 아카이브를 사용하지 않습니다. npm 게시용 패키지 준비는 [배포 안내](publishing.ko.md)를 따릅니다.
 
 ```sh
 npm ci --ignore-scripts
@@ -152,7 +152,9 @@ try {
 
 ## 규칙 파일
 
-`ruleFiles`의 `.rules`는 고정 리비전의 Codex `codex-execpolicy`가 직접 평가합니다.
+`ruleFiles`의 `.rules`는 Codex 리비전 `a956835d020762cb2b570053af06f643a11c0ecc`의 규칙 계약을 이식한 TypeScript 엔진이 평가합니다. 이전 네이티브 엔진에서 수집한 실제 출력은 [대조 검사](../test/unit/execpolicy-parity.test.mjs)에서 재생합니다.
+
+평가에는 Starlark 값과 정책 함수만 노출하며 호스트 파일·네트워크 함수나 JavaScript `eval`을 제공하지 않습니다. 입출력 크기·실행 단계·자료 크기·중첩 깊이·평가 시간을 제한합니다. 비동기 API는 취소 가능한 Node.js 작업 스레드, 동기 API는 제한된 Node.js 프로세스를 사용합니다. 잘못되거나 지원하지 않는 입력과 한도 초과는 규칙 오류로 거부합니다. 규칙 파일이 없으면 시작할 때 평가 스레드나 외부 실행 파일이 필요하지 않습니다.
 
 - Starlark 함수·조건식·컴프리헨션·문자열 보간, `prefix_rule`, `host_executable`, `network_rule`, `match`·`not_match` 검증을 지원합니다.
 - 복합 명령에는 가장 강한 규칙을 적용합니다.

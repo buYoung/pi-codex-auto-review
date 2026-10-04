@@ -2,7 +2,7 @@
 
 [English](publishing.md) | **한국어**
 
-`pnpm release`에서 버전을 선택하고 커밋·태그·푸시를 확인하면 GitHub Actions가 macOS ARM64와 Linux x64 실행 파일을 빌드하고 npm에 게시합니다. 로컬 명령은 npm 자격 증명을 사용하지 않습니다.
+`pnpm release`에서 버전을 선택하고 커밋·태그·푸시를 확인하면 GitHub Actions가 JavaScript 패키지를 빌드·검증하고 npm에 게시합니다. 로컬 명령은 npm 자격 증명을 사용하지 않습니다. 이 절차는 `0.1.4` 이후 소스에 적용되며, 게시된 `0.1.4`에는 이전 네이티브 실행 파일이 남아 있습니다.
 
 ## 처음 한 번 설정
 
@@ -49,7 +49,7 @@ pnpm release
 
 각 확인의 기본값은 승인입니다. `n`이나 `Ctrl+C`를 입력하면 해당 작업과 이후 흐름을 중단합니다. `--ci`, 버전 인자나 자동 응답으로 질문을 건너뛰는 방식은 지원하지 않습니다.
 
-버전 선택은 자동으로 `0.1.2` 등을 적용하지 않습니다. `package.json`과 `package-lock.json`의 버전 변경은 release-it이 수행하며 npm 버전 수명 주기 스크립트는 실행하지 않습니다. 로컬에서는 실행 파일을 다시 빌드하거나 npm에 게시하지 않습니다.
+버전 선택은 자동으로 `0.1.2` 등을 적용하지 않습니다. `package.json`과 `package-lock.json`의 버전 변경은 release-it이 수행하며 npm 버전 수명 주기 스크립트는 실행하지 않습니다. 로컬에서는 패키지를 다시 빌드하거나 npm에 게시하지 않습니다.
 
 같은 npm 버전은 다시 게시할 수 없습니다. 현재 준비 버전이 이미 npm에 게시됐다면 더 큰 버전을 선택합니다. 시험 버전은 npm의 `next` 태그로, 정식 버전은 `latest` 태그로 게시합니다.
 
@@ -57,15 +57,15 @@ pnpm release
 
 `v*` 태그의 푸시가 `.github/workflows/npm-package.yml`을 시작합니다.
 
-1. `macos-14` ARM64와 `ubuntu-22.04` x64에서 같은 커밋의 Rust 규칙 엔진을 Rust 1.95.0으로 빌드합니다.
-2. 패키지 작업은 태그와 `package.json` 버전이 일치하고 태그 커밋이 `origin/master`에 포함되는지 확인합니다.
-3. npm 잠금 파일로 의존성을 설치하고 두 실행 파일을 취합합니다. `npm pack`의 `prepack`이 TypeScript와 실행 파일 형식·CPU·소스 해시, 필수 배포 파일을 검사합니다. 삭제한 샌드박스 빌드 결과를 정리하고 `dist/sandbox`·`node_modules`가 압축 파일에 없는지도 검사합니다.
+1. `ubuntu-22.04`에서 npm 잠금 파일로 공식 개발 의존성을 설치합니다.
+2. 태그와 `package.json` 버전이 일치하고 태그 커밋이 `origin/master`에 포함되는지 확인한 뒤, TypeScript를 빌드하고 원본 결과 대조를 포함한 정책 검사를 실행합니다.
+3. `npm pack`의 `prepack`이 TypeScript를 컴파일하고 필수 파일과 JavaScript 규칙 작업 스레드를 검사합니다. 이전 샌드박스·네이티브 빌드 결과를 정리하고 바이너리·`.node`·`.wasm`·묶인 의존성이 압축 파일에 있으면 거부합니다.
 4. 검증한 `pi-codex-auto-review-<버전>.tgz`를 `npm-package` 결과물에 보관합니다.
 5. 별도 게시 작업이 같은 결과물을 내려받아 OIDC로 npm에 게시합니다.
 
 **Actions → npm 배포 → Run workflow**로 수동 실행하면 압축 패키지 준비만 수행하며 게시 작업은 생략합니다. 태그 게시에는 같은 워크플로의 태그 실행을 사용합니다.
 
-Linux 규칙 엔진은 Ubuntu 22.04의 GNU 환경에서 빌드합니다. Alpine 등 musl 환경과 macOS x64·Linux ARM64는 이 규칙 엔진 배포의 지원 대상에 포함하지 않습니다. 승인 동작의 검증은 [검증 안내](testing/auto-review-protection.ko.md)를 따릅니다.
+하나의 JavaScript 압축 파일을 사용하며 규칙 엔진의 CPU·libc 의존성이 없습니다. 실제 Pi 사용 가능 여부·경로 처리·셸 지원은 호스트에 따라 다릅니다. 별도 운영체제 workflow는 Rust 설치 없이 Linux·Windows 실행 검사를 유지합니다. 실제 검증 범위는 [검증 안내](testing/auto-review-protection.ko.md)를 따릅니다.
 
 ## 중단과 실패 후 확인
 
@@ -96,7 +96,7 @@ pi
 
 ## 로컬에서 압축 패키지만 준비
 
-게시용 압축 파일을 직접 확인해야 할 때 사용합니다. TypeScript와 같은 네이티브 소스로 만든 두 플랫폼의 실행 파일·메타데이터가 먼저 준비되어 있어야 합니다.
+게시용 압축 파일을 직접 확인해야 할 때 사용합니다. 개발 의존성을 먼저 설치하며 별도 플랫폼 결과물은 필요하지 않습니다.
 
 ```sh
 npm run build
@@ -104,7 +104,7 @@ mkdir -p tmp/npm-release
 npm pack --pack-destination tmp/npm-release
 ```
 
-`npm run build`는 현재 운영체제·아키텍처의 실행 파일만 만듭니다. 다른 플랫폼의 결과물은 Actions의 빌드 결과에서 가져와 `dist/native/<플랫폼>-<아키텍처>/`에 둡니다. 실행 파일이 없거나 소스 해시가 다르면 압축 패키지 검사는 중단합니다. 정상 게시 준비에서 `--ignore-scripts`로 `prepack`을 생략하지 않습니다.
+`npm run build`는 JavaScript 모듈과 규칙 평가 진입점을 만듭니다. 게시 전 검사는 이 파일의 포함 여부를 확인하고 남아 있는 네이티브 결과물을 거부합니다. 정상 게시 준비에서 `--ignore-scripts`로 `prepack`을 생략하지 않습니다.
 
 ## 관련 근거
 

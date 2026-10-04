@@ -42,7 +42,7 @@
         "check:fix": "biome check --write .",
         "check:staged": "lint-staged",
         "release": "node scripts/release.mjs",
-        "build": "node scripts/clean-build.mjs && tsc && node scripts/build-execpolicy.mjs",
+        "build": "node scripts/clean-build.mjs && tsc",
         "prepack": "node scripts/clean-build.mjs && tsc && node scripts/check-package.mjs",
         "test:contracts": "node scripts/run-tests.mjs contracts",
         "test:policy": "node scripts/run-tests.mjs policy",
@@ -93,8 +93,6 @@
         "dist/**/*.js",
         "dist/**/*.d.ts",
         "dist/**/*.js.map",
-        "dist/native/*/pi-guard-execpolicy*",
-        "dist/native/*/artifact.json",
         "README.md",
         "README.ko.md",
         "LICENSE",
@@ -106,8 +104,6 @@
         "docs/security/dependencies.md",
         "docs/security/dependencies.ko.md",
         "docs/testing/auto-review-protection.md",
-        "docs/testing/auto-review-protection.ko.md",
-        "native/execpolicy/LICENSE",
-        "native/execpolicy/NOTICE"
+        "docs/testing/auto-review-protection.ko.md"
     ]
 }

@@ -168,7 +168,6 @@ try {
             "src",
             "test",
             "scripts",
-            "native",
             ".github",
             "docs",
             "package.json",

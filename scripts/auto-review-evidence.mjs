@@ -79,9 +79,10 @@ export const scenarioMatrix = [
     row(
         "command-rules",
         [ref("execpolicy/src/parser.rs")],
-        "Pinned Starlark rules feed approval decisions; unknown commands require review",
+        "TypeScript rules match captured pinned Codex results and feed approval decisions; unknown commands require review",
         [
             ["policy", "Codex Starlark"],
+            ["policy", "original Codex result replay"],
             ["policy", "all network_rule"],
             ["integration", "unknown executable commands"],
         ],

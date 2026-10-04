@@ -1002,13 +1002,15 @@ test("[package] npm tarball loads the default factory through public Pi APIs wit
     );
     assert.ok(
         packed.files.some(
-            (file) =>
-                file.path ===
-                `dist/native/${process.platform}-${process.arch}/pi-guard-execpolicy${process.platform === "win32" ? ".exe" : ""}`,
+            (file) => file.path === "dist/policy/rules-worker.js",
         ),
     );
     assert.ok(
-        packed.files.some((file) => file.path === "native/execpolicy/LICENSE"),
+        !packed.files.some(
+            (file) =>
+                file.path.startsWith("dist/native/") ||
+                file.path.endsWith(".node"),
+        ),
     );
     assert.ok(
         !packed.files.some(
@@ -1048,8 +1050,9 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createAgentSessionRuntime,createAgentSessionServices,createAgentSessionFromServices,createMcpExtension,SettingsManager,SessionManager,VERSION} from ${JSON.stringify(process.env.PI_GUARD_TEST_HOST_SDK_ENTRY ?? import.meta.resolve("@earendil-works/pi-coding-agent"))};
 import {offlineModelRuntime,planStream,FAKE_MODEL} from ${JSON.stringify(new URL("../harness/pi.mjs", import.meta.url).href)};
-import {parseRules} from './dist/policy/rules.js';
+import {parseRules,evaluateRules} from './dist/policy/rules.js';
 assert.equal(parseRules('prefix_rule(pattern=["packed"], decision="forbidden")')[0].decision,'forbidden');
+assert.equal((await evaluateRules([{name:'packed.rules',source:'prefix_rule(["packed"], decision="prompt")'}],[['packed','--check']])).matches[0][0].decision,'prompt');
 const cwd=process.cwd(),agentDir=process.env.GUARD_AGENT_DIR;
 const modelRuntime=await offlineModelRuntime({agentDir});
 const runtime=await createAgentSessionRuntime(async input=>{
