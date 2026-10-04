@@ -1,7 +1,7 @@
 {
     "name": "pi-codex-auto-review",
     "version": "0.2.0",
-    "description": "Codex의 ‘Approve for me’에서 영감을 받은 Pi용 자동 실행 승인 검토 확장. 규칙과 Pi의 현재 모델로 도구 실행을 검토하고, 필요한 경우 사용자 승인을 요청합니다.",
+    "description": "Automatic execution approval review for Pi, inspired by Codex's \"Approve for me\". Reviews tool execution with rules and Pi's current model, requesting user approval when needed.",
     "license": "Apache-2.0",
     "keywords": [
         "pi-package",
