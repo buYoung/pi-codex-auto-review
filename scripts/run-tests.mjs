@@ -22,7 +22,7 @@ export async function sourceDigest() {
             }
         }
     }
-    for (const dir of ["src", "test", "scripts", "vendor", "native", ".github"])
+    for (const dir of ["src", "test", "scripts", "native", ".github"])
         await add(dir);
     for (const path of [
         "package.json",

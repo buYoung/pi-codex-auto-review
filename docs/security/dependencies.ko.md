@@ -23,20 +23,19 @@
 
 ## Pi 패키지의 잠금 보정
 
-Pi 0.99.1의 `npm-shrinkwrap.json`은 취약한 `brace-expansion 5.0.9`를 고정한다. 루트 `overrides`, 일반 업데이트, 감사 자동 수정으로는 바뀌지 않았고, 루트 잠금만 수정해도 깨끗한 설치 시 5.0.9가 다시 설치되는 것을 확인했다. 확인한 Pi 1.0.0 배포에도 같은 잠금이 있었다.
+공식 Pi 0.99.1의 `npm-shrinkwrap.json`은 `brace-expansion 5.0.9`를 고정한다. 이전 조치에서는 당시 확인한 설치 경로에서 루트 보정이 유지되지 않아 개발용 아카이브를 재포장했다. 이 우회 구성은 0.1.4까지 포함돼 있었다.
 
-따라서 공식 Pi 0.99.1 아카이브의 **잠금 항목 한 곳만** 수정한 개발 의존성을 사용한다. SDK 파일 1,227개를 대조했으며 소스·컴파일 결과·버전·라이선스는 동일하다. 아카이브와 변경 내역은 `vendor/`에 있으며, 이 아카이브도 검증 소스 해시에 포함된다. SDK API를 새 버전으로 바꾸지 않았다.
+현재 소스는 **공식 `@earendil-works/pi-coding-agent@0.99.1`을 직접 사용**하고 레지스트리 무결성 값을 `package-lock.json`에 기록한다. 루트 보정과 커밋된 의존성 잠금으로 `brace-expansion 5.0.12`를 유지한다. 별도 디렉터리의 깨끗한 `npm ci --ignore-scripts`에서 공식 SDK와 해당 버전이 설치됐고, `npm install --package-lock-only --ignore-scripts`로 잠금을 갱신해도 유지됐다. 기존 의존성 보안 검사 2개도 통과했다. SDK API 버전은 그대로이며 `vendor` 아카이브·메타데이터·재포장 스크립트는 제거했다.
 
 ```sh
-python3 scripts/vendor-pi-sdk.py
-npm install --package-lock-only --ignore-scripts
 npm ci --ignore-scripts
+npm ls brace-expansion --all
 npm run build
 npm run test:contracts
 npm audit --json
 ```
 
-생성기는 공식 원본 아카이브의 SHA-512 무결성을 확인한다. 생성 파일의 SHA-256·SHA-512와 수정한 잠금 항목은 [`vendor/pi-sdk-security.json`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/vendor/pi-sdk-security.json)에 기록한다. Docker도 같은 아카이브와 잠금 파일로 설치한다.
+Docker와 CI도 같은 잠금 파일로 `npm ci`를 실행한다. SDK 아카이브 생성이나 설치 중 패치는 필요하지 않다. 의존성을 갱신하면 실제 설치 버전을 확인하고 보안 회귀 검사를 다시 수행한다. 이전 아카이브의 출처 기록은 [0.1.4 소스](https://github.com/buYoung/pi-codex-auto-review/blob/v0.1.4/vendor/pi-sdk-security.json)에 보존돼 있다.
 
 ## 확인한 결과
 
@@ -50,6 +49,6 @@ npm audit --json
 
 설치된 의존성의 `overrides`는 소비자 프로젝트에 적용되지 않고 `package-lock.json`도 게시되지 않는다. 이전 패키지에 묶었던 샌드박스 런타임은 현재 소스에서 제거했다. 게시 전 검사는 샌드박스 코드와 `node_modules`가 압축 파일에 남지 않는지 확인한다.
 
-Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. 개발용 `vendor/pi-coding-agent-0.99.1-security.1.tgz`도 배포하지 않으므로 별도로 설치된 Pi의 `brace-expansion` 보정은 이 패키지의 보장 범위에 포함되지 않는다.
+Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. 저장소의 개발용 잠금 파일은 별도로 설치된 Pi의 `brace-expansion` 버전을 변경하거나 보장하지 않는다.
 
 플랫폼 실행 파일을 준비한 뒤 저장소 루트에서 `npm pack`을 실행하면 게시 전 검사가 적용된다. 소비자 설치에는 Rust 컴파일이나 보안 보정을 위한 설치 스크립트를 요구하지 않는다. 두 플랫폼의 실행 파일 취합은 [배포 안내](../publishing.ko.md)를 따른다.

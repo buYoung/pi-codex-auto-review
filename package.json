@@ -68,7 +68,7 @@
     "devDependencies": {
         "@biomejs/biome": "2.5.15",
         "@earendil-works/pi-ai": "0.99.1",
-        "@earendil-works/pi-coding-agent": "file:vendor/pi-coding-agent-0.99.1-security.1.tgz",
+        "@earendil-works/pi-coding-agent": "0.99.1",
         "@earendil-works/pi-tui": "0.99.1",
         "@inquirer/prompts": "8.5.2",
         "@sinclair/typebox": "0.34.52",

@@ -23,20 +23,19 @@ At the time of that record, the [official `node-forge` advisory](https://github.
 
 ## Pi package lock adjustment
 
-Pi 0.99.1's `npm-shrinkwrap.json` pins vulnerable `brace-expansion 5.0.9`. Root `overrides`, ordinary updates, and automatic audit fixes did not change it. Changing only the root lockfile also reinstalled 5.0.9 on a clean installation. The inspected Pi 1.0.0 distribution had the same lock entry.
+Pi 0.99.1's published `npm-shrinkwrap.json` pins `brace-expansion 5.0.9`. Earlier remediation used a repackaged development archive because the installation paths checked at that time did not retain the root override. That workaround was included through 0.1.4.
 
-The development dependency therefore uses the official Pi 0.99.1 archive with **one lock entry changed**. A comparison of 1,227 SDK files found identical source, compiled output, version, and license. The archive and change record are under `vendor/`, and the archive is included in the verification source hash. The SDK API was not upgraded.
+The current source uses **official `@earendil-works/pi-coding-agent@0.99.1` directly**, with its registry integrity recorded in `package-lock.json`. The root override and committed dependency lock retain `brace-expansion 5.0.12`. A fresh isolated `npm ci --ignore-scripts` installed that version from the official SDK; regenerating the lockfile with `npm install --package-lock-only --ignore-scripts` retained it. Both existing dependency security checks passed. The SDK API version is unchanged, and the `vendor` archive, metadata, and repackaging script have been removed.
 
 ```sh
-python3 scripts/vendor-pi-sdk.py
-npm install --package-lock-only --ignore-scripts
 npm ci --ignore-scripts
+npm ls brace-expansion --all
 npm run build
 npm run test:contracts
 npm audit --json
 ```
 
-The generator verifies the official original archive's SHA-512 integrity. Generated file SHA-256 and SHA-512 hashes and the modified lock entry are recorded in [`vendor/pi-sdk-security.json`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/vendor/pi-sdk-security.json). Docker installs from the same archive and lockfile.
+Docker and CI use the same committed lockfile with `npm ci`; no generated SDK archive or install-time patch is needed. When updating dependencies, check the installed version and run the security regression checks again. The earlier archive's provenance remains available in the [0.1.4 source](https://github.com/buYoung/pi-codex-auto-review/blob/v0.1.4/vendor/pi-sdk-security.json).
 
 ## Recorded results
 
@@ -50,6 +49,6 @@ This adjustment applies to environments installed with this repository's lockfil
 
 An installed dependency's `overrides` do not apply to the consumer project, and `package-lock.json` is not published. The sandbox runtime bundled in the earlier package has been removed from the current source. Prepack checks ensure that sandbox code and `node_modules` are absent from the archive.
 
-The Pi host remains in `peerDependencies` and is not bundled. The development archive `vendor/pi-coding-agent-0.99.1-security.1.tgz` is not distributed either, so this package does not guarantee the `brace-expansion` adjustment for a separately installed Pi.
+The Pi host remains in `peerDependencies` and is not bundled. This repository's development lockfile does not change or guarantee the `brace-expansion` version of a separately installed Pi.
 
 After preparing platform executables, run `npm pack` from the repository root to apply prepack checks. Consumer installation requires neither Rust compilation nor an installation script for security adjustments. See the [publishing guide](../publishing.md) for collecting both platforms' executables.

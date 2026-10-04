@@ -168,7 +168,6 @@ try {
             "src",
             "test",
             "scripts",
-            "vendor",
             "native",
             ".github",
             "docs",
