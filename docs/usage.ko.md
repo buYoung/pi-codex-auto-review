@@ -11,9 +11,9 @@ npm 패키지는 Node.js 22.19 이상과 Pi 0.99.1 또는 1.0.0에서 설치합�
 `0.1.4`에는 영문 승인 설명, `/scoped-models` 연동, `/approve retry`, 일반 사용자 메시지에 따른 재승인 판단과 검토 문맥 전달·복원 보정이 포함됩니다. `0.1.3`은 샌드박스를 제거하고 `/approve`·`/approve-model` 설정 명령을 추가한 이전 버전입니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.2.0
+pi install npm:@buyong/pi-codex-auto-review@0.2.2
 pi list
-pi remove npm:pi-codex-auto-review
+pi remove npm:@buyong/pi-codex-auto-review
 ```
 
 `--local`을 추가하면 현재 프로젝트의 `.pi/settings.json`에 등록합니다. 프로젝트 패키지는 해당 프로젝트의 신뢰 결정 후 로드됩니다. 버전을 명시한 설치는 그 버전으로 고정됩니다.
@@ -78,10 +78,10 @@ node packages/pi-codex-auto-review/dist/cli.js \
 
 ## SDK
 
-승인 제어가 준비되지 않으면 시작을 거부해야 하는 실행은 `pi-codex-auto-review/startup`의 `createGuardedRuntime()`을 사용합니다. 확장과 승인 제어기 상태를 검사하고, 모드 재연결과 직접 사용자 셸 호출에도 같은 검사를 적용합니다.
+승인 제어가 준비되지 않으면 시작을 거부해야 하는 실행은 `@buyong/pi-codex-auto-review/startup`의 `createGuardedRuntime()`을 사용합니다. 확장과 승인 제어기 상태를 검사하고, 모드 재연결과 직접 사용자 셸 호출에도 같은 검사를 적용합니다.
 
 ```ts
-import { createGuardedRuntime } from 'pi-codex-auto-review/startup';
+import { createGuardedRuntime } from '@buyong/pi-codex-auto-review/startup';
 
 const runtime = await createGuardedRuntime({
   cwd: process.cwd(),

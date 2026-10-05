@@ -2,13 +2,13 @@ name: npm 배포
 on:
   push:
     tags:
-      - '*@[0-9]*'
+      - '**@[0-9]*'
   workflow_dispatch:
     inputs:
       package:
         description: 압축 패키지를 준비할 작업 공간 패키지 이름
         required: true
-        default: pi-codex-auto-review
+        default: '@buyong/pi-codex-auto-review'
 permissions:
   contents: read
 concurrency:
@@ -60,7 +60,7 @@ jobs:
         env:
           PACKAGE_NAME: ${{ steps.release.outputs.package }}
         run: npm run build -- --filter="$PACKAGE_NAME"
-      - if: steps.release.outputs.package == 'pi-codex-auto-review'
+      - if: steps.release.outputs.package == '@buyong/pi-codex-auto-review'
         run: npm run test:policy
       - run: mkdir -p tmp/npm
       - name: 압축 패키지 생성

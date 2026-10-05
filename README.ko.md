@@ -9,7 +9,7 @@ Codex의 ‘Approve for me’에서 영감을 받은 Pi 자동 실행 승인 검
 `0.2.0`은 네이티브 규칙 실행 파일을 TypeScript 엔진으로 교체해 JavaScript로 배포하고, `vendor`의 재포장 Pi SDK를 제거합니다. 이 확장에는 Rust 컴파일러나 플랫폼별 규칙 바이너리가 필요하지 않습니다. Node.js와 Pi 호스트는 계속 필요하며, Pi 자체의 네이티브 모듈은 별개입니다.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.2.0
+pi install npm:@buyong/pi-codex-auto-review@0.2.2
 pi list
 ```
 

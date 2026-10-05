@@ -23,7 +23,7 @@ COPY scripts ./scripts
 COPY .github ./.github
 COPY tsconfig.base.json README.md README.ko.md LICENSE NOTICE ./
 COPY docs ./docs
-RUN npm run build --workspace pi-codex-auto-review && node test/docker/package.mjs \
+RUN npm run build --workspace packages/pi-codex-auto-review && node test/docker/package.mjs \
     && mkdir -p .reports/pi-guard docs/handoffs/pi-guard \
     && chown -R node:node /opt/pi-guard
 ARG SOURCE_DIGEST

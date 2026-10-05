@@ -20,7 +20,7 @@ npm ci --ignore-scripts
 
 ### npm Trusted Publisher
 
-이 저장소에서 게시하는 패키지마다 npm **Settings → Trusted publishing**에서 GitHub Actions 연결을 추가합니다. 예를 들어 `pi-codex-auto-review`가 있으며, 모든 패키지가 같은 워크플로를 사용합니다.
+이 저장소에서 게시하는 패키지마다 npm **Settings → Trusted publishing**에서 GitHub Actions 연결을 추가합니다. 예를 들어 `@buyong/pi-codex-auto-review`가 있으며, 모든 패키지가 같은 워크플로를 사용합니다.
 
 | 항목 | 입력 값 |
 |---|---|
@@ -34,6 +34,18 @@ npm ci --ignore-scripts
 
 게시 작업에는 `id-token: write` 권한이 설정되어 있고 npm 11.5.1 이상인지 확인합니다. GitHub-hosted runner가 발급하는 OIDC 인증을 사용하므로 `NPM_TOKEN`을 GitHub Secret에 추가하지 않습니다. npm의 연결은 저장 시 검증되지 않으므로 실제 첫 게시에서 확인해야 합니다. [npm Trusted Publishing 공식 안내](https://docs.npmjs.com/trusted-publishers/)
 
+### 새 패키지의 첫 게시
+
+npm은 레지스트리에 이미 있는 패키지에만 Trusted Publisher를 연결할 수 있습니다. 그래서 새 패키지의 첫 버전은 GitHub Actions로 게시할 수 없고, 처음 한 번만 저장소 루트에서 직접 게시합니다. 이름을 바꿔 새로 게시할 때도 같습니다. 예를 들어 `0.2.2`부터 쓰는 `@buyong/pi-codex-auto-review`는 다음과 같습니다.
+
+```sh
+npm login
+npm publish --workspace packages/pi-codex-auto-review --access public
+npm deprecate pi-codex-auto-review "Renamed to @buyong/pi-codex-auto-review"
+```
+
+`prepack`이 빌드와 게시 전 검사를 실행합니다. 이전 이름 `pi-codex-auto-review`에는 `npm deprecate`로 새 이름을 안내합니다. 게시한 뒤 새 패키지의 **Settings → Trusted publishing**에 위 표와 같은 값으로 연결을 추가합니다. 그다음부터는 `pnpm release`에서 패키지를 선택해 게시합니다. 직접 게시한 버전은 다시 게시할 수 없으므로 더 큰 버전을 선택합니다.
+
 ## 버전 선택과 릴리스
 
 `master`의 변경 사항이 커밋된 상태에서 실행합니다.
@@ -43,7 +55,7 @@ pnpm release
 ```
 
 1. 릴리스할 패키지를 선택합니다. `private`가 아닌 작업 공간 패키지만 표시합니다.
-2. 현재 버전과 구체적인 다음 버전을 보고 하나를 선택합니다. `0.1.1`에서 `0.1.2`를 출시할 때는 **patch**를 선택합니다. 해당 버전의 로컬 릴리스 태그가 없으면 **현재 준비 버전 출시**도 선택할 수 있습니다. `pi-codex-auto-review`는 `0.2.1`까지 사용한 `v<버전>` 태그도 릴리스 태그로 봅니다.
+2. 현재 버전과 구체적인 다음 버전을 보고 하나를 선택합니다. `0.1.1`에서 `0.1.2`를 출시할 때는 **patch**를 선택합니다. 해당 버전의 로컬 릴리스 태그가 없으면 **현재 준비 버전 출시**도 선택할 수 있습니다.
 3. 커밋 여부를 확인하고 릴리스 커밋을 만듭니다. 현재 버전을 그대로 출시할 때는 출시 기록을 남기는 빈 커밋을 만듭니다.
 4. `<패키지>@<버전>` 태그 생성 여부를 확인하고 주석 태그를 만듭니다.
 5. `master`와 해당 태그의 푸시 여부를 확인합니다. 승인하면 두 참조를 원자적으로 함께 푸시하고 Actions의 npm 게시를 시작합니다.
@@ -59,8 +71,8 @@ pnpm release
 `<패키지>@<버전>` 태그의 푸시가 `.github/workflows/npm-package.yml`을 시작합니다.
 
 1. `ubuntu-22.04`에서 npm 잠금 파일로 공식 개발 의존성을 설치합니다.
-2. 태그가 가리키는 작업 공간 패키지를 찾고, 태그와 그 `package.json` 버전이 일치하는지, 태그 커밋이 `origin/master`에 포함되는지 확인합니다. 그다음 Turborepo로 패키지를 빌드합니다. `pi-codex-auto-review`는 원본 결과 대조를 포함한 정책 검사도 실행합니다.
-3. `npm pack --workspace <패키지>`가 패키지의 `prepack`을 실행합니다. `pi-codex-auto-review`의 `prepack`은 TypeScript를 컴파일하고, `files`에 적힌 README·LICENSE·NOTICE·문서를 저장소 루트에서 복사한 뒤 필수 파일과 JavaScript 규칙 작업 스레드를 검사합니다. 바이너리·`.node`·`.wasm`·묶인 의존성이 압축 파일에 있으면 거부합니다. 복사한 문서는 `postpack`이 지웁니다.
+2. 태그가 가리키는 작업 공간 패키지를 찾고, 태그와 그 `package.json` 버전이 일치하는지, 태그 커밋이 `origin/master`에 포함되는지 확인합니다. 그다음 Turborepo로 패키지를 빌드합니다. `@buyong/pi-codex-auto-review`는 원본 결과 대조를 포함한 정책 검사도 실행합니다.
+3. `npm pack --workspace <패키지>`가 패키지의 `prepack`을 실행합니다. `@buyong/pi-codex-auto-review`의 `prepack`은 TypeScript를 컴파일하고, `files`에 적힌 README·LICENSE·NOTICE·문서를 저장소 루트에서 복사한 뒤 필수 파일과 JavaScript 규칙 작업 스레드를 검사합니다. 바이너리·`.node`·`.wasm`·묶인 의존성이 압축 파일에 있으면 거부합니다. 복사한 문서는 `postpack`이 지웁니다.
 4. 검증한 `<패키지>-<버전>.tgz`를 `npm-package` 결과물에 보관합니다.
 5. 별도 게시 작업이 같은 결과물을 내려받아 OIDC로 npm에 게시합니다.
 
@@ -84,16 +96,16 @@ git ls-remote origin refs/heads/master 'refs/tags/*@*'
 
 ## 게시 결과와 Pi 설치 확인
 
-`0.2.0` 게시 후 다음 명령으로 확인합니다.
+`0.2.2` 게시 후 다음 명령으로 확인합니다.
 
 ```sh
-npm view pi-codex-auto-review@0.2.0 version --registry=https://registry.npmjs.org/
-pi install npm:pi-codex-auto-review@0.2.0
+npm view @buyong/pi-codex-auto-review@0.2.2 version --registry=https://registry.npmjs.org/
+pi install npm:@buyong/pi-codex-auto-review@0.2.2
 pi list
 pi
 ```
 
-다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. `0.2.0`은 Rust 규칙 엔진을 JavaScript로 컴파일하는 TypeScript 구현으로 교체하고 개발용 SDK 재포장을 제거합니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.ko.md)을 따릅니다.
+다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. `0.2.0`은 Rust 규칙 엔진을 JavaScript로 컴파일하는 TypeScript 구현으로 교체하고 개발용 SDK 재포장을 제거합니다. `0.2.2`부터는 `@buyong/pi-codex-auto-review` 이름으로 게시하며, 그 이전 버전은 `pi-codex-auto-review`에 남아 있습니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.ko.md)을 따릅니다.
 
 ## 로컬에서 압축 패키지만 준비
 
@@ -102,7 +114,7 @@ pi
 ```sh
 npm run build
 mkdir -p tmp/npm-release
-npm pack --workspace pi-codex-auto-review --pack-destination tmp/npm-release
+npm pack --workspace packages/pi-codex-auto-review --pack-destination tmp/npm-release
 ```
 
 `npm run build`는 `packages/pi-codex-auto-review/dist`에 JavaScript 모듈과 규칙 평가 진입점을 만듭니다. 게시 전 검사는 이 파일의 포함 여부를 확인하고 남아 있는 네이티브 결과물을 거부합니다. 정상 게시 준비에서 `--ignore-scripts`로 `prepack`을 생략하지 않습니다.

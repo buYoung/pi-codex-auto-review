@@ -9,7 +9,7 @@ A Pi extension for automatic execution approval review, inspired by Codex's “A
 Version `0.2.0` replaces the native rule executables with a TypeScript engine distributed as JavaScript and removes the repackaged Pi SDK under `vendor`. The extension requires no Rust compiler or platform-specific rule binary. Node.js and the Pi host are still required; Pi's own native modules are separate.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.2.0
+pi install npm:@buyong/pi-codex-auto-review@0.2.2
 pi list
 ```
 

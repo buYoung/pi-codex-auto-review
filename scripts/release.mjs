@@ -28,8 +28,6 @@ const interactiveOptions = {
     snapshot: false,
     preRelease: false,
 };
-// Releases up to 0.2.1 were tagged v<version> before the repository became a monorepo.
-const legacyTagPackageName = "pi-codex-auto-review";
 let selectedPackage;
 const readCurrentVersion = () =>
     JSON.parse(readFileSync(join(selectedPackage.path, "package.json"), "utf8"))
@@ -80,14 +78,6 @@ async function choosePackage() {
     );
 }
 
-function hasReleaseTag(version) {
-    return (
-        hasLocalTag(`${selectedPackage.name}@${version}`) ||
-        (selectedPackage.name === legacyTagPackageName &&
-            hasLocalTag(`v${version}`))
-    );
-}
-
 function hasLocalTag(tagName) {
     try {
         git("show-ref", "--verify", "--quiet", "--", `refs/tags/${tagName}`);
@@ -127,7 +117,7 @@ async function chooseVersion(currentVersion) {
         .filter(
             (choice) => choice.value && semver.gt(choice.value, currentVersion),
         );
-    if (!hasReleaseTag(currentVersion)) {
+    if (!hasLocalTag(`${selectedPackage.name}@${currentVersion}`)) {
         choices.unshift({
             value: currentVersion,
             name: `현재 준비 버전 ${currentVersion} 출시 (첫 태그 생성)`,

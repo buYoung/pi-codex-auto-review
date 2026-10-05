@@ -19,7 +19,7 @@ const [packed] = JSON.parse(
         await exec("npm", [
             "pack",
             "--workspace",
-            "pi-codex-auto-review",
+            "packages/pi-codex-auto-review",
             "--ignore-scripts",
             "--json",
             "--pack-destination",

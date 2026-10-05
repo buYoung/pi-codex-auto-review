@@ -11,9 +11,9 @@ Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. Vers
 `0.1.4` includes English approval descriptions, `/scoped-models` integration, `/approve retry`, reapproval through ordinary user messages, and fixes for passing and restoring review context. The earlier `0.1.3` removed the sandbox and added the `/approve` and `/approve-model` settings commands.
 
 ```sh
-pi install npm:pi-codex-auto-review@0.2.0
+pi install npm:@buyong/pi-codex-auto-review@0.2.2
 pi list
-pi remove npm:pi-codex-auto-review
+pi remove npm:@buyong/pi-codex-auto-review
 ```
 
 Add `--local` to register the package in the current project's `.pi/settings.json`. Project packages load after a trust decision for that project. Specifying a version pins the installation to that version.
@@ -78,10 +78,10 @@ node packages/pi-codex-auto-review/dist/cli.js \
 
 ## SDK
 
-Use `createGuardedRuntime()` from `pi-codex-auto-review/startup` when execution must refuse to start without approval controls. It checks extension and approval controller readiness and applies the same checks to mode reconnection and direct user shell calls.
+Use `createGuardedRuntime()` from `@buyong/pi-codex-auto-review/startup` when execution must refuse to start without approval controls. It checks extension and approval controller readiness and applies the same checks to mode reconnection and direct user shell calls.
 
 ```ts
-import { createGuardedRuntime } from 'pi-codex-auto-review/startup';
+import { createGuardedRuntime } from '@buyong/pi-codex-auto-review/startup';
 
 const runtime = await createGuardedRuntime({
   cwd: process.cwd(),

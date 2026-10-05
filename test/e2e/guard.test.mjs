@@ -979,7 +979,7 @@ test("[package] npm tarball loads the default factory through public Pi APIs wit
                 [
                     "pack",
                     "--workspace",
-                    "pi-codex-auto-review",
+                    "packages/pi-codex-auto-review",
                     "--ignore-scripts",
                     "--json",
                     "--pack-destination",
