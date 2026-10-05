@@ -10,7 +10,10 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createAction, createProfile } from "../../dist/contracts.js";
+import {
+    createAction,
+    createProfile,
+} from "../../packages/pi-codex-auto-review/dist/contracts.js";
 
 export const auditDirectory =
     process.env.PI_GUARD_RUN_DIR ??

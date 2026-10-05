@@ -13,8 +13,8 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { EMPTY_DELTA } from "../../dist/contracts.js";
-import { PiExecutor } from "../../dist/tools/executor.js";
+import { EMPTY_DELTA } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { PiExecutor } from "../../packages/pi-codex-auto-review/dist/tools/executor.js";
 import { auditPopulationPath, fixture } from "../harness/fixtures.mjs";
 import { guardedFixture, planStream } from "../harness/pi.mjs";
 import { shellQuote, workloadEnvironment } from "../harness/shell.mjs";
@@ -570,7 +570,7 @@ test("[workflow] real CLI loads an explicit provider and selects the same model 
             : {}),
     };
     const args = [
-        resolve("dist/cli.js"),
+        resolve("packages/pi-codex-auto-review/dist/cli.js"),
         "--cwd",
         f.workspace,
         "--policy",
@@ -790,7 +790,7 @@ test("[workflow] live CLI observer counts actual HTTP main and reviewer calls wi
     const child = await exec(
         process.execPath,
         [
-            resolve("dist/cli.js"),
+            resolve("packages/pi-codex-auto-review/dist/cli.js"),
             "--cwd",
             f.workspace,
             "--policy",
@@ -978,6 +978,8 @@ test("[package] npm tarball loads the default factory through public Pi APIs wit
                 "npm",
                 [
                     "pack",
+                    "--workspace",
+                    "pi-codex-auto-review",
                     "--ignore-scripts",
                     "--json",
                     "--pack-destination",

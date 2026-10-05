@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { validatePlatformEvidence } from "../dist/reports.js";
+import { validatePlatformEvidence } from "../packages/pi-codex-auto-review/dist/reports.js";
 import { reportRoot } from "./evidence-store.mjs";
 import { suites } from "./suites.mjs";
 

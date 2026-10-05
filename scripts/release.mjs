@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { input, select } from "@inquirer/prompts";
 import release, { Config } from "release-it";
@@ -14,6 +15,9 @@ const root = realpathSync(fileURLToPath(new URL("../", import.meta.url)));
 const guardPath = fileURLToPath(
     new URL("./release-prompts.mjs", import.meta.url),
 );
+const lockfilePath = fileURLToPath(
+    new URL("./release-lockfile.mjs", import.meta.url),
+);
 const prompt = new InquirerPrompt();
 const interactiveOptions = {
     ci: false,
@@ -24,8 +28,12 @@ const interactiveOptions = {
     snapshot: false,
     preRelease: false,
 };
+// Releases up to 0.2.1 were tagged v<version> before the repository became a monorepo.
+const legacyTagPackageName = "pi-codex-auto-review";
+let selectedPackage;
 const readCurrentVersion = () =>
-    JSON.parse(readFileSync(`${root}/package.json`, "utf8")).version;
+    JSON.parse(readFileSync(join(selectedPackage.path, "package.json"), "utf8"))
+        .version;
 const git = (...args) =>
     execFileSync("git", args, {
         cwd: root,
@@ -34,6 +42,51 @@ const git = (...args) =>
     }).trim();
 let headBefore;
 let hasReportedReleaseError = false;
+
+function listPublishablePackages() {
+    const workspaces = JSON.parse(
+        execFileSync("npm", ["query", ".workspace"], {
+            cwd: root,
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "pipe"],
+            shell: process.platform === "win32",
+        }),
+    );
+    return (
+        workspaces
+            .filter((workspace) => workspace.private !== true)
+            // npm redacts UUID-like segments in printed absolute paths, so use location.
+            .map(({ name, location }) => ({
+                name,
+                path: realpathSync(join(root, location)),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+    );
+}
+
+async function choosePackage() {
+    const packages = listPublishablePackages();
+    if (!packages.length)
+        throw new Error("릴리스할 수 있는 작업 공간 패키지가 없습니다.");
+    return requireAnswer(
+        select({
+            message: "릴리스할 패키지를 선택하세요.",
+            choices: packages.map((workspace) => ({
+                value: workspace,
+                name: `${workspace.name} (${relative(root, workspace.path)})`,
+            })),
+        }),
+        "패키지",
+    );
+}
+
+function hasReleaseTag(version) {
+    return (
+        hasLocalTag(`${selectedPackage.name}@${version}`) ||
+        (selectedPackage.name === legacyTagPackageName &&
+            hasLocalTag(`v${version}`))
+    );
+}
 
 function hasLocalTag(tagName) {
     try {
@@ -74,7 +127,7 @@ async function chooseVersion(currentVersion) {
         .filter(
             (choice) => choice.value && semver.gt(choice.value, currentVersion),
         );
-    if (!hasLocalTag(`v${currentVersion}`)) {
+    if (!hasReleaseTag(currentVersion)) {
         choices.unshift({
             value: currentVersion,
             name: `현재 준비 버전 ${currentVersion} 출시 (첫 태그 생성)`,
@@ -82,7 +135,7 @@ async function chooseVersion(currentVersion) {
     }
     const selected = await requireAnswer(
         select({
-            message: `릴리스 버전을 선택하세요. 현재 버전: ${currentVersion}`,
+            message: `${selectedPackage.name}의 릴리스 버전을 선택하세요. 현재 버전: ${currentVersion}`,
             choices: [
                 ...choices,
                 { value: "custom", name: "다음 버전 직접 입력" },
@@ -159,18 +212,22 @@ try {
     ) {
         throw new Error("릴리스 브랜치는 origin/master를 추적해야 합니다.");
     }
+    selectedPackage = await choosePackage();
     for (const file of [
-        "package.json",
+        relative(root, join(selectedPackage.path, "package.json")),
         "package-lock.json",
         ".release-it.json",
         "scripts/release.mjs",
         "scripts/release-prompts.mjs",
+        "scripts/release-lockfile.mjs",
     ]) {
         git("ls-files", "--error-unmatch", "--", file);
     }
     headBefore = git("rev-parse", "HEAD");
+    // release-it bumps the package.json in the current directory.
+    process.chdir(selectedPackage.path);
     const config = new Config({
-        config: ".release-it.json",
+        config: join(root, ".release-it.json"),
         ...interactiveOptions,
     });
     await config.init();
@@ -198,7 +255,8 @@ try {
             "package.json에 빌드 메타데이터 없는 SemVer가 필요합니다.",
         );
     const selectedVersion = await chooseVersion(currentVersion);
-    const tagName = `v${selectedVersion}`;
+    const packageName = selectedPackage.name;
+    const tagName = `${packageName}@${selectedVersion}`;
     try {
         await release(
             {
@@ -213,6 +271,10 @@ try {
                 },
                 git: {
                     ...options.git,
+                    tagName: `${packageName}@\${version}`,
+                    tagMatch: `${packageName}@[0-9]*`,
+                    tagAnnotation: `${packageName} \${version}`,
+                    commitMessage: `chore(${packageName} \${version} 릴리스): \${branchName}\n\n1. ${packageName} 패키지 버전 \${version}의 출시를 기록합니다.\n2. 버전 태그로 GitHub Actions의 npm 게시를 시작합니다.`,
                     requireCleanWorkingDir: false,
                     pushRepo: "",
                     commitArgs: [
@@ -231,6 +293,7 @@ try {
                 },
                 plugins: {
                     [guardPath]: { currentVersion, selectedVersion },
+                    [lockfilePath]: { root },
                     ...options.plugins,
                 },
             },
@@ -240,7 +303,7 @@ try {
         hasReportedReleaseError = true;
         throw error;
     }
-    console.info(`${selectedVersion} 릴리스 태그를 푸시했습니다.`);
+    console.info(`${tagName} 릴리스 태그를 푸시했습니다.`);
 } catch (error) {
     if (!hasReportedReleaseError) {
         if (error instanceof ReleaseStopped) console.info(error.message);

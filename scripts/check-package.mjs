@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const repository = fileURLToPath(new URL("../", import.meta.url));
+const packageDirectory = fileURLToPath(
+    new URL("../packages/pi-codex-auto-review/", import.meta.url),
+);
 const packed = spawnSync(
     process.platform === "win32" ? "npm.cmd" : "npm",
     ["pack", "--dry-run", "--json", "--ignore-scripts"],
     {
-        cwd: repository,
+        cwd: packageDirectory,
         encoding: "utf8",
         maxBuffer: 16 * 1024 * 1024,
         shell: process.platform === "win32",
@@ -48,7 +50,9 @@ assert.ok(
     ),
     "The package must not contain native binaries, development dependencies, or removed sandbox assets",
 );
-const { evaluateRules } = await import("../dist/policy/rules.js");
+const { evaluateRules } = await import(
+    "../packages/pi-codex-auto-review/dist/policy/rules.js"
+);
 const result = await evaluateRules(
     [
         {

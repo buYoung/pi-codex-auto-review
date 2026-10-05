@@ -4,7 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { stripVTControlCharacters } from "node:util";
 import { initTheme, SessionManager } from "@earendil-works/pi-coding-agent";
-import { createGuardExtension } from "../../dist/index.js";
+import { createGuardExtension } from "../../packages/pi-codex-auto-review/dist/index.js";
 import { fixture } from "../harness/fixtures.mjs";
 import { FAKE_MODEL, guardedFixture, planStream } from "../harness/pi.mjs";
 

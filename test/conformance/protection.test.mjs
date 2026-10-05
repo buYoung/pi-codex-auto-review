@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, symlink, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { createProfile } from "../../dist/contracts.js";
-import { defaultProfile, validateSettings } from "../../dist/policy/index.js";
+import { createProfile } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import {
+    defaultProfile,
+    validateSettings,
+} from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import { fixture } from "../harness/fixtures.mjs";
 import { FAKE_MODEL, guardedFixture } from "../harness/pi.mjs";
 import { replayReviews, replayScenario } from "../harness/scenarios.mjs";

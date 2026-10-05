@@ -1,40 +1,16 @@
 {
-    "name": "pi-codex-auto-review",
-    "version": "0.2.1",
-    "description": "Automatic execution approval review for Pi, inspired by Codex's \"Approve for me\". Reviews tool execution with rules and Pi's current model, requesting user approval when needed.",
+    "name": "pi-codex-permission",
+    "private": true,
     "license": "Apache-2.0",
-    "keywords": [
-        "pi-package",
-        "pi-extension",
-        "approval",
-        "auto-review"
+    "workspaces": [
+        "packages/*"
     ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/buYoung/pi-codex-auto-review.git"
-    },
-    "homepage": "https://github.com/buYoung/pi-codex-auto-review#readme",
-    "bugs": {
-        "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
-    },
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "type": "module",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "exports": {
-        ".": "./dist/index.js",
-        "./startup": "./dist/startup.js"
-    },
-    "bin": {
-        "pi-codex-auto-review": "dist/cli.js"
-    },
-    "pi": {
-        "extensions": [
-            "./dist/index.js"
-        ]
+    "devEngines": {
+        "packageManager": {
+            "name": "npm",
+            "version": "^11.5.1",
+            "onFail": "warn"
+        }
     },
     "scripts": {
         "prepare": "husky",
@@ -42,8 +18,7 @@
         "check:fix": "biome check --write .",
         "check:staged": "lint-staged",
         "release": "node scripts/release.mjs",
-        "build": "node scripts/clean-build.mjs && tsc",
-        "prepack": "node scripts/clean-build.mjs && tsc && node scripts/check-package.mjs",
+        "build": "turbo run build",
         "test:contracts": "node scripts/run-tests.mjs contracts",
         "test:policy": "node scripts/run-tests.mjs policy",
         "test:reviewer": "node scripts/run-tests.mjs reviewer",
@@ -60,25 +35,15 @@
     "lint-staged": {
         "*": "biome check --no-errors-on-unmatched --files-ignore-unknown=true"
     },
-    "peerDependencies": {
-        "@earendil-works/pi-ai": ">=0.86.1",
-        "@earendil-works/pi-coding-agent": ">=0.86.1",
-        "@earendil-works/pi-tui": ">=0.86.1"
-    },
     "devDependencies": {
         "@biomejs/biome": "2.5.15",
-        "@earendil-works/pi-ai": "0.99.1",
-        "@earendil-works/pi-coding-agent": "0.99.1",
-        "@earendil-works/pi-tui": "0.99.1",
         "@inquirer/prompts": "8.5.2",
-        "@sinclair/typebox": "0.34.52",
-        "@types/node": "24.0.0",
         "husky": "9.1.7",
         "lint-staged": "16.4.0",
         "pi-ollama-cloud": "0.12.2",
         "release-it": "21.0.1",
         "semver": "7.8.5",
-        "typescript": "6.0.3"
+        "turbo": "2.11.7"
     },
     "overrides": {
         "@earendil-works/pi-ai": "0.99.1",
@@ -88,22 +53,5 @@
     },
     "engines": {
         "node": ">=22.19.0"
-    },
-    "files": [
-        "dist/**/*.js",
-        "dist/**/*.d.ts",
-        "dist/**/*.js.map",
-        "README.md",
-        "README.ko.md",
-        "LICENSE",
-        "NOTICE",
-        "docs/usage.md",
-        "docs/usage.ko.md",
-        "docs/publishing.md",
-        "docs/publishing.ko.md",
-        "docs/security/dependencies.md",
-        "docs/security/dependencies.ko.md",
-        "docs/testing/auto-review-protection.md",
-        "docs/testing/auto-review-protection.ko.md"
-    ]
+    }
 }

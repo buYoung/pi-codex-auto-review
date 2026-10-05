@@ -3,12 +3,12 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { reviewPolicy } from "../../dist/review/policy.js";
+import { reviewPolicy } from "../../packages/pi-codex-auto-review/dist/review/policy.js";
 import {
     CODEX_POLICY_TEMPLATE,
     CODEX_TENANT_POLICY,
-} from "../../dist/review/upstream-policy.js";
-import { parseAssessment } from "../../dist/reviewer.js";
+} from "../../packages/pi-codex-auto-review/dist/review/upstream-policy.js";
+import { parseAssessment } from "../../packages/pi-codex-auto-review/dist/reviewer.js";
 import {
     liveCaseIds,
     livePolicyCases,

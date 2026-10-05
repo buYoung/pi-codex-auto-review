@@ -1,19 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { decision, digest } from "../../dist/contracts.js";
-import { validateSettings } from "../../dist/policy/index.js";
+import {
+    decision,
+    digest,
+} from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { validateSettings } from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import {
     AUTHORIZATION_ENTRY,
     REVIEW_CONTEXT_ENTRY,
     ReviewContextStore,
-} from "../../dist/review/context.js";
-import { reviewPolicy } from "../../dist/review/policy.js";
-import { observeToolUserInput } from "../../dist/review/user-input.js";
+} from "../../packages/pi-codex-auto-review/dist/review/context.js";
+import { reviewPolicy } from "../../packages/pi-codex-auto-review/dist/review/policy.js";
+import { observeToolUserInput } from "../../packages/pi-codex-auto-review/dist/review/user-input.js";
 import {
     PiReviewProvider,
     parseAssessment,
     reviewAction,
-} from "../../dist/reviewer.js";
+} from "../../packages/pi-codex-auto-review/dist/reviewer.js";
 import { ControlledClock, fixture } from "../harness/fixtures.mjs";
 
 test("[review] only ambiguous actions call a separate tool-free current-model request", async (t) => {

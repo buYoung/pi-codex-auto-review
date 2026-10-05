@@ -29,12 +29,12 @@ import {
     digest,
     retryIdentity,
     validateWorkerFrame,
-} from "../../dist/contracts.js";
-import { validateSettings } from "../../dist/policy/index.js";
+} from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { validateSettings } from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import {
     validateEvidence,
     validatePlatformEvidence,
-} from "../../dist/reports.js";
+} from "../../packages/pi-codex-auto-review/dist/reports.js";
 import { createRun, writeImmutable } from "../../scripts/evidence-store.mjs";
 import { fixture } from "../harness/fixtures.mjs";
 

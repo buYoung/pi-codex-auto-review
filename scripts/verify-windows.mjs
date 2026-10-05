@@ -4,8 +4,11 @@ import { access, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { machine, release, tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { createProfile, EMPTY_DELTA } from "../dist/contracts.js";
-import { PiExecutor } from "../dist/tools/executor.js";
+import {
+    createProfile,
+    EMPTY_DELTA,
+} from "../packages/pi-codex-auto-review/dist/contracts.js";
+import { PiExecutor } from "../packages/pi-codex-auto-review/dist/tools/executor.js";
 import { createRun, writeImmutable } from "./evidence-store.mjs";
 import { contractDigest, sourceDigest } from "./run-tests.mjs";
 

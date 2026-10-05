@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { machine, release } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { validatePlatformEvidence } from "../dist/reports.js";
+import { validatePlatformEvidence } from "../packages/pi-codex-auto-review/dist/reports.js";
 import { createRun, writeImmutable } from "./evidence-store.mjs";
 import {
     contractDigest,

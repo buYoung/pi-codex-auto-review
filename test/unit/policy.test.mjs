@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { createAction, createProfile } from "../../dist/contracts.js";
+import {
+    createAction,
+    createProfile,
+} from "../../packages/pi-codex-auto-review/dist/contracts.js";
 import {
     analyzeShell,
     canonicalPath,
@@ -12,12 +15,12 @@ import {
     PolicyEngine,
     resolveToolPath,
     validateSettings,
-} from "../../dist/policy/index.js";
+} from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import {
     matchesRule,
     parseRules,
     ruleCommands,
-} from "../../dist/policy/rules.js";
+} from "../../packages/pi-codex-auto-review/dist/policy/rules.js";
 import { fixture } from "../harness/fixtures.mjs";
 
 async function setup(t, settings = {}, profileOverrides = {}) {

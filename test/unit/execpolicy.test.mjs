@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { createAction } from "../../dist/contracts.js";
-import { PolicyEngine, validateSettings } from "../../dist/policy/index.js";
+import { createAction } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import {
+    PolicyEngine,
+    validateSettings,
+} from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import {
     CODEX_EXECPOLICY_REVISION,
     evaluateRules,
     parseRules,
-} from "../../dist/policy/rules.js";
+} from "../../packages/pi-codex-auto-review/dist/policy/rules.js";
 import { fixture } from "../harness/fixtures.mjs";
 
 // Ported boundaries from Codex a956835d/execpolicy parser, host_executable and network-rule tests.

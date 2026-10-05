@@ -31,17 +31,17 @@ Source builds use TypeScript and require no Rust compiler or platform binary. In
 ```sh
 npm ci --ignore-scripts
 npm run build
-node dist/cli.js --help
+node packages/pi-codex-auto-review/dist/cli.js --help
 ```
 
 ## Registering as a Pi plugin
 
-Register the built repository as a local package. Local paths load directly from their location without copying.
+Register the built package directory, `packages/pi-codex-auto-review`, as a local package. Local paths load directly from their location without copying.
 
 ```sh
-pi install ./pi-codex-auto-review
+pi install ./pi-codex-auto-review/packages/pi-codex-auto-review
 pi list
-pi remove ./pi-codex-auto-review
+pi remove ./pi-codex-auto-review/packages/pi-codex-auto-review
 ```
 
 - Registration connects local tools and official MCP tools to the approval path. Pi's default MCP extension is replaced to avoid duplicate connections.
@@ -51,16 +51,16 @@ pi remove ./pi-codex-auto-review
 ## CLI
 
 ```sh
-node dist/cli.js --cwd /작업/디렉터리
-node dist/cli.js --mode print "프로젝트를 분석해줘"
-node dist/cli.js --mode rpc
-node dist/cli.js --mode tui
+node packages/pi-codex-auto-review/dist/cli.js --cwd /작업/디렉터리
+node packages/pi-codex-auto-review/dist/cli.js --mode print "프로젝트를 분석해줘"
+node packages/pi-codex-auto-review/dist/cli.js --mode rpc
+node packages/pi-codex-auto-review/dist/cli.js --mode tui
 ```
 
 Specify a registered external provider with `--extension`, and select both `--provider` and `--model`. Run from a shell with `OLLAMA_API_KEY` exported.
 
 ```sh
-node dist/cli.js \
+node packages/pi-codex-auto-review/dist/cli.js \
   --extension node_modules/pi-ollama-cloud/index.ts \
   --provider ollama-cloud --model glm-5.3 \
   --mode print "현재 프로젝트를 분석해줘"

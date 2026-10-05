@@ -10,10 +10,16 @@ const exec = promisify(execFile),
     consumer = "/opt/installed";
 await mkdir(artifacts, { recursive: true });
 await mkdir(consumer, { recursive: true });
+// Lifecycle scripts stay off, so add the repository documents prepack would copy.
+await exec("node", ["../../scripts/package-shared-files.mjs", "copy"], {
+    cwd: "packages/pi-codex-auto-review",
+});
 const [packed] = JSON.parse(
     (
         await exec("npm", [
             "pack",
+            "--workspace",
+            "pi-codex-auto-review",
             "--ignore-scripts",
             "--json",
             "--pack-destination",

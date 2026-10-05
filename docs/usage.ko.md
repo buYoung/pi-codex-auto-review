@@ -31,17 +31,17 @@ Pi는 관리하는 확장에 호스트 SDK의 물리적 복사본을 설치하�
 ```sh
 npm ci --ignore-scripts
 npm run build
-node dist/cli.js --help
+node packages/pi-codex-auto-review/dist/cli.js --help
 ```
 
 ## Pi 플러그인으로 등록
 
-빌드한 저장소를 로컬 패키지로 등록합니다. 로컬 경로는 복사 없이 해당 위치에서 직접 로드됩니다.
+빌드한 패키지 디렉터리인 `packages/pi-codex-auto-review`를 로컬 패키지로 등록합니다. 로컬 경로는 복사 없이 해당 위치에서 직접 로드됩니다.
 
 ```sh
-pi install ./pi-codex-auto-review
+pi install ./pi-codex-auto-review/packages/pi-codex-auto-review
 pi list
-pi remove ./pi-codex-auto-review
+pi remove ./pi-codex-auto-review/packages/pi-codex-auto-review
 ```
 
 - 등록하면 로컬 도구와 공식 MCP가 승인 경로에 연결되고, Pi의 기본 MCP 확장은 중복 연결되지 않도록 교체됩니다.
@@ -51,16 +51,16 @@ pi remove ./pi-codex-auto-review
 ## CLI
 
 ```sh
-node dist/cli.js --cwd /작업/디렉터리
-node dist/cli.js --mode print "프로젝트를 분석해줘"
-node dist/cli.js --mode rpc
-node dist/cli.js --mode tui
+node packages/pi-codex-auto-review/dist/cli.js --cwd /작업/디렉터리
+node packages/pi-codex-auto-review/dist/cli.js --mode print "프로젝트를 분석해줘"
+node packages/pi-codex-auto-review/dist/cli.js --mode rpc
+node packages/pi-codex-auto-review/dist/cli.js --mode tui
 ```
 
 등록된 외부 공급자는 `--extension`으로 명시하고 `--provider`와 `--model`을 함께 선택합니다. `OLLAMA_API_KEY`를 export한 셸에서 실행합니다.
 
 ```sh
-node dist/cli.js \
+node packages/pi-codex-auto-review/dist/cli.js \
   --extension node_modules/pi-ollama-cloud/index.ts \
   --provider ollama-cloud --model glm-5.3 \
   --mode print "현재 프로젝트를 분석해줘"

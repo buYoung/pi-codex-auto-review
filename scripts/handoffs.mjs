@@ -1,43 +1,46 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { validateEvidence } from "../dist/reports.js";
+import { validateEvidence } from "../packages/pi-codex-auto-review/dist/reports.js";
 import { writeImmutable } from "./evidence-store.mjs";
 import { contractDigest, runtimeVersions, sourceDigest } from "./run-tests.mjs";
 import { suites } from "./suites.mjs";
 
 const root = new URL("../", import.meta.url);
 const modules = {
-    "01-contracts": ["src/contracts.ts", "src/reports.ts"],
+    "01-contracts": [
+        "packages/pi-codex-auto-review/src/contracts.ts",
+        "packages/pi-codex-auto-review/src/reports.ts",
+    ],
     "02-policy": [
-        "src/policy/index.ts",
-        "src/policy/paths.ts",
-        "src/policy/shell.ts",
-        "src/policy/rules.ts",
-        "src/policy/domains.ts",
+        "packages/pi-codex-auto-review/src/policy/index.ts",
+        "packages/pi-codex-auto-review/src/policy/paths.ts",
+        "packages/pi-codex-auto-review/src/policy/shell.ts",
+        "packages/pi-codex-auto-review/src/policy/rules.ts",
+        "packages/pi-codex-auto-review/src/policy/domains.ts",
     ],
     "03-review": [
-        "src/reviewer.ts",
-        "src/review/policy.ts",
-        "src/review/context.ts",
-        "src/review/investigation.ts",
-        "src/review/lifecycle.ts",
-        "src/approvals.ts",
-        "src/audit.ts",
-        "src/signals.ts",
+        "packages/pi-codex-auto-review/src/reviewer.ts",
+        "packages/pi-codex-auto-review/src/review/policy.ts",
+        "packages/pi-codex-auto-review/src/review/context.ts",
+        "packages/pi-codex-auto-review/src/review/investigation.ts",
+        "packages/pi-codex-auto-review/src/review/lifecycle.ts",
+        "packages/pi-codex-auto-review/src/approvals.ts",
+        "packages/pi-codex-auto-review/src/audit.ts",
+        "packages/pi-codex-auto-review/src/signals.ts",
     ],
     "04-execution": [
-        "src/tools/executor.ts",
-        "src/tools/environment.ts",
-        "src/tools/mutation-queue.ts",
+        "packages/pi-codex-auto-review/src/tools/executor.ts",
+        "packages/pi-codex-auto-review/src/tools/environment.ts",
+        "packages/pi-codex-auto-review/src/tools/mutation-queue.ts",
     ],
     "05-integration": [
-        "src/index.ts",
-        "src/startup.ts",
-        "src/cli.ts",
-        "src/tools/controller.ts",
-        "src/approval-commands.ts",
-        "src/approval-settings.ts",
+        "packages/pi-codex-auto-review/src/index.ts",
+        "packages/pi-codex-auto-review/src/startup.ts",
+        "packages/pi-codex-auto-review/src/cli.ts",
+        "packages/pi-codex-auto-review/src/tools/controller.ts",
+        "packages/pi-codex-auto-review/src/approval-commands.ts",
+        "packages/pi-codex-auto-review/src/approval-settings.ts",
     ],
 };
 export async function writeHandoffs(

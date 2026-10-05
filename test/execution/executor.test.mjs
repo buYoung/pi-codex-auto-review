@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { access, chmod, mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { EMPTY_DELTA } from "../../dist/contracts.js";
-import { PiExecutor } from "../../dist/tools/executor.js";
+import { EMPTY_DELTA } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { PiExecutor } from "../../packages/pi-codex-auto-review/dist/tools/executor.js";
 import { fixture } from "../harness/fixtures.mjs";
 import { shellQuote } from "../harness/shell.mjs";
 

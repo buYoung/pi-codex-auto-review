@@ -6,7 +6,7 @@ import {
     SessionManager,
     SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { createGuardedRuntime } from "../../dist/startup.js";
+import { createGuardedRuntime } from "../../packages/pi-codex-auto-review/dist/startup.js";
 
 let ai;
 export async function hostAI() {

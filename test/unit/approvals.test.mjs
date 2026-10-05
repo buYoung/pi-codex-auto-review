@@ -2,14 +2,20 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { ApprovalManager, FileGrantPersistence } from "../../dist/approvals.js";
-import { AuditLog, redact } from "../../dist/audit.js";
-import { decision } from "../../dist/contracts.js";
-import { ReviewContextStore } from "../../dist/review/context.js";
+import {
+    ApprovalManager,
+    FileGrantPersistence,
+} from "../../packages/pi-codex-auto-review/dist/approvals.js";
+import {
+    AuditLog,
+    redact,
+} from "../../packages/pi-codex-auto-review/dist/audit.js";
+import { decision } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { ReviewContextStore } from "../../packages/pi-codex-auto-review/dist/review/context.js";
 import {
     ReviewLifecycle,
     reviewFeedback,
-} from "../../dist/review/lifecycle.js";
+} from "../../packages/pi-codex-auto-review/dist/review/lifecycle.js";
 import { ControlledClock, fixture } from "../harness/fixtures.mjs";
 
 const provider = {

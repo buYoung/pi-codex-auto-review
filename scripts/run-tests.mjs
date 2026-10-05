@@ -3,11 +3,12 @@ import { access, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { run } from "node:test";
 import { fileURLToPath } from "node:url";
-import { validateEvidence } from "../dist/reports.js";
+import { validateEvidence } from "../packages/pi-codex-auto-review/dist/reports.js";
 import { createRun, writeImmutable } from "./evidence-store.mjs";
 import { suites } from "./suites.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+const packageDirectory = "packages/pi-codex-auto-review";
 export async function sourceDigest() {
     const hash = createHash("sha256");
     async function add(dir) {
@@ -22,11 +23,14 @@ export async function sourceDigest() {
             }
         }
     }
-    for (const dir of ["src", "test", "scripts", ".github"]) await add(dir);
+    for (const dir of [`${packageDirectory}/src`, "test", "scripts", ".github"])
+        await add(dir);
     for (const path of [
         "package.json",
         "package-lock.json",
-        "tsconfig.json",
+        "tsconfig.base.json",
+        `${packageDirectory}/package.json`,
+        `${packageDirectory}/tsconfig.json`,
         "README.md",
     ])
         hash.update(await readFile(join(root, path)));
@@ -34,8 +38,10 @@ export async function sourceDigest() {
 }
 export async function contractDigest() {
     return createHash("sha256")
-        .update(await readFile(join(root, "src/contracts.ts")))
-        .update(await readFile(join(root, "src/reports.ts")))
+        .update(
+            await readFile(join(root, packageDirectory, "src/contracts.ts")),
+        )
+        .update(await readFile(join(root, packageDirectory, "src/reports.ts")))
         .digest("hex");
 }
 export async function runtimeVersions() {

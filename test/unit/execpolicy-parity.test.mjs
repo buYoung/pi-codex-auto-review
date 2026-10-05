@@ -6,7 +6,7 @@ import {
     CODEX_EXECPOLICY_REVISION,
     evaluateRules,
     parseRules,
-} from "../../dist/policy/rules.js";
+} from "../../packages/pi-codex-auto-review/dist/policy/rules.js";
 
 const corpus = JSON.parse(
     await readFile(

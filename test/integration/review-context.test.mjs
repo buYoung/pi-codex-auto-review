@@ -8,7 +8,7 @@ import {
     createReadToolDefinition,
     SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { digest } from "../../dist/contracts.js";
+import { digest } from "../../packages/pi-codex-auto-review/dist/contracts.js";
 import { fixture } from "../harness/fixtures.mjs";
 import { FAKE_MODEL, guardedFixture, planStream } from "../harness/pi.mjs";
 

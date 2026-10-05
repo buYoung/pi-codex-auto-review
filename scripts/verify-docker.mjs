@@ -165,15 +165,18 @@ try {
         await mkdir(context, { recursive: true });
         // Explicit allowlist: no host credentials, .env, .git, node_modules or old reports enter the build context.
         for (const path of [
-            "src",
+            "packages/pi-codex-auto-review/src",
+            "packages/pi-codex-auto-review/package.json",
+            "packages/pi-codex-auto-review/tsconfig.json",
             "test",
             "scripts",
             ".github",
             "docs",
             "package.json",
             "package-lock.json",
-            "tsconfig.json",
+            "tsconfig.base.json",
             "README.md",
+            "README.ko.md",
             "LICENSE",
             "NOTICE",
         ])

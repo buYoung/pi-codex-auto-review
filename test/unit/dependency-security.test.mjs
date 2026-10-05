@@ -8,7 +8,13 @@ import { promisify } from "node:util";
 
 test("[dependency-security] the extension has no sandbox runtime or bundled production dependencies", async () => {
     const pkg = JSON.parse(
-        await readFile(new URL("../../package.json", import.meta.url), "utf8"),
+        await readFile(
+            new URL(
+                "../../packages/pi-codex-auto-review/package.json",
+                import.meta.url,
+            ),
+            "utf8",
+        ),
     );
     const lock = JSON.parse(
         await readFile(

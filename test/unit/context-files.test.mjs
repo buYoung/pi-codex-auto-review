@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { link, mkdir, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { loadContextFiles } from "../../dist/context-files.js";
-import { validateSettings } from "../../dist/policy/index.js";
+import { loadContextFiles } from "../../packages/pi-codex-auto-review/dist/context-files.js";
+import { validateSettings } from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import { fixture } from "../harness/fixtures.mjs";
 
 const options = (f, extra = {}) => ({

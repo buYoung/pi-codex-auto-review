@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { digest } from "../../dist/contracts.js";
+import { digest } from "../../packages/pi-codex-auto-review/dist/contracts.js";
 
 const expected = [],
     transmitted = [];

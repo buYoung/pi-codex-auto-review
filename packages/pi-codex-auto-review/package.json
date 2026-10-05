@@ -1,0 +1,77 @@
+{
+    "name": "pi-codex-auto-review",
+    "version": "0.2.1",
+    "description": "Automatic execution approval review for Pi, inspired by Codex's \"Approve for me\". Reviews tool execution with rules and Pi's current model, requesting user approval when needed.",
+    "license": "Apache-2.0",
+    "keywords": [
+        "pi-package",
+        "pi-extension",
+        "approval",
+        "auto-review"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/buYoung/pi-codex-auto-review.git"
+    },
+    "homepage": "https://github.com/buYoung/pi-codex-auto-review#readme",
+    "bugs": {
+        "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js",
+        "./startup": "./dist/startup.js"
+    },
+    "bin": {
+        "pi-codex-auto-review": "dist/cli.js"
+    },
+    "pi": {
+        "extensions": [
+            "./dist/index.js"
+        ]
+    },
+    "scripts": {
+        "build": "tsc",
+        "prepack": "tsc && node ../../scripts/package-shared-files.mjs copy && node ../../scripts/check-package.mjs",
+        "postpack": "node ../../scripts/package-shared-files.mjs remove"
+    },
+    "peerDependencies": {
+        "@earendil-works/pi-ai": ">=0.86.1",
+        "@earendil-works/pi-coding-agent": ">=0.86.1",
+        "@earendil-works/pi-tui": ">=0.86.1"
+    },
+    "devDependencies": {
+        "@earendil-works/pi-ai": "0.99.1",
+        "@earendil-works/pi-coding-agent": "0.99.1",
+        "@earendil-works/pi-tui": "0.99.1",
+        "@sinclair/typebox": "0.34.52",
+        "@types/node": "24.0.0",
+        "typescript": "6.0.3"
+    },
+    "engines": {
+        "node": ">=22.19.0"
+    },
+    "files": [
+        "dist/**/*.js",
+        "dist/**/*.d.ts",
+        "dist/**/*.js.map",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
+        "NOTICE",
+        "docs/usage.md",
+        "docs/usage.ko.md",
+        "docs/publishing.md",
+        "docs/publishing.ko.md",
+        "docs/security/dependencies.md",
+        "docs/security/dependencies.ko.md",
+        "docs/testing/auto-review-protection.md",
+        "docs/testing/auto-review-protection.ko.md"
+    ]
+}

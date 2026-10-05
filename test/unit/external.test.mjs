@@ -4,12 +4,12 @@ import {
     approvalEligible,
     createAction,
     createProfile,
-} from "../../dist/contracts.js";
-import { validateSettings } from "../../dist/policy/index.js";
+} from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { validateSettings } from "../../packages/pi-codex-auto-review/dist/policy/index.js";
 import {
     externalPolicy,
     requiresMcpApproval,
-} from "../../dist/tools/external.js";
+} from "../../packages/pi-codex-auto-review/dist/tools/external.js";
 
 test("[external-policy] Codex MCP annotation precedence and four approval modes", () => {
     for (const [annotations, expected] of [

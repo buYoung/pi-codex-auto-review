@@ -2,7 +2,7 @@
 
 **English** | [한국어](publishing.ko.md)
 
-Choose a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies the JavaScript package and publishes to npm. The local command does not use npm credentials. Version `0.2.0` uses this JavaScript-only workflow; the published `0.1.4` still contains the earlier native executables.
+Choose a package and a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies that JavaScript package and publishes it to npm. The local command does not use npm credentials. Version `0.2.0` uses this JavaScript-only workflow; the published `0.1.4` still contains the earlier native executables.
 
 ## One-time setup
 
@@ -16,11 +16,11 @@ Use a terminal with Node.js 24.14.0 and pnpm 10 available. Install dependencies 
 npm ci --ignore-scripts
 ```
 
-Dependency installation and CI builds use the existing `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. The current package does not bundle sandbox dependencies and uses the Pi host as a peer dependency.
+The repository is an npm workspaces monorepo: each published package lives in `packages/<package>`, and Turborepo runs the package builds. Tests, scripts, and documents stay at the repository root. Dependency installation and CI builds use the root `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. The current package does not bundle sandbox dependencies and uses the Pi host as a peer dependency.
 
 ### npm Trusted Publisher
 
-Add a GitHub Actions connection in **Settings → Trusted publishing** for `pi-codex-auto-review` on npm.
+Add a GitHub Actions connection in **Settings → Trusted publishing** on npm for each package published from this repository, such as `pi-codex-auto-review`. Every package uses the same workflow.
 
 | Field | Value |
 | --- | --- |
@@ -42,28 +42,29 @@ Run after committing changes on `master`.
 pnpm release
 ```
 
-1. Review the current version and concrete next versions, then select one. For a release from `0.1.1` to `0.1.2`, choose **patch**. If no local version tag exists, **현재 준비 버전 출시** (release the currently prepared version) is also available.
-2. Confirm the commit and create a release commit. Releasing the current version unchanged creates an empty commit to record the release.
-3. Confirm creation of the `v<version>` tag and create an annotated tag.
-4. Confirm pushing `master` and that tag. Approval pushes both references atomically and starts npm publishing in Actions.
+1. Select the package to release. Only workspace packages that are not `private` are listed.
+2. Review the current version and concrete next versions, then select one. For a release from `0.1.1` to `0.1.2`, choose **patch**. If no local release tag exists for that version, **현재 준비 버전 출시** (release the currently prepared version) is also available. For `pi-codex-auto-review`, the earlier `v<version>` tags up to `0.2.1` also count as release tags.
+3. Confirm the commit and create a release commit. Releasing the current version unchanged creates an empty commit to record the release.
+4. Confirm creation of the `<package>@<version>` tag and create an annotated tag.
+5. Confirm pushing `master` and that tag. Approval pushes both references atomically and starts npm publishing in Actions.
 
 Each confirmation defaults to approval. Entering `n` or pressing `Ctrl+C` stops that operation and all later steps. Skipping questions through `--ci`, version arguments, or automatic answers is unsupported.
 
-Version selection does not automatically apply a version such as `0.1.2`. release-it updates versions in `package.json` and `package-lock.json` without running npm version lifecycle scripts. The local process does not rebuild the package or publish to npm.
+Version selection does not automatically apply a version such as `0.1.2`. release-it updates the version in the selected package's `package.json` without running npm version lifecycle scripts, and the release plugin records the same version in the root `package-lock.json` for the release commit. The local process does not rebuild the package or publish to npm.
 
 An npm version cannot be published again. If the currently prepared version has already been published, choose a higher version. Prereleases use npm's `next` tag; stable releases use `latest`.
 
 ## What GitHub Actions does
 
-Pushing a `v*` tag starts `.github/workflows/npm-package.yml`.
+Pushing a `<package>@<version>` tag starts `.github/workflows/npm-package.yml`.
 
 1. Install the official development dependencies from the npm lockfile on `ubuntu-22.04`.
-2. Check that the tag matches the version in `package.json` and that the tagged commit is included in `origin/master`, then build TypeScript and run policy tests, including the captured Codex result corpus.
-3. The `npm pack` prepack step compiles TypeScript, checks required files, and exercises the JavaScript rule worker. It removes obsolete sandbox/native output and rejects archives containing native binaries, `.node` or `.wasm` files, or bundled dependencies.
-4. Save the verified `pi-codex-auto-review-<version>.tgz` in the `npm-package` artifact.
+2. Find the workspace package named by the tag, check that the tag matches the version in its `package.json`, and check that the tagged commit is included in `origin/master`. Then build the package with Turborepo. For `pi-codex-auto-review`, also run policy tests, including the captured Codex result corpus.
+3. `npm pack --workspace <package>` runs the package's prepack step. For `pi-codex-auto-review`, prepack compiles TypeScript, copies the README, LICENSE, NOTICE, and documents listed in `files` from the repository root, checks required files, and exercises the JavaScript rule worker. It rejects archives containing native binaries, `.node` or `.wasm` files, or bundled dependencies. Postpack removes the copied documents.
+4. Save the verified `<package>-<version>.tgz` in the `npm-package` artifact.
 5. A separate publish job downloads that same artifact and publishes it to npm through OIDC.
 
-Running **Actions → npm 배포 → Run workflow** manually prepares the archive only and skips publishing. For tag publishing, use a tag-triggered run of the same workflow.
+Running **Actions → npm 배포 → Run workflow** manually prepares the archive for the entered package only and skips publishing. For tag publishing, use a tag-triggered run of the same workflow.
 
 One JavaScript archive serves all platforms; it has no rule-engine CPU or libc dependency. Actual Pi availability, path behavior, and shell support still depend on the host. The separate OS workflow retains Linux and Windows execution checks without installing Rust. Follow the [verification guide](testing/auto-review-protection.md) for the executed scope.
 
@@ -76,7 +77,7 @@ After a failed push, release-it may attempt to clean up remote tags. Do not infe
 ```sh
 git status --short
 git log -1
-git ls-remote origin refs/heads/master 'refs/tags/v*'
+git ls-remote origin refs/heads/master 'refs/tags/*@*'
 ```
 
 If Actions fails after the tag push, inspect that run's logs and rerun the failed job. First check whether npm publishing actually succeeded. Do not repeat a published version; use a new version for new changes.
@@ -101,10 +102,10 @@ Use this when you need to inspect the publishable archive directly. Install the 
 ```sh
 npm run build
 mkdir -p tmp/npm-release
-npm pack --pack-destination tmp/npm-release
+npm pack --workspace pi-codex-auto-review --pack-destination tmp/npm-release
 ```
 
-`npm run build` creates the JavaScript modules and rule evaluation entry points. Prepack verifies their inclusion and rejects leftover native artifacts. Do not skip prepack with `--ignore-scripts` when preparing an actual release.
+`npm run build` creates the JavaScript modules and rule evaluation entry points in `packages/pi-codex-auto-review/dist`. Prepack verifies their inclusion and rejects leftover native artifacts. Do not skip prepack with `--ignore-scripts` when preparing an actual release.
 
 ## References
 

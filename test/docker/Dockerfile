@@ -14,14 +14,16 @@ RUN case "$TARGETARCH" in \
     && rm -rf /tmp/fd.tar.gz "/tmp/fd-v10.3.0-${FD_ARCH}-unknown-linux-musl"
 WORKDIR /opt/pi-guard
 COPY package.json package-lock.json ./
+COPY packages/pi-codex-auto-review/package.json ./packages/pi-codex-auto-review/
 RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
-COPY src ./src
+COPY packages/pi-codex-auto-review/src ./packages/pi-codex-auto-review/src
+COPY packages/pi-codex-auto-review/tsconfig.json ./packages/pi-codex-auto-review/
 COPY test ./test
 COPY scripts ./scripts
 COPY .github ./.github
-COPY tsconfig.json README.md LICENSE NOTICE ./
+COPY tsconfig.base.json README.md README.ko.md LICENSE NOTICE ./
 COPY docs ./docs
-RUN npm run build && node test/docker/package.mjs \
+RUN npm run build --workspace pi-codex-auto-review && node test/docker/package.mjs \
     && mkdir -p .reports/pi-guard docs/handoffs/pi-guard \
     && chown -R node:node /opt/pi-guard
 ARG SOURCE_DIGEST

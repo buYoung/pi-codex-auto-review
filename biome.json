@@ -24,5 +24,17 @@
         "rules": {
             "preset": "recommended"
         }
-    }
+    },
+    "overrides": [
+        {
+            "includes": ["scripts/**", "test/**"],
+            "linter": {
+                "rules": {
+                    "suspicious": {
+                        "noUndeclaredEnvVars": "off"
+                    }
+                }
+            }
+        }
+    ]
 }

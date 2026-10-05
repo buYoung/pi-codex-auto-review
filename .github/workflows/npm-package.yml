@@ -2,8 +2,13 @@ name: npm 배포
 on:
   push:
     tags:
-      - 'v*'
+      - '*@[0-9]*'
   workflow_dispatch:
+    inputs:
+      package:
+        description: 압축 패키지를 준비할 작업 공간 패키지 이름
+        required: true
+        default: pi-codex-auto-review
 permissions:
   contents: read
 concurrency:
@@ -29,36 +34,50 @@ jobs:
         env:
           RELEASE_EVENT: ${{ github.event_name }}
           RELEASE_TAG: ${{ github.ref_name }}
+          INPUT_PACKAGE: ${{ inputs.package }}
         run: |
           node --input-type=module <<'JS'
           import { readFileSync, appendFileSync } from 'node:fs';
           import { execFileSync } from 'node:child_process';
           import assert from 'node:assert/strict';
           import semver from 'semver';
-          const {name, version} = JSON.parse(readFileSync('package.json', 'utf8'));
-          assert.equal(name, 'pi-codex-auto-review');
+          const isTagPush = process.env.RELEASE_EVENT === 'push';
+          const tag = process.env.RELEASE_TAG;
+          const packageName = isTagPush ? tag.slice(0, tag.lastIndexOf('@')) : process.env.INPUT_PACKAGE;
+          const workspace = JSON.parse(execFileSync('npm', ['query', '.workspace'], {encoding: 'utf8'}))
+            .find((candidate) => candidate.name === packageName);
+          assert.ok(workspace && workspace.private !== true, `게시할 작업 공간 패키지가 아닙니다: ${packageName}`);
+          const {name, version} = JSON.parse(readFileSync(`${workspace.location}/package.json`, 'utf8'));
           assert.ok(semver.valid(version) && !semver.parse(version).build.length);
-          if (process.env.RELEASE_EVENT === 'push') {
-            assert.equal(process.env.RELEASE_TAG, `v${version}`, '태그와 package.json 버전이 다릅니다.');
+          if (isTagPush) {
+            assert.equal(tag, `${name}@${version}`, '태그와 package.json 버전이 다릅니다.');
             execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'], {stdio: 'inherit'});
           }
-          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nnpm-tag=${semver.prerelease(version) ? 'next' : 'latest'}\n`);
+          const tarball = `${name.replace(/^@/, '').replace('/', '-')}-${version}.tgz`;
+          appendFileSync(process.env.GITHUB_OUTPUT, `package=${name}\nversion=${version}\ntarball=${tarball}\nnpm-tag=${semver.prerelease(version) ? 'next' : 'latest'}\n`);
           JS
-      - run: npm run build
-      - run: npm run test:policy
+      - name: 패키지 빌드
+        env:
+          PACKAGE_NAME: ${{ steps.release.outputs.package }}
+        run: npm run build -- --filter="$PACKAGE_NAME"
+      - if: steps.release.outputs.package == 'pi-codex-auto-review'
+        run: npm run test:policy
       - run: mkdir -p tmp/npm
-      - run: npm pack --pack-destination tmp/npm
+      - name: 압축 패키지 생성
+        env:
+          PACKAGE_NAME: ${{ steps.release.outputs.package }}
+        run: npm pack --workspace "$PACKAGE_NAME" --pack-destination tmp/npm
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: npm-package
           path: tmp/npm/*.tgz
           if-no-files-found: error
     outputs:
-      version: ${{ steps.release.outputs.version }}
+      tarball: ${{ steps.release.outputs.tarball }}
       npm-tag: ${{ steps.release.outputs.npm-tag }}
   publish:
     name: npm에 게시
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: package
     runs-on: ubuntu-22.04
     timeout-minutes: 10
@@ -89,6 +108,6 @@ jobs:
           JS
       - name: 검증한 압축 패키지 게시
         env:
-          PACKAGE_VERSION: ${{ needs.package.outputs.version }}
+          TARBALL: ${{ needs.package.outputs.tarball }}
           NPM_TAG: ${{ needs.package.outputs.npm-tag }}
-        run: npm publish "tmp/npm/pi-codex-auto-review-${PACKAGE_VERSION}.tgz" --access public --tag "$NPM_TAG" --registry=https://registry.npmjs.org/
+        run: npm publish "tmp/npm/$TARBALL" --access public --tag "$NPM_TAG" --registry=https://registry.npmjs.org/

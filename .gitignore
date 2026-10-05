@@ -1,15 +1,23 @@
 /tmp
 /out-tsc
 
-/node_modules
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 /.pnp
 .pnp.js
 
-/dist
+dist/
+.turbo/
 /.reports
+
+# Repository documents copied in only while packing (scripts/package-shared-files.mjs).
+/packages/pi-codex-auto-review/README.md
+/packages/pi-codex-auto-review/README.ko.md
+/packages/pi-codex-auto-review/LICENSE
+/packages/pi-codex-auto-review/NOTICE
+/packages/pi-codex-auto-review/docs/
 
 .vscode/*
 
