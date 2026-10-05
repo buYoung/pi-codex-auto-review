@@ -18,6 +18,8 @@ dist/
 /packages/pi-codex-auto-review/LICENSE
 /packages/pi-codex-auto-review/NOTICE
 /packages/pi-codex-auto-review/docs/
+/packages/pi-codex-computer-use/LICENSE
+/packages/pi-codex-computer-use/docs/
 
 .vscode/*
 
