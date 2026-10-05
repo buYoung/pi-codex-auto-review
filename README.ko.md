@@ -24,7 +24,7 @@ pi list
 
 ## 승인 설정
 
-- `/approve`: **Approve for me**(보조 모델 검토) 또는 **Ask for approval**(사용자 승인)을 선택합니다.
+- `/approve`: **Approve for me**(보조 모델 검토), **Ask for approval**(사용자 승인), **Full Access**(확인 후 이번 세션 동안 승인 없이 실행) 중 하나를 선택합니다.
 - `/approve-model`: Pi의 현재 `/scoped-models` 범위에서 등록된 모델을 검색해 보조 검토 모델을 선택합니다. **Use current Pi model**로 현재 주 모델을 사용하도록 되돌릴 수 있습니다.
 
 선택은 `<agentDir>/guard/settings.json`에 저장되고 다음 실행에도 적용됩니다. 주 대화 모델은 바뀌지 않습니다. 취소하면 기존 설정을 유지합니다.

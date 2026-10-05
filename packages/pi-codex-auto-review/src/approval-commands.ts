@@ -22,10 +22,12 @@ import { type GuardSettings, validateSettings } from "./policy/index.js";
 import type { GuardController } from "./tools/controller.js";
 
 type ReviewModel = GuardSettings["reviewModel"];
+type ApprovalMode = GuardSettings["approvalsReviewer"] | "full_access";
 const CURRENT_MODEL = "current";
 const modeNames = {
     auto_review: "Approve for me",
     user: "Ask for approval",
+    full_access: "Full Access",
 } as const;
 // Match the public Codex permission picker: https://learn.chatgpt.com/docs/security-administration
 const approvalModes: SelectItem[] = [
@@ -39,12 +41,26 @@ const approvalModes: SelectItem[] = [
         label: modeNames.user,
         description: "Always ask to edit external files and use the internet",
     },
+    // Codex TUI permission_preset_description("full-access"), naming Pi instead of Codex.
+    {
+        value: "full_access",
+        label: modeNames.full_access,
+        description:
+            "Use with caution: Pi can edit files outside this workspace and access the internet without approval",
+    },
+];
+// Codex TUI open_full_access_confirmation(), naming Pi instead of Codex.
+const FULL_ACCESS_CONFIRMATION =
+    "Enable full access?\nWhen Pi runs with full access, it can edit any file on your computer and run commands with network, without your approval. Exercise caution when enabling full access. This significantly increases the risk of data loss, leaks, or unexpected behavior.";
+const fullAccessChoices = [
+    "Yes, continue anyway — Apply full access for this session",
+    "Cancel — Go back without enabling full access",
 ];
 
 class ApprovalModePicker extends Container {
     private readonly list: SelectList;
     constructor(
-        current: GuardSettings["approvalsReviewer"],
+        current: ApprovalMode,
         finish: (value: string | undefined) => void,
     ) {
         super();
@@ -296,39 +312,61 @@ export function registerApprovalCommands(
                     "INVALID_APPROVAL_COMMAND",
                     "Use /approve to choose a mode or /approve retry to review a denied action again.",
                 );
-            const current = guard.options.settings;
+            const current: ApprovalMode = guard.isFullAccess
+                ? "full_access"
+                : guard.options.settings.approvalsReviewer;
             const choices = approvalModes.map(
                 (item) => `${item.label} — ${item.description}`,
             );
-            const choice =
-                context.mode === "rpc"
-                    ? await context.ui
-                          .select(
-                              `Approval mode — Current: ${modeNames[current.approvalsReviewer]}`,
-                              choices,
-                          )
-                          .then(
-                              (selected) =>
-                                  approvalModes[choices.indexOf(selected ?? "")]
-                                      ?.value,
-                          )
-                    : await context.ui.custom<string | undefined>(
-                          (_tui, _theme, _keys, done) =>
-                              new ApprovalModePicker(
-                                  current.approvalsReviewer,
-                                  done,
-                              ),
-                      );
-            if (choice === undefined) return;
-            const reviewer =
-                choice === "auto_review"
-                    ? "auto_review"
-                    : choice === "user"
-                      ? "user"
-                      : undefined;
-            if (!reviewer) return;
-            await apply({ approvalsReviewer: reviewer }, context);
-            context.ui.notify(`Approval mode: ${modeNames[reviewer]}`, "info");
+            // Like Codex, cancelling the Full Access confirmation returns to the picker.
+            for (;;) {
+                const choice =
+                    context.mode === "rpc"
+                        ? await context.ui
+                              .select(
+                                  `Approval mode — Current: ${modeNames[current]}`,
+                                  choices,
+                              )
+                              .then(
+                                  (selected) =>
+                                      approvalModes[
+                                          choices.indexOf(selected ?? "")
+                                      ]?.value,
+                              )
+                        : await context.ui.custom<string | undefined>(
+                              (_tui, _theme, _keys, done) =>
+                                  new ApprovalModePicker(current, done),
+                          );
+                if (choice === undefined) return;
+                if (choice === "full_access") {
+                    const confirmed = await context.ui.select(
+                        FULL_ACCESS_CONFIRMATION,
+                        fullAccessChoices,
+                    );
+                    if (confirmed !== fullAccessChoices[0]) continue;
+                    guard.setFullAccess(true);
+                    context.ui.setStatus("auto-review", undefined);
+                    context.ui.notify(
+                        `Approval mode: ${modeNames.full_access}`,
+                        "info",
+                    );
+                    return;
+                }
+                const reviewer =
+                    choice === "auto_review"
+                        ? "auto_review"
+                        : choice === "user"
+                          ? "user"
+                          : undefined;
+                if (!reviewer) return;
+                await apply({ approvalsReviewer: reviewer }, context);
+                guard.setFullAccess(false);
+                context.ui.notify(
+                    `Approval mode: ${modeNames[reviewer]}`,
+                    "info",
+                );
+                return;
+            }
         },
     });
     pi.registerCommand("approve-model", {

@@ -7,6 +7,7 @@ import {
     type Json,
     type PolicyDecision,
 } from "../contracts.js";
+import type { PackageApproval } from "../package-approvals.js";
 import type { GuardSettings } from "../policy/index.js";
 
 export interface ExternalToolIdentity {
@@ -22,6 +23,8 @@ export interface ExternalToolIdentity {
     readonly requiresUserInput?: boolean;
     readonly isSensitiveAction?: boolean;
     readonly requiresStrictReview?: boolean;
+    /** Version and content fingerprint used to reuse an earlier approval of the same tool. */
+    readonly packageApproval?: PackageApproval;
 }
 /** Literal ordering of Codex mcp_tool_call.rs requires_mcp_tool_approval. */
 export function requiresMcpApproval(

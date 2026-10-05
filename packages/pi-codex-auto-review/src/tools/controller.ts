@@ -15,6 +15,7 @@ import {
     type ActionSource,
     canonicalJson,
     createAction,
+    decision,
     digest,
     type ExecutionOptions,
     type GuardAction,
@@ -26,6 +27,11 @@ import {
     TOOL_NAMES,
     type WorkerJob,
 } from "../contracts.js";
+import {
+    isPackageCacheEligible,
+    type PackageApproval,
+    skillPackageApproval,
+} from "../package-approvals.js";
 import {
     canonicalPath,
     type GuardSettings,
@@ -71,6 +77,8 @@ export class GuardController {
         string,
         { token: string; isEnabled: boolean }
     >();
+    /** Codex Full Access: applies until Pi exits or another approval mode is chosen; never saved. */
+    private isFullAccessEnabled = false;
     constructor(
         readonly options: {
             profile: PermissionProfile;
@@ -129,6 +137,22 @@ export class GuardController {
         });
         this.settingsUpdates = task.catch(() => {});
         await task;
+    }
+    get isFullAccess(): boolean {
+        return this.isFullAccessEnabled;
+    }
+    setFullAccess(isEnabled: boolean): void {
+        this.assertReady();
+        this.isFullAccessEnabled = isEnabled;
+    }
+    /** Full Access skips approval and every path, command and network restriction, as in Codex. */
+    private async evaluate(
+        action: GuardAction,
+        signal: AbortSignal,
+    ): Promise<PolicyDecision> {
+        return this.isFullAccessEnabled
+            ? decision(action, "allow", "Full Access permits this action")
+            : this.policy.evaluate(action, signal);
     }
     assertReady(): void {
         if (!this.isReady || this.stopped.signal.aborted)
@@ -282,6 +306,7 @@ export class GuardController {
         context: ExtensionContext,
         signal: AbortSignal,
         trustedAuthorization = "",
+        packageApproval?: PackageApproval,
     ) {
         this.reviewContext.refreshInstructions();
         if (context.getSystemPrompt)
@@ -347,6 +372,7 @@ export class GuardController {
             reviewContext,
             settings: this.options.settings,
             executionContext,
+            packageApproval,
             onReviewStart: () => {
                 this.activeReviews.add(action.digest);
                 if (context.hasUI)
@@ -532,13 +558,21 @@ export class GuardController {
                     await checkCurrent();
                     const admission = await this.requestAdmission(
                         candidate,
-                        externalPolicy(
-                            candidate,
-                            candidateIdentity,
-                            this.options.settings,
-                        ),
+                        this.isFullAccessEnabled
+                            ? decision(
+                                  candidate,
+                                  "allow",
+                                  "Full Access permits this action",
+                              )
+                            : externalPolicy(
+                                  candidate,
+                                  candidateIdentity,
+                                  this.options.settings,
+                              ),
                         context,
                         signal,
+                        "",
+                        candidateIdentity.packageApproval,
                     );
                     if (!admission.isAllowed)
                         throw this.denied(admission, args);
@@ -649,13 +683,20 @@ export class GuardController {
             ...(options.signal ? [options.signal] : []),
         ]);
         const authorizationVersion = this.reviewContext.scopeVersion;
-        const policyDecision = await this.policy.evaluate(action, signal);
+        const policyDecision = await this.evaluate(action, signal);
+        const packageApproval =
+            job.kind === "shell" && isPackageCacheEligible(policyDecision)
+                ? await skillPackageApproval(job.command, job.cwd).catch(
+                      () => undefined,
+                  )
+                : undefined;
         const admission = await this.requestAdmission(
             action,
             policyDecision,
             context,
             signal,
             trustedAuthorization,
+            packageApproval,
         );
         if (!admission.isAllowed) throw this.denied(admission, retryArguments);
         signal.throwIfAborted();
@@ -673,7 +714,7 @@ export class GuardController {
                 "STALE_APPROVAL",
                 "Execution context changed after admission",
             );
-        const finalDecision = await this.policy.evaluate(action, signal);
+        const finalDecision = await this.evaluate(action, signal);
         if (finalDecision.kind === "deny")
             throw new GuardError("PERMISSION_DENIED", finalDecision.reason);
         if (digest(finalDecision.delta) !== digest(policyDecision.delta))

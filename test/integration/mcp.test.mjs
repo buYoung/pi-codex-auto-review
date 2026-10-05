@@ -443,7 +443,7 @@ test("[external-tools] changed registration and cancellation during review canno
     assert.equal(effects, 0);
     assert.equal(reviews, 2);
 });
-test("[external-tools] real MCP stdio server runs only an approved exact call and preserves structured results", async (t) => {
+test("[external-tools] real MCP stdio server reuses an approval of the same tool version and preserves structured results", async (t) => {
     const f = await fixture(t),
         target = join(f.outside, "sentinel.txt");
     let reviews = 0;
@@ -478,9 +478,9 @@ test("[external-tools] real MCP stdio server runs only an approved exact call an
     const events = [];
     runtime.session.subscribe((event) => events.push(event));
     await invoke(runtime, "mcp__stdio__write_owned", "approved-effect");
-    await invoke(runtime, "mcp__stdio__write_owned", "denied-effect");
-    assert.equal(reviews, 2);
-    assert.equal(await readFile(target, "utf8"), "approved-effect");
+    await invoke(runtime, "mcp__stdio__write_owned", "reused-effect");
+    assert.equal(reviews, 1);
+    assert.equal(await readFile(target, "utf8"), "reused-effect");
     const result = events.find(
         (event) => event.type === "tool_execution_end" && !event.isError,
     );
@@ -489,7 +489,7 @@ test("[external-tools] real MCP stdio server runs only an approved exact call an
         "approved-effect",
     );
     assert.ok(
-        events.some(
+        !events.some(
             (event) => event.type === "tool_execution_end" && event.isError,
         ),
     );

@@ -24,7 +24,7 @@ Pi can ignore extension loading failures. If approval protection must be ready b
 
 ## Approval settings
 
-- `/approve`: Choose **Approve for me** (secondary model review) or **Ask for approval** (user approval).
+- `/approve`: Choose **Approve for me** (secondary model review), **Ask for approval** (user approval), or **Full Access** (no approval for this session, after confirmation).
 - `/approve-model`: Search registered models and choose a secondary review model within Pi's current `/scoped-models` scope. Choose **Use current Pi model** to return to the main model.
 
 Selections are saved to `<agentDir>/guard/settings.json` and persist across runs. The main conversation model stays unchanged. Cancelling preserves the existing settings.

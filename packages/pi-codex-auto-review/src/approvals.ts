@@ -19,6 +19,12 @@ import {
     type ReviewResult,
     ruleDigest,
 } from "./contracts.js";
+import {
+    isPackageCacheEligible,
+    type PackageApproval,
+    type PackageApprovalScope,
+    type PackageApprovalStore,
+} from "./package-approvals.js";
 import type { GuardSettings } from "./policy/index.js";
 import { ReviewLifecycle } from "./review/lifecycle.js";
 import {
@@ -112,10 +118,34 @@ export class ApprovalManager {
             clock?: Clock;
             approvalPolicy?: ApprovalPolicy;
             approvalsReviewer?: "auto_review" | "user";
+            packageApprovals?: PackageApprovalStore;
         },
     ) {}
     async initialize(): Promise<void> {
         this.grants = (await this.options.persistence?.load()) ?? [];
+        await this.options.packageApprovals?.load();
+    }
+    /** Caching is an optimization: a failed save never changes the admission result. */
+    private async rememberPackage(
+        action: GuardAction,
+        approval: PackageApproval | undefined,
+        scope: PackageApprovalScope,
+    ): Promise<void> {
+        if (!approval || !this.options.packageApprovals) return;
+        try {
+            await this.options.packageApprovals.remember(
+                approval,
+                scope,
+                action.sessionId,
+            );
+            await this.options.audit.record(action, "package-approval", scope);
+        } catch {
+            await this.options.audit.record(
+                action,
+                "package-approval",
+                "save-failed",
+            );
+        }
     }
     reset(sessionId?: string): void {
         this.epoch.abort(new GuardError("SESSION_CHANGED", "Session changed"));
@@ -141,6 +171,7 @@ export class ApprovalManager {
             reviewContext?: ReviewContext;
             settings?: GuardSettings;
             executionContext?: ReviewExecutionContext;
+            packageApproval?: PackageApproval;
             onReviewStart?: () => void;
             onReviewResult?: (result?: ReviewResult) => void;
             onInterrupt?: () => void;
@@ -249,6 +280,33 @@ export class ApprovalManager {
                 reason: "Bound rule authorized the action",
             };
         }
+        const packageApproval =
+            !retry && isPackageCacheEligible(policy)
+                ? context.packageApproval
+                : undefined;
+        if (
+            packageApproval &&
+            this.options.packageApprovals?.has(
+                packageApproval,
+                action.sessionId,
+            )
+        ) {
+            this.lifecycle.record(action, contextId);
+            await this.options.audit.record(
+                action,
+                "package-approval",
+                "reused",
+            );
+            return {
+                isAllowed: true,
+                delta: policy.delta,
+                authority: {
+                    kind: "scoped-permissions",
+                    actionDigest: action.digest,
+                },
+                reason: "The same approved package version authorized the action",
+            };
+        }
         context.onReviewStart?.();
         const review =
             this.options.approvalsReviewer === "user" ||
@@ -306,6 +364,12 @@ export class ApprovalManager {
                     "Full command approval requires a structured assessment",
                 );
             await this.options.audit.record(action, "review", "approved");
+            if (review.result?.status === "approved")
+                await this.rememberPackage(
+                    action,
+                    packageApproval,
+                    "persistent",
+                );
             return {
                 isAllowed: true,
                 delta: policy.delta,
@@ -380,7 +444,10 @@ export class ApprovalManager {
                     }
                 }
                 deadline.signal.throwIfAborted();
-                if (choice !== "once") this.grants.push(grant);
+                if (choice !== "once") {
+                    this.grants.push(grant);
+                    await this.rememberPackage(action, packageApproval, choice);
+                }
                 await this.options.audit.record(action, "approval", choice);
                 // Once-grants are consumed at logical admission; helpers share this returned immutable profile.
                 return {

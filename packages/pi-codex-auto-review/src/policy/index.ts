@@ -1,5 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -247,16 +247,9 @@ export async function defaultProfile(
     controlPaths: readonly string[] = [],
     trustedExtensionPaths: readonly string[] = [],
 ): Promise<PermissionProfile> {
-    const workspace = await canonicalPath(cwd, cwd),
-        home = homedir();
-    const hardRead = [
-        join(home, ".ssh"),
-        join(home, ".aws"),
-        join(home, ".codex"),
-        join(home, ".pi", "agent"),
-        ...controlPaths,
-        ...settings.ruleFiles,
-    ];
+    const workspace = await canonicalPath(cwd, cwd);
+    // Codex workspace-write reads everything; only guard control and rule files stay hidden.
+    const hardRead = [...controlPaths, ...settings.ruleFiles];
     const hardWrite = [
         ...hardRead,
         join(workspace, ".pi", "guard"),
@@ -296,7 +289,7 @@ export async function defaultProfile(
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
         }
-        for (const name of [".agents", ".codex"]) {
+        for (const name of [".agents", ".codex", ".aws"]) {
             const path = join(root, name);
             try {
                 if ((await stat(path)).isDirectory())
@@ -306,12 +299,9 @@ export async function defaultProfile(
                     throw error;
             }
         }
+        // Like Codex project .codex metadata, project .pi edits go through approval review.
         readOnlyPaths.push(await canonicalPath(join(root, ".pi"), cwd));
-        hardWrite.push(
-            ...["mcp.json", "settings.json", "extensions", "guard"].map(
-                (name) => join(root, ".pi", name),
-            ),
-        );
+        hardWrite.push(join(root, ".pi", "guard"));
     }
     return createProfile({
         mode: settings.mode,

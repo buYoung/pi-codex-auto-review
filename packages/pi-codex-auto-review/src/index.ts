@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import {
     type BashToolOptions,
     createBashToolDefinition,
@@ -19,6 +19,7 @@ import { ApprovalManager, FileGrantPersistence } from "./approvals.js";
 import { AuditLog } from "./audit.js";
 import type { PermissionProfile } from "./contracts.js";
 import { createProfile } from "./contracts.js";
+import { PackageApprovalStore } from "./package-approvals.js";
 import { defaultProfile, type GuardSettings } from "./policy/index.js";
 import {
     AUTHORIZATION_ENTRY,
@@ -68,10 +69,11 @@ export function createGuardExtension(options: GuardOptions = {}) {
             Boolean(options.settingsPath),
         );
         const settings = await settingsStore.load();
+        // Only guard control files stay absolutely protected; Codex has no other default denies.
         const baseline = await defaultProfile(
             cwd,
             settings,
-            [agentDir, settingsPath],
+            [controlDir, settingsPath],
             options.trustedExtensionPaths,
         );
         const profile = options.profile
@@ -89,6 +91,15 @@ export function createGuardExtension(options: GuardOptions = {}) {
                           ...baseline.denyWrite,
                       ]),
                   ],
+                  // Callers own metadata choices, but project .pi config always needs approval.
+                  readOnlyPaths: [
+                      ...new Set([
+                          ...(options.profile.readOnlyPaths ?? []),
+                          ...(baseline.readOnlyPaths ?? []).filter(
+                              (path) => basename(path) === ".pi",
+                          ),
+                      ]),
+                  ],
               })
             : baseline;
         const audit = new AuditLog(join(controlDir, "audit.jsonl"));
@@ -100,6 +111,9 @@ export function createGuardExtension(options: GuardOptions = {}) {
             audit,
             persistence: new FileGrantPersistence(
                 join(controlDir, "grants.json"),
+            ),
+            packageApprovals: new PackageApprovalStore(
+                join(controlDir, "package-approvals.json"),
             ),
         });
         controller = new GuardController({
@@ -175,27 +189,11 @@ export function createGuardExtension(options: GuardOptions = {}) {
         pi.on("message_end", (event) => {
             guard.reviewContext.message(event.message);
         });
+        // Like Codex dynamic and extension tools, other extension tools run without approval;
+        // shell, file, network and MCP actions keep their own review paths.
         pi.on("tool_call", (event) => {
             guard.assertReady();
             guard.noteCall(event);
-            if (
-                ![
-                    "bash",
-                    "read",
-                    "edit",
-                    "write",
-                    "grep",
-                    "find",
-                    "ls",
-                    "codemode",
-                    ...guard.options.settings.trustedTools,
-                ].includes(event.toolName) &&
-                !guard.isExternalTool(event.toolName)
-            )
-                return {
-                    block: true,
-                    reason: "Unknown tool needs an explicit trusted adapter",
-                };
         });
         pi.on("tool_execution_end", (event) => {
             const result = event.result ?? {},

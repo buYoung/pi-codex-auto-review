@@ -22,7 +22,7 @@ Pi does not install a physical copy of the host SDK for managed extensions. The 
 
 The earlier `Directory metadata scope is too large to qualify safely` error and startup delays came from sandbox directory inspection. The current source removes that execution path and the `@anthropic-ai/sandbox-runtime` dependency.
 
-The extension can read the code and dependencies needed to run even inside the default installation directory, `.pi/agent/npm`. Agent settings and credential paths remain protected.
+As in Codex `workspace-write`, the model can read any file except the guard control files (`<agentDir>/guard`, the settings file, and `ruleFiles`). Writes outside the workspace and to project `.git`, `.agents`, `.codex`, `.aws`, and `.pi` metadata go through approval review instead of being blocked. The guard control files, the extension's own code, and trusted extension code stay absolutely protected.
 
 ## Building from source
 
@@ -104,13 +104,13 @@ try {
 | `profile` | Directly supplies an SDK profile, including `readOnlyPaths`. Required control and authentication path protection also applies |
 | `mcp: false`, `mcpToolPolicies` | Disables MCP connections, or configures `approvalMode` by `server/tool` key |
 
-The protected entry point disables automatic extension discovery. Tools outside the known set are blocked unless they have a trusted adapter.
+The protected entry point disables automatic extension discovery. As with Codex dynamic and extension tools, tools registered by loaded extensions run without approval; shell, file, network, and MCP actions keep their review paths.
 
 ## Policy file
 
 Specify a policy with `--policy` or SDK `settings` or `settingsPath`.
 
-A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve for me** or **Ask for approval** in `/approve`. The screen uses the English descriptions from [Codex's official approval picker](https://learn.chatgpt.com/docs/security-administration) and wraps the selected description on narrow terminals. Command descriptions, selection screens, status text, and fixed approval dialog text are in English.
+A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve for me**, **Ask for approval**, or **Full Access** in `/approve`. As in Codex, **Full Access** asks for confirmation, runs every action without approval or path restrictions, and applies only until Pi exits or another mode is chosen; it is never saved. The screen uses the English descriptions from [Codex's official approval picker](https://learn.chatgpt.com/docs/security-administration) and wraps the selected description on narrow terminals. Command descriptions, selection screens, status text, and fixed approval dialog text are in English.
 
 `/approve-model` shows only available models in Pi's current `/scoped-models` scope. Without a configured scope, it shows all available models, as Pi does. If every scoped model is unavailable, it does not expand to the full list. A model removed from the scope while the picker is open is not saved; existing settings are preserved.
 
@@ -143,7 +143,7 @@ A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve
 | `ruleFiles` | `[]` | Paths to the rule files described below |
 | `commandRules` | `[]` | Literal argument prefix rules (`allow`, `ask`, `deny`) |
 | `allowedDomains` | `[]` | Allowed domain patterns |
-| `trustedTools` | `[]` | Additional tool names allowed outside the known set |
+| `trustedTools` | `[]` | Kept for compatibility; extension tools no longer need to be listed |
 | `reviewTimeoutMs`, `approvalTimeoutMs`, `executionTimeoutSeconds` | 20000, 60000, 120 | Reviewer and approval dialog timeouts are in milliseconds; shell timeout is in seconds |
 | `reviewPolicy`, `reviewMaxRounds`, `reviewMaxOutputTokens`, `reviewContextChars` | `null`, 4, 2048, 60000 | Replaces the reviewer's organization policy section. Risk assessment, source distinction, and outcome criteria remain intact |
 | `writableRoots` | `[]` | Additional writable roots |
@@ -182,6 +182,7 @@ Evaluation exposes only Starlark values and policy functions, with no host file 
 - Errors and timeouts never become approvals. Invalid risk or authorization level responses are also treated as review failures.
 - `/approve` configures the approval method; `/approve-model` selects the secondary model. Changes apply immediately after saving and invalidate pending reviews and saved approvals from the previous policy.
 - After reading a denial reason, the user can authorize the exact operation, target, and content to send in an ordinary message. The next review receives the latest authorization and new facts; no special command is needed. If the user withdraws authorization or requests another target, review is based on the current instructions and actual operation.
+- An approved MCP tool or skill version is reused without another review. The fingerprint covers the MCP server configuration, the server name and version from `initialize`, and the tool definition, or every file in the skill directory that contains `SKILL.md`. Automatic approvals and **Save as an allow rule** are stored in `<agentDir>/guard/package-approvals.json`; **Allow for this session** lasts for the session; **Allow once** is not reused. A changed version or content is reviewed again. Calls that need extra paths or domains, escalation, a rule prompt, strict MCP review, or user input are always reviewed. Skill reuse applies only to a single `<script>` or `<interpreter> <script>` command, and skills that contain symbolic links are not cached.
 - `/approve retry` lets the user select one exact operation from up to ten recent automatic review denials. Selecting it after checking the target, input, and denial reason triggers one new review of the same operation in the same context. It does not automatically allow the operation or grant session approval. A previous `critical` assessment can be reevaluated, but an operation still assessed as `critical` or subject to an explicit absolute denial remains blocked. The authorization marker does not apply to changed inputs or stale context.
 - A custom `reviewPolicy` replaces only the original organization policy section. Strings such as `{{ extra_policy }}` inside the policy are preserved literally. Risk and authorization criteria are not replaced.
 - Actual model responses must use the structured `outcome` assessment. The existing `decision` interface of a `ReviewProvider` explicitly injected through the SDK remains for compatibility; actual Pi models cannot use that path.

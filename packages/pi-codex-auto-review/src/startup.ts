@@ -191,7 +191,7 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
                     `Registered model not found: ${options.modelSelection.provider}/${options.modelSelection.id}`,
                 );
             // A fixed SDK `tools` list is a permanent allowlist and discards later MCP registrations.
-            // Local tools still have final execution guards; unknown tools are blocked by the guard hook.
+            // Local tools still have final execution guards; other extension tools run as in Codex.
             const result = await createAgentSessionFromServices({
                 services,
                 sessionManager: input.sessionManager,
@@ -205,21 +205,6 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
             session.setActiveToolsByName(
                 session
                     .getAllTools()
-                    .filter(
-                        (tool) =>
-                            [
-                                "read",
-                                "bash",
-                                "edit",
-                                "write",
-                                "grep",
-                                "find",
-                                "ls",
-                                "codemode",
-                                ...(options.settings?.trustedTools ?? []),
-                            ].includes(tool.name) ||
-                            guard.assertReady().isExternalTool(tool.name),
-                    )
                     .filter((tool) =>
                         ["direct", "model-only"].includes(tool.exposure),
                     )

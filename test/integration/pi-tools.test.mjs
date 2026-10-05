@@ -767,7 +767,7 @@ test("[tools] outside creation reviews the exact target and cannot approve a lat
         "unchanged",
     );
 });
-test("[startup] public startup performs no execution qualification and still rejects discarded factories and unknown tools", async (t) => {
+test("[startup] public startup performs no execution qualification, still rejects discarded factories and runs extension tools as Codex does", async (t) => {
     const f = await fixture(t),
         modelRuntime = await offlineModelRuntime(f),
         executor = {
@@ -813,7 +813,7 @@ test("[startup] public startup performs no execution qualification and still rej
         [{ name: "unknown", args: { path: "a" } }],
     ]);
     await runtime.session.prompt("Check unknown.");
-    assert.equal(called, false);
+    assert.equal(called, true);
 });
 test("[startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery", async (t) => {
     const f = await fixture(t),
@@ -863,10 +863,11 @@ test("[startup] explicit installed cloud provider loads through public Pi TypeSc
         "explicit-provider",
     );
 });
-test("[startup] default permissions protect the complete explicitly selected agent credential directory", async (t) => {
+test("[startup] default permissions protect the guard control directory inside the explicitly selected agent directory", async (t) => {
     const f = await fixture(t),
-        authPath = join(f.agentDir, "auth.json"),
+        authPath = join(f.agentDir, "guard", "control-fixture.txt"),
         tools = [];
+    await mkdir(join(f.agentDir, "guard"), { recursive: true });
     await writeFile(authPath, "owned-auth-fixture");
     const extension = createGuardExtension({
         mcp: false,

@@ -22,7 +22,7 @@ Pi는 관리하는 확장에 호스트 SDK의 물리적 복사본을 설치하�
 
 기존 버전의 `Directory metadata scope is too large to qualify safely`와 시작 지연은 샌드박스의 디렉터리 검사 경로에서 발생했습니다. 현재 소스에서는 이 실행 경로와 `@anthropic-ai/sandbox-runtime` 의존성을 제거했습니다.
 
-기본 설치 위치인 `.pi/agent/npm` 안에서도 실행에 필요한 확장 코드와 의존성을 읽을 수 있습니다. 에이전트 설정과 자격 증명 경로의 보호는 유지합니다.
+Codex `workspace-write`와 같이 모델은 가드 제어 파일(`<agentDir>/guard`, 설정 파일, `ruleFiles`)을 제외한 모든 파일을 읽을 수 있습니다. 작업 공간 밖과 프로젝트의 `.git`·`.agents`·`.codex`·`.aws`·`.pi` 메타데이터에 쓰는 작업은 차단하지 않고 승인 검토를 거칩니다. 가드 제어 파일과 확장 자체 코드, 신뢰한 확장 코드는 계속 절대 보호합니다.
 
 ## 소스에서 빌드
 
@@ -104,13 +104,13 @@ try {
 | `profile` | `readOnlyPaths` 등 SDK 프로필을 직접 전달합니다. 필수 제어·인증 경로 보호는 함께 적용됩니다 |
 | `mcp: false`, `mcpToolPolicies` | MCP 연결 끄기와 `서버/도구` 키별 `approvalMode` |
 
-보호 진입점은 자동 확장 탐색을 끕니다. 알려진 도구 외에는 신뢰한 어댑터가 없는 도구를 차단합니다.
+보호 진입점은 자동 확장 탐색을 끕니다. Codex의 동적·확장 도구처럼 불러온 확장이 등록한 도구는 승인 없이 실행하며, 셸·파일·네트워크·MCP 작업은 기존 검토 경로를 유지합니다.
 
 ## 정책 파일
 
 `--policy` 또는 SDK의 `settings`·`settingsPath`로 지정합니다.
 
-일반 Pi 설치에서는 `<agentDir>/guard/settings.json`을 사용합니다. `/approve`에서 **Approve for me** 또는 **Ask for approval**을 선택합니다. 화면에는 [Codex의 공식 승인 선택 화면](https://learn.chatgpt.com/docs/security-administration)과 같은 영문 설명을 표시하며, 좁은 터미널에서도 선택한 설명을 줄바꿈해 보여 줍니다. 명령 설명·선택 화면·상태·승인 대화상자의 고정 문구는 영어입니다.
+일반 Pi 설치에서는 `<agentDir>/guard/settings.json`을 사용합니다. `/approve`에서 **Approve for me**, **Ask for approval**, **Full Access** 중 하나를 선택합니다. Codex와 같이 **Full Access**는 확인을 거친 뒤 모든 작업을 승인과 경로 제한 없이 실행하며, Pi를 종료하거나 다른 방식을 고를 때까지만 적용되고 저장하지 않습니다. 화면에는 [Codex의 공식 승인 선택 화면](https://learn.chatgpt.com/docs/security-administration)과 같은 영문 설명을 표시하며, 좁은 터미널에서도 선택한 설명을 줄바꿈해 보여 줍니다. 명령 설명·선택 화면·상태·승인 대화상자의 고정 문구는 영어입니다.
 
 `/approve-model`은 Pi의 현재 `/scoped-models` 범위에서 사용 가능한 모델만 표시합니다. 범위를 지정하지 않았다면 Pi와 동일하게 전체 사용 가능 모델을 표시합니다. 범위의 모델이 모두 사용할 수 없더라도 전체 목록으로 임의 확대하지 않습니다. 선택창이 열린 동안 범위에서 빠진 모델은 저장하지 않으며 기존 설정을 유지합니다.
 
@@ -143,7 +143,7 @@ try {
 | `ruleFiles` | `[]` | 아래 규칙 파일 경로 |
 | `commandRules` | `[]` | 리터럴 인자 접두사 규칙 (`allow`·`ask`·`deny`) |
 | `allowedDomains` | `[]` | 허용 도메인 패턴 |
-| `trustedTools` | `[]` | 알려진 도구 외에 통과할 추가 도구 이름 |
+| `trustedTools` | `[]` | 호환을 위해 유지합니다. 확장 도구는 더 이상 등록하지 않아도 됩니다 |
 | `reviewTimeoutMs`, `approvalTimeoutMs`, `executionTimeoutSeconds` | 20000, 60000, 120 | 검토자·승인 창은 밀리초, 쉘은 초 단위입니다 |
 | `reviewPolicy`, `reviewMaxRounds`, `reviewMaxOutputTokens`, `reviewContextChars` | `null`, 4, 2048, 60000 | 검토자의 조직 정책 부분을 교체합니다. 위험 평가·출처 구분·결과 기준은 유지합니다 |
 | `writableRoots` | `[]` | 추가 쓰기 루트 |
@@ -182,6 +182,7 @@ try {
 - 오류와 시간 초과는 승인으로 바뀌지 않으며, 잘못된 위험 등급·승인 수준 응답도 검토 실패로 처리합니다.
 - `/approve`는 승인 방식 설정이고 `/approve-model`은 보조 모델 선택입니다. 설정 변경은 저장 후 즉시 적용하며 이전 정책의 대기 검토와 저장 승인을 무효화합니다.
 - 거부 이유를 본 뒤 일반 사용자 메시지로 정확한 작업·대상·전송할 내용을 명시해 승인하면, 다음 검토에 최신 승인과 새 사실이 전달됩니다. 별도 명령은 필요하지 않습니다. 사용자가 승인을 철회하거나 다른 대상을 요청하면 현재 지시와 실제 작업을 기준으로 다시 판단합니다.
+- 승인된 MCP 도구나 스킬 버전은 다시 검토하지 않고 재사용합니다. 지문은 MCP 서버 설정·`initialize`의 서버 이름과 버전·도구 정의, 또는 `SKILL.md`가 있는 스킬 디렉터리의 모든 파일입니다. 자동 승인과 **Save as an allow rule**은 `<agentDir>/guard/package-approvals.json`에 저장하고, **Allow for this session**은 해당 세션에만, **Allow once**는 재사용하지 않습니다. 버전이나 내용이 바뀌면 다시 검토합니다. 추가 경로·도메인, 권한 상승, 규칙의 확인 요구, 엄격한 MCP 검토, 사용자 입력이 필요한 호출은 항상 검토합니다. 스킬 재사용은 `<script>` 또는 `<interpreter> <script>` 단일 명령에만 적용하며, 심볼릭 링크가 있는 스킬은 캐시하지 않습니다.
 - `/approve retry`는 최근 자동 검토 거부 최대 10개에서 정확한 작업 하나를 선택합니다. 화면의 대상·입력·거부 이유를 확인해 선택하면 같은 문맥의 같은 작업을 한 번 다시 검토하며, 자동 허용이나 세션 승인을 만들지 않습니다. 과거 `critical` 판정도 재평가할 수 있지만, 새 평가에서도 `critical`인 작업이나 명시적 절대 거부는 허용하지 않습니다. 변경된 입력과 오래된 문맥에는 승인 표식이 적용되지 않습니다.
 - 사용자 지정 `reviewPolicy`는 원본의 조직 정책 부분만 교체합니다. 정책 본문에 있는 `{{ extra_policy }}` 같은 문자열은 그대로 보존하며, 위험·승인 기준은 교체하지 않습니다.
 - 실제 모델 응답은 `outcome` 기반의 구조화된 평가만 받습니다. SDK에서 명시적으로 주입한 기존 `ReviewProvider`의 `decision` 인터페이스는 호환 목적으로 남아 있으며, 실제 Pi 모델은 그 경로를 사용할 수 없습니다.

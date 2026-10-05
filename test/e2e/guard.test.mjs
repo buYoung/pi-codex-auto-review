@@ -329,7 +329,7 @@ test("[workflow] trusted project MCP configuration cannot be rewritten by model 
     );
     assert.equal(await readFile(target, "utf8"), "unchanged");
     assert.equal(await readFile(path, "utf8"), '{"mcpServers":{}}');
-    assert.equal(reviews, 1);
+    assert.equal(reviews, 2);
     await rm(directory, { recursive: true });
     await runtime.session.reload();
     const createConfig = `const fs=require('fs');fs.mkdirSync(${JSON.stringify(directory)},{recursive:true});fs.writeFileSync(${JSON.stringify(path)},${JSON.stringify(injected)});`;

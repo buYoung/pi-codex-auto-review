@@ -10,6 +10,7 @@ import {
     type McpTransportFactory,
 } from "@earendil-works/pi-coding-agent";
 import { canonicalJson, digest, GuardError } from "../contracts.js";
+import { mcpPackageApproval } from "../package-approvals.js";
 import { getPiSDKEntryPath } from "../pi-host.js";
 import type { GuardController } from "./controller.js";
 import {
@@ -80,6 +81,7 @@ function guardedTransport(
     registration: string,
     catalog: Map<string, CatalogEntry>,
     policies: McpToolPolicies,
+    configDigest: string,
 ): Transport {
     const pending = new Map<
         string | number,
@@ -87,6 +89,8 @@ function guardedTransport(
     >();
     const active = new Map<string, ExternalInvocation>();
     let generation = 0;
+    // The initialize result names the server version used in package approval fingerprints.
+    let serverInfo: unknown = null;
     const captureTools = (tools: unknown) => {
         if (!Array.isArray(tools))
             throw new GuardError(
@@ -124,6 +128,13 @@ function guardedTransport(
                 requiresUserInput: meta.codex_requires_user_input === true,
                 isSensitiveAction: meta.codex_sensitive_action === true,
                 requiresStrictReview: meta.codex_strict_auto_review === true,
+                packageApproval: mcpPackageApproval({
+                    server,
+                    tool: tool.name,
+                    configDigest,
+                    serverInfo,
+                    definition: tool,
+                }),
             };
             catalog.set(`${server}\0${tool.name}`, {
                 identity,
@@ -279,6 +290,13 @@ function guardedTransport(
                             pending.delete(id);
                             if (request.callId) active.delete(request.callId);
                             if (
+                                request.method === "initialize" &&
+                                "result" in raw &&
+                                raw.result
+                            )
+                                serverInfo =
+                                    record(raw.result).serverInfo ?? null;
+                            if (
                                 request.method === "tools/list" &&
                                 "result" in raw &&
                                 raw.result
@@ -348,6 +366,11 @@ export async function createGuardedMcpExtension(
             registration,
             catalog,
             policies,
+            digest({
+                name: entry.name,
+                source: entry.source,
+                config: JSON.parse(JSON.stringify(entry.config)),
+            }),
         );
     };
     const mcpFactory = createMcpExtension({
