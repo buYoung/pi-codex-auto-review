@@ -1027,6 +1027,47 @@ test("[package] npm tarball loads the default factory through public Pi APIs wit
         { timeout: 10000 },
     );
     await mkdir(join(consumer, "package/node_modules"), { recursive: true });
+    // Install the runtime dependency from its own packed artifact, as npm would.
+    const redactPacked = JSON.parse(
+            (
+                await exec(
+                    "npm",
+                    [
+                        "pack",
+                        "--workspace",
+                        "packages/redact",
+                        "--ignore-scripts",
+                        "--json",
+                        "--pack-destination",
+                        artifacts,
+                    ],
+                    {
+                        cwd: repository,
+                        env,
+                        timeout: 20000,
+                        maxBuffer: 2_000_000,
+                    },
+                )
+            ).stdout,
+        )[0],
+        redactDirectory = join(consumer, "package/node_modules/@buyong/redact");
+    assert.ok(
+        redactPacked.files.some(
+            (file) => file.path === "dist/pii/data/catalog.js",
+        ) && redactPacked.files.some((file) => file.path === "NOTICE"),
+    );
+    await mkdir(redactDirectory, { recursive: true });
+    await exec(
+        "tar",
+        [
+            "-xzf",
+            join(artifacts, redactPacked.filename),
+            "-C",
+            redactDirectory,
+            "--strip-components=1",
+        ],
+        { timeout: 10000 },
+    );
     await writeFile(
         join(f.agentDir, "mcp.json"),
         JSON.stringify({

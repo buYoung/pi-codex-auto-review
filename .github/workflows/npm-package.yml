@@ -62,6 +62,9 @@ jobs:
         run: npm run build -- --filter="$PACKAGE_NAME"
       - if: steps.release.outputs.package == '@buyong/pi-codex-auto-review'
         run: npm run test:policy
+      # The test runner loads the evidence validator from the auto-review build.
+      - if: steps.release.outputs.package == '@buyong/redact'
+        run: npm run build && npm run test:redaction
       - run: mkdir -p tmp/npm
       - name: 압축 패키지 생성
         env:

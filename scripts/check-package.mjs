@@ -121,6 +121,22 @@ async function verifyPackage(packageDirectory) {
                 [["package-check", "--verify"]],
             );
             assert.equal(result.matches[0][0].decision, "prompt");
+            const engine = JSON.parse(
+                readFileSync(
+                    join(repository, "packages/redact/package.json"),
+                    "utf8",
+                ),
+            );
+            assert.deepEqual(
+                manifest.dependencies,
+                { "@buyong/redact": engine.version },
+                "The package must depend on exactly the workspace @buyong/redact version",
+            );
+            assert.ok(
+                !manifest.bundleDependencies?.length &&
+                    !manifest.bundledDependencies?.length,
+                "The package must not bundle its runtime dependency",
+            );
         } else {
             // The new package has an exact allow-list: all compiled JS/declarations/maps plus its
             // own docs. Repository briefs, runtime copies and build configuration cannot sneak in.

@@ -2,7 +2,7 @@
 
 **English** | [한국어](dependencies.ko.md)
 
-The current source removes `@anthropic-ai/sandbox-runtime`, its transitive `node-forge` dependency, and `bundleDependencies`. The distribution does not include `node_modules` and uses the Pi host as a peer dependency. This extension does not replace dependencies in an installed Pi host.
+The current source removes `@anthropic-ai/sandbox-runtime`, its transitive `node-forge` dependency, and `bundleDependencies`. The distribution does not include `node_modules` and uses the Pi host as a peer dependency. Its only runtime dependency is `@buyong/redact`, the masking engine published from this repository's `packages/redact`. It is pinned to an exact version, has no runtime dependencies of its own, and npm installs it with the extension. This extension does not replace dependencies in an installed Pi host.
 
 ## Audit before the 0.1.3 release
 
@@ -49,6 +49,6 @@ This adjustment applies to environments installed with this repository's lockfil
 
 An installed dependency's `overrides` do not apply to the consumer project, and `package-lock.json` is not published. The sandbox runtime bundled in the earlier package has been removed from the current source. Prepack checks ensure that sandbox code and `node_modules` are absent from the archive.
 
-The Pi host remains in `peerDependencies` and is not bundled. This repository's development lockfile does not change or guarantee the `brace-expansion` version of a separately installed Pi.
+The Pi host remains in `peerDependencies` and is not bundled. `@buyong/redact` is a regular `dependencies` entry, not a bundled one; the archive contains only a reference to it. This repository's development lockfile does not change or guarantee the `brace-expansion` version of a separately installed Pi.
 
 Run `npm pack` from the repository root to apply prepack checks. The current source builds and packages JavaScript without a Rust compiler or platform executable. Consumer installation needs no security patch script. See the [publishing guide](../publishing.md).

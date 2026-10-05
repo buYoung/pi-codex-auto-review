@@ -15,7 +15,10 @@ RUN case "$TARGETARCH" in \
 WORKDIR /opt/pi-guard
 COPY package.json package-lock.json ./
 COPY packages/pi-codex-auto-review/package.json ./packages/pi-codex-auto-review/
+COPY packages/redact/package.json ./packages/redact/
 RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
+COPY packages/redact/src ./packages/redact/src
+COPY packages/redact/tsconfig.json packages/redact/README.md packages/redact/README.ko.md packages/redact/LICENSE packages/redact/NOTICE ./packages/redact/
 COPY packages/pi-codex-auto-review/src ./packages/pi-codex-auto-review/src
 COPY packages/pi-codex-auto-review/tsconfig.json ./packages/pi-codex-auto-review/
 COPY test ./test
@@ -23,7 +26,8 @@ COPY scripts ./scripts
 COPY .github ./.github
 COPY tsconfig.base.json README.md README.ko.md LICENSE NOTICE ./
 COPY docs ./docs
-RUN npm run build --workspace packages/pi-codex-auto-review && node test/docker/package.mjs \
+RUN npm run build --workspace packages/redact \
+    && npm run build --workspace packages/pi-codex-auto-review && node test/docker/package.mjs \
     && mkdir -p .reports/pi-guard docs/handoffs/pi-guard \
     && chown -R node:node /opt/pi-guard
 ARG SOURCE_DIGEST

@@ -2,7 +2,7 @@
 
 [English](dependencies.md) | **한국어**
 
-현재 소스는 `@anthropic-ai/sandbox-runtime`, 그 하위 `node-forge`, `bundleDependencies`를 제거했다. 배포 패키지에 `node_modules`를 포함하지 않으며 Pi 호스트는 peer dependency로 사용한다. 설치된 Pi의 의존성을 이 확장이 교체하지 않는다.
+현재 소스는 `@anthropic-ai/sandbox-runtime`, 그 하위 `node-forge`, `bundleDependencies`를 제거했다. 배포 패키지에 `node_modules`를 포함하지 않으며 Pi 호스트는 peer dependency로 사용한다. 런타임 의존성은 이 저장소의 `packages/redact`에서 배포하는 가림 엔진 `@buyong/redact` 하나뿐이다. 정확한 버전으로 고정하며, 자체 런타임 의존성이 없고, npm이 확장과 함께 설치한다. 설치된 Pi의 의존성을 이 확장이 교체하지 않는다.
 
 ## 0.1.3 배포 전 감사
 
@@ -49,6 +49,6 @@ Docker와 CI도 같은 잠금 파일로 `npm ci`를 실행한다. SDK 아카이�
 
 설치된 의존성의 `overrides`는 소비자 프로젝트에 적용되지 않고 `package-lock.json`도 게시되지 않는다. 이전 패키지에 묶었던 샌드박스 런타임은 현재 소스에서 제거했다. 게시 전 검사는 샌드박스 코드와 `node_modules`가 압축 파일에 남지 않는지 확인한다.
 
-Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. 저장소의 개발용 잠금 파일은 별도로 설치된 Pi의 `brace-expansion` 버전을 변경하거나 보장하지 않는다.
+Pi 호스트는 `peerDependencies`로 유지하고 묶지 않는다. `@buyong/redact`는 묶은 의존성이 아니라 일반 `dependencies` 항목이며, 배포 압축 파일에는 그 참조만 들어간다. 저장소의 개발용 잠금 파일은 별도로 설치된 Pi의 `brace-expansion` 버전을 변경하거나 보장하지 않는다.
 
 저장소 루트에서 `npm pack`을 실행하면 게시 전 검사가 적용된다. 현재 소스는 Rust 컴파일러나 플랫폼별 실행 파일 없이 JavaScript를 빌드·패키징한다. 소비자 설치에도 보안 보정을 위한 설치 스크립트를 요구하지 않는다. [배포 안내](../publishing.ko.md)를 따른다.

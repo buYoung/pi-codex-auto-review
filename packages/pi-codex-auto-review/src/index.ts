@@ -20,7 +20,7 @@ import { AuditLog } from "./audit.js";
 import type { PermissionProfile } from "./contracts.js";
 import { createProfile } from "./contracts.js";
 import { PackageApprovalStore } from "./package-approvals.js";
-import { defaultProfile, type GuardSettings } from "./policy/index.js";
+import { defaultProfile, type GuardSettingsInput } from "./policy/index.js";
 import {
     AUTHORIZATION_ENTRY,
     REVIEW_CONTEXT_ENTRY,
@@ -36,7 +36,7 @@ import {
 export interface GuardOptions {
     cwd?: string;
     agentDir?: string;
-    settings?: Partial<GuardSettings>;
+    settings?: GuardSettingsInput;
     settingsPath?: string;
     profile?: PermissionProfile;
     executor?: ToolExecutor;
@@ -175,7 +175,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
             if (event.source === "interactive" || event.source === "rpc") {
                 guard.authorizeUser(event.text);
                 pi.appendEntry(AUTHORIZATION_ENTRY, {
-                    text: safeEvidence(event.text),
+                    text: safeEvidence(event.text, guard.reviewRedactor),
                     source: event.source,
                 });
             }

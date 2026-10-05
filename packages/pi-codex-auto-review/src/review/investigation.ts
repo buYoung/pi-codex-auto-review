@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Redactor } from "@buyong/redact";
 import {
     canonicalJson,
     createProfile,
@@ -10,6 +11,7 @@ import {
 import { canonicalPath, isWithin } from "../policy/paths.js";
 import type { ToolExecutor } from "../tools/executor.js";
 import { safeEvidence } from "./context.js";
+import { reviewRedactor } from "./redaction.js";
 
 export const INVESTIGATION_TOOLS = [
     {
@@ -42,6 +44,7 @@ export class LocalInvestigation implements ReviewInvestigation {
         private readonly executor: ToolExecutor,
         private readonly profile: PermissionProfile,
         private readonly cwd: string,
+        private readonly redactor: Redactor = reviewRedactor(),
     ) {}
     async execute(
         name: string,
@@ -103,7 +106,8 @@ export class LocalInvestigation implements ReviewInvestigation {
             raw.content
                 ?.filter((item) => item.type === "text")
                 .map((item) => ({ type: "text", text: item.text ?? "" })) ?? [];
-        const text = canonicalJson(safeEvidence(visible));
+        // Mask the full output before the excerpt so a cut cannot split a detection.
+        const text = canonicalJson(safeEvidence(visible, this.redactor));
         return text.length <= 12000
             ? text
             : `${text.slice(0, 12000)}\n<truncated reason="inspection-output-limit" />`;

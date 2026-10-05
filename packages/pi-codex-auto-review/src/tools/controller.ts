@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import type { Redactor } from "@buyong/redact";
 import {
     type BashOperations,
     type BashToolOptions,
@@ -41,6 +42,7 @@ import {
 import { ReviewContextStore, safeEvidence } from "../review/context.js";
 import { LocalInvestigation } from "../review/investigation.js";
 import { reviewFeedback } from "../review/lifecycle.js";
+import { reviewRedactor } from "../review/redaction.js";
 import { observeToolUserInput } from "../review/user-input.js";
 import {
     PiReviewProvider,
@@ -91,12 +93,19 @@ export class GuardController {
             persistContext?: (item: ReviewContextItem) => void;
         },
     ) {
-        this.reviewContext = new ReviewContextStore(options.persistContext);
+        this.reviewContext = new ReviewContextStore(
+            options.persistContext,
+            () => this.reviewRedactor,
+        );
         this.currentPolicy = new PolicyEngine(
             options.settings,
             options.profile,
         );
         this.approvals = options.approvals;
+    }
+    /** Masks reviewer-bound evidence with the current redaction settings. */
+    get reviewRedactor(): Redactor {
+        return reviewRedactor(this.options.settings.redaction);
     }
     async initialize(cwd: string): Promise<void> {
         await this.policy.initialize(cwd);
@@ -343,7 +352,10 @@ export class GuardController {
                         id: "direct-user-bash",
                         source: "user" as const,
                         trust: "authorization" as const,
-                        content: safeEvidence(trustedAuthorization),
+                        content: safeEvidence(
+                            trustedAuthorization,
+                            this.reviewRedactor,
+                        ),
                     },
                 ],
             };
@@ -360,6 +372,7 @@ export class GuardController {
                         this.options.executor,
                         this.policy.profile,
                         action.cwd,
+                        this.reviewRedactor,
                     ),
                 ),
             ui: this.ui(

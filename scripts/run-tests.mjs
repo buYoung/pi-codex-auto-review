@@ -9,6 +9,7 @@ import { suites } from "./suites.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const packageDirectory = "packages/pi-codex-auto-review";
+const redactPackageDirectory = "packages/redact";
 export async function sourceDigest() {
     const hash = createHash("sha256");
     async function add(dir) {
@@ -23,7 +24,13 @@ export async function sourceDigest() {
             }
         }
     }
-    for (const dir of [`${packageDirectory}/src`, "test", "scripts", ".github"])
+    for (const dir of [
+        `${packageDirectory}/src`,
+        `${redactPackageDirectory}/src`,
+        "test",
+        "scripts",
+        ".github",
+    ])
         await add(dir);
     for (const path of [
         "package.json",
@@ -31,6 +38,8 @@ export async function sourceDigest() {
         "tsconfig.base.json",
         `${packageDirectory}/package.json`,
         `${packageDirectory}/tsconfig.json`,
+        `${redactPackageDirectory}/package.json`,
+        `${redactPackageDirectory}/tsconfig.json`,
         "README.md",
     ])
         hash.update(await readFile(join(root, path)));

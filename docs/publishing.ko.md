@@ -16,7 +16,7 @@ Node.js 24.14.0과 pnpm 10을 사용할 수 있는 터미널에서 저장소 루
 npm ci --ignore-scripts
 ```
 
-저장소는 npm 작업 공간(workspaces) 기반 모노레포입니다. 게시하는 패키지는 `packages/<패키지>`에 두고 패키지 빌드는 Turborepo가 실행합니다. 테스트·스크립트·문서는 저장소 루트에 둡니다. 의존성 설치와 CI 빌드는 루트 `package-lock.json`을 사용합니다. `pnpm`은 릴리스 스크립트의 실행 진입점으로 사용하며, `pnpm-lock.yaml`로 설치 방식을 바꾸지 않습니다. 현재 패키지는 샌드박스 의존성을 묶지 않고 Pi 호스트를 peer dependency로 사용합니다.
+저장소는 npm 작업 공간(workspaces) 기반 모노레포입니다. 게시하는 패키지는 `packages/<패키지>`에 두고 패키지 빌드는 Turborepo가 실행합니다. 테스트·스크립트·문서는 저장소 루트에 둡니다. 의존성 설치와 CI 빌드는 루트 `package-lock.json`을 사용합니다. `pnpm`은 릴리스 스크립트의 실행 진입점으로 사용하며, `pnpm-lock.yaml`로 설치 방식을 바꾸지 않습니다. 현재 패키지는 샌드박스 의존성을 묶지 않고 Pi 호스트를 peer dependency로 사용합니다. 런타임 의존성은 `packages/redact`의 `@buyong/redact` 하나입니다.
 
 ### npm Trusted Publisher
 
@@ -46,6 +46,17 @@ npm deprecate pi-codex-auto-review "Renamed to @buyong/pi-codex-auto-review"
 
 `prepack`이 빌드와 게시 전 검사를 실행합니다. 이전 이름 `pi-codex-auto-review`에는 `npm deprecate`로 새 이름을 안내합니다. 게시한 뒤 새 패키지의 **Settings → Trusted publishing**에 위 표와 같은 값으로 연결을 추가합니다. 그다음부터는 `pnpm release`에서 패키지를 선택해 게시합니다. 직접 게시한 버전은 다시 게시할 수 없으므로 더 큰 버전을 선택합니다.
 
+### `@buyong/redact`와의 게시 순서
+
+`@buyong/pi-codex-auto-review`는 `dependencies`에 `@buyong/redact`의 정확한 버전을 고정합니다. 그 `@buyong/redact` 버전을 먼저 게시하세요. 아직 게시되지 않은 버전을 가리키는 auto-review 릴리스는 설치할 수 없습니다. `@buyong/redact`의 첫 버전은 위와 같이 직접 게시한 뒤 Trusted Publisher에 연결합니다.
+
+```sh
+npm login
+npm publish --workspace packages/redact --access public
+```
+
+새 엔진 버전이 필요한 변경이라면 `@buyong/redact`를 먼저 릴리스하고, `packages/pi-codex-auto-review/package.json`과 루트 `package-lock.json`의 고정 버전을 올린 다음 `@buyong/pi-codex-auto-review`를 릴리스합니다.
+
 ## 버전 선택과 릴리스
 
 `master`의 변경 사항이 커밋된 상태에서 실행합니다.
@@ -71,7 +82,7 @@ pnpm release
 `<패키지>@<버전>` 태그의 푸시가 `.github/workflows/npm-package.yml`을 시작합니다.
 
 1. `ubuntu-22.04`에서 npm 잠금 파일로 공식 개발 의존성을 설치합니다.
-2. 태그가 가리키는 작업 공간 패키지를 찾고, 태그와 그 `package.json` 버전이 일치하는지, 태그 커밋이 `origin/master`에 포함되는지 확인합니다. 그다음 Turborepo로 패키지를 빌드합니다. `@buyong/pi-codex-auto-review`는 원본 결과 대조를 포함한 정책 검사도 실행합니다.
+2. 태그가 가리키는 작업 공간 패키지를 찾고, 태그와 그 `package.json` 버전이 일치하는지, 태그 커밋이 `origin/master`에 포함되는지 확인합니다. 그다음 Turborepo로 패키지를 빌드합니다. `@buyong/pi-codex-auto-review`는 원본 결과 대조를 포함한 정책 검사도 실행합니다. `@buyong/redact`는 가림 테스트를 실행합니다.
 3. `npm pack --workspace <패키지>`가 패키지의 `prepack`을 실행합니다. `@buyong/pi-codex-auto-review`의 `prepack`은 TypeScript를 컴파일하고, `files`에 적힌 README·LICENSE·NOTICE·문서를 저장소 루트에서 복사한 뒤 필수 파일과 JavaScript 규칙 작업 스레드를 검사합니다. 바이너리·`.node`·`.wasm`·묶인 의존성이 압축 파일에 있으면 거부합니다. 복사한 문서는 `postpack`이 지웁니다.
 4. 검증한 `<패키지>-<버전>.tgz`를 `npm-package` 결과물에 보관합니다.
 5. 별도 게시 작업이 같은 결과물을 내려받아 OIDC로 npm에 게시합니다.
