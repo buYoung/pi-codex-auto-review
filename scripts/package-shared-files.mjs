@@ -6,10 +6,13 @@ import { fileURLToPath } from "node:url";
 // "files" are copied in by prepack and removed again by postpack.
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const packageDirectory = process.cwd();
-const { files } = JSON.parse(
+const { files, sharedFiles: explicitSharedFiles } = JSON.parse(
     await readFile(join(packageDirectory, "package.json"), "utf8"),
 );
-const sharedFiles = files.filter((path) => !path.startsWith("dist/"));
+// Packages with their own README declare only repository-owned files to copy/remove.
+// Existing packages retain the original `files`-derived behavior.
+const sharedFiles =
+    explicitSharedFiles ?? files.filter((path) => !path.startsWith("dist/"));
 const mode = process.argv[2];
 
 if (mode === "copy") {

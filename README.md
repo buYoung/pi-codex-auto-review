@@ -73,6 +73,10 @@ npm run verify:guard
 - See the [Docker section](docs/usage.md#ollama-cloud-verification-in-docker) for container verification.
 - Each run is stored under `.reports/pi-guard/runs/<run ID>/<platform>/`. See the [protection verification matrix](docs/testing/auto-review-protection.md) for allowed, blocked, and failure cases.
 
+## Other workspace packages
+
+[`@buyong/pi-codex-computer-use`](packages/pi-codex-computer-use/README.md) is an independent pi extension for Codex Desktop's Computer Use and Browser Use runtime. It has its own installation requirements and feature switches; see its [usage guide](docs/computer-use/usage.md).
+
 ## Documentation
 
 - [Usage](docs/usage.md) · [한국어](docs/usage.ko.md) — Installation, source builds, CLI, SDK, policies, and Docker verification.
