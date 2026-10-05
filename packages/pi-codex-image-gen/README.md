@@ -26,6 +26,31 @@ In Pi, sign in with your ChatGPT account:
 
 When that login is missing, the extension hides `image_gen` and its bundled skill from the model. If the extension hid the tool, it enables it again before the next user prompt after login. A tool you disabled yourself stays disabled.
 
+## Select the image model
+
+The default image model is `gpt-image-2.5`. Open the settings selector in Pi:
+
+```text
+/codex-imagen
+```
+
+Choose `gpt-image-2.5` or `gpt-image-2`. The selection is saved and applies to subsequent image generation and editing requests, including after restarting Pi. You can also set it directly:
+
+```text
+/codex-imagen gpt-image-2.5
+/codex-imagen gpt-image-2
+```
+
+Settings live at `<agentDir>/codex-image-gen/settings.json`, where `agentDir` is Pi's agent data directory and honors `PI_CODING_AGENT_DIR`.
+
+```json
+{
+    "model": "gpt-image-2.5"
+}
+```
+
+Without a settings file or a `model` value, the default is `gpt-image-2.5`. Image requests read the file each time, so manual edits apply to the next request. Invalid or unreadable settings report an error instead of sending a request with a different model. These names are sent to the existing ChatGPT subscription backend; actual availability depends on the account and backend response.
+
 ## Generate and edit images
 
 Ask Pi to create an image, for example:

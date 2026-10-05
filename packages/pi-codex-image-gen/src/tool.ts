@@ -25,6 +25,7 @@ import {
     generatedImageResult,
     type ImageGenDetails,
 } from "./result.js";
+import { ImageGenSettingsStore } from "./settings.js";
 
 export const IMAGE_GEN_TOOL_NAME = "image_gen";
 export const IMAGE_GEN_TOOL_LABEL = "Image generation";
@@ -153,6 +154,16 @@ export const imageGenTool: RegisteredToolDefinition = {
     prepareArguments: (args) => parseImageGenArguments(args).arguments,
     async execute(toolCallId, params, signal, onUpdate, ctx) {
         const { plan } = parseImageGenArguments(params);
+        signal?.throwIfAborted();
+        try {
+            plan.model = await new ImageGenSettingsStore().load();
+        } catch (error) {
+            signal?.throwIfAborted();
+            return errorResult(
+                `image generation failed: unable to load model settings: ${error instanceof Error ? error.message : String(error)}`,
+                detailsForPlan(plan),
+            );
+        }
         return executeImageGen(toolCallId, plan, signal, onUpdate, ctx);
     },
 };

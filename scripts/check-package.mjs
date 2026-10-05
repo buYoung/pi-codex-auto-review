@@ -74,6 +74,8 @@ const requiredFiles = {
         "dist/auth.js",
         "dist/artifact.js",
         "dist/reference-images.js",
+        "dist/settings.js",
+        "dist/commands.js",
         "README.md",
         "README.ko.md",
         "LICENSE",

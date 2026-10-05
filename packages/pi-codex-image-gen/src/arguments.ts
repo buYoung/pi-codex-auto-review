@@ -1,8 +1,14 @@
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
-/** Image model Codex requests (`IMAGE_MODEL` in Codex `tool.rs`). */
-export const IMAGE_MODEL = "gpt-image-2";
+export const IMAGE_MODELS = ["gpt-image-2.5", "gpt-image-2"] as const;
+export type ImageModel = (typeof IMAGE_MODELS)[number];
+/** Default image model; users can select either supported model in settings. */
+export const IMAGE_MODEL: ImageModel = "gpt-image-2.5";
+
+export function isImageModel(value: unknown): value is ImageModel {
+    return value === "gpt-image-2.5" || value === "gpt-image-2";
+}
 /** Maximum reference images per edit (`MAX_EDIT_IMAGES` in Codex `tool.rs`). */
 export const MAX_EDIT_IMAGES = 5;
 
@@ -26,7 +32,7 @@ export type ImageBackground = "transparent" | "opaque";
 interface ImageRequestBase {
     prompt: string;
     background: ImageBackground;
-    model: typeof IMAGE_MODEL;
+    model: ImageModel;
     quality: "auto";
     size: "auto";
 }
@@ -181,11 +187,14 @@ function deserializeArguments(args: unknown): ImageGenArguments {
 }
 
 /** `request_for_call_args` in Codex `tool.rs`, up to the point images are loaded. */
-function planRequest(args: ImageGenArguments): ImageRequestPlan {
+function planRequest(
+    args: ImageGenArguments,
+    model: ImageModel,
+): ImageRequestPlan {
     const base: ImageRequestBase = {
         prompt: args.prompt,
         background: args.transparent_background ? "transparent" : "opaque",
-        model: IMAGE_MODEL,
+        model,
         quality: "auto",
         size: "auto",
     };
@@ -219,7 +228,10 @@ function planRequest(args: ImageGenArguments): ImageRequestPlan {
  * Validates raw tool arguments in Codex order and returns both the normalized arguments
  * (for Pi's schema validation) and the request plan. Throws `Error` with Codex's messages.
  */
-export function parseImageGenArguments(args: unknown): ParsedImageGenArguments {
+export function parseImageGenArguments(
+    args: unknown,
+    model: ImageModel = IMAGE_MODEL,
+): ParsedImageGenArguments {
     const normalized = deserializeArguments(args);
-    return { arguments: normalized, plan: planRequest(normalized) };
+    return { arguments: normalized, plan: planRequest(normalized, model) };
 }

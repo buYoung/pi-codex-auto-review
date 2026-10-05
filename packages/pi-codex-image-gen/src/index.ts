@@ -1,4 +1,5 @@
 import type { ExtensionFactory } from "@earendil-works/pi-coding-agent";
+import { registerImageGenSettingsCommand } from "./commands.js";
 import {
     applyExposureDecision,
     createExposureState,
@@ -10,6 +11,7 @@ import { imageGenTool } from "./tool.js";
 export type {
     ImageBackground,
     ImageGenArguments,
+    ImageModel,
     ImageRequestPlan,
 } from "./arguments.js";
 export { parseImageGenArguments } from "./arguments.js";
@@ -39,6 +41,7 @@ export {
  */
 const imageGenExtension: ExtensionFactory = (pi) => {
     pi.registerTool(imageGenTool);
+    registerImageGenSettingsCommand(pi);
     const state = createExposureState();
     pi.on("session_start", (_event, ctx) => {
         state.hiddenByExtension = undefined;
