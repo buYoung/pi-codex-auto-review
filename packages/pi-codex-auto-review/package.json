@@ -41,6 +41,9 @@
         "prepack": "tsc && node ../../scripts/package-shared-files.mjs copy && node ../../scripts/check-package.mjs",
         "postpack": "node ../../scripts/package-shared-files.mjs remove"
     },
+    "dependencies": {
+        "@buyong/redact": "0.1.0"
+    },
     "peerDependencies": {
         "@earendil-works/pi-ai": ">=0.86.1",
         "@earendil-works/pi-coding-agent": ">=0.86.1",

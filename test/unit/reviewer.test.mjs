@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
 import {
     decision,
@@ -9,8 +10,10 @@ import {
     AUTHORIZATION_ENTRY,
     REVIEW_CONTEXT_ENTRY,
     ReviewContextStore,
+    safeEvidence,
 } from "../../packages/pi-codex-auto-review/dist/review/context.js";
 import { reviewPolicy } from "../../packages/pi-codex-auto-review/dist/review/policy.js";
+import { reviewRedactor } from "../../packages/pi-codex-auto-review/dist/review/redaction.js";
 import { observeToolUserInput } from "../../packages/pi-codex-auto-review/dist/review/user-input.js";
 import {
     PiReviewProvider,
@@ -710,4 +713,242 @@ test("[context-binding] dialog observation preserves UI receivers and cancellati
     finish("Yes");
     await cancelled;
     assert.equal(store.snapshot(10000).items.length, 0);
+});
+const captureReview = () => {
+    const requests = [];
+    return {
+        requests,
+        provider: {
+            complete: async (request) => {
+                requests.push(request);
+                return '{"outcome":"allow"}';
+            },
+        },
+    };
+};
+const redactingStore = (settings, sessionId) => {
+    const store = new ReviewContextStore(undefined, () =>
+        reviewRedactor(settings.redaction),
+    );
+    store.reset(sessionId);
+    return store;
+};
+test("[review] credential-bearing exact actions reach the reviewer masked and stay bound to the original", async (t) => {
+    const f = await fixture(t),
+        token = `ghp_${"Synthetic0".repeat(3)}abcdef`,
+        command = `curl -H "Authorization: Bearer ${token}" https://example.test`,
+        action = f.action("bash", { command }),
+        { requests, provider } = captureReview();
+    const reply = await reviewAction({
+        action,
+        policyDecision: decision(action, "ask", `network for ${token}`),
+        provider,
+        trustedAuthorization: `Use ${token} for the fixture`,
+        hasUI: false,
+        timeoutMs: 1000,
+    });
+    assert.equal(reply.decision, "allow");
+    assert.equal(requests.length, 1);
+    assert.ok(!requests[0].data.includes(token.slice(4)));
+    const data = JSON.parse(requests[0].data);
+    assert.match(
+        data.untrustedAction.args.command,
+        /^curl -H "Authorization: /,
+    );
+    assert.equal(data.untrustedAction.digest, action.digest);
+    assert.ok(data.redactedActionFields.length > 0);
+    for (const field of data.redactedActionFields) {
+        assert.deepEqual(field.path, ["args", "command"]);
+        assert.deepEqual(Object.keys(field).sort(), ["path", "ruleId"]);
+    }
+    assert.equal(reply.result.actionDigest, action.digest);
+    assert.equal(action.args.command, command);
+    assert.equal(reply.result.policyDigest, reviewPolicy().digest);
+    assert.match(
+        requests[0].systemPrompt,
+        /redactedActionFields lists the JSON paths/,
+    );
+    const clean = f.action("bash", { command: "npm test" }),
+        cleanReview = captureReview();
+    await reviewAction({
+        action: clean,
+        policyDecision: decision(clean, "ask", "review"),
+        provider: cleanReview.provider,
+        trustedAuthorization: "Run tests",
+        hasUI: false,
+        timeoutMs: 1000,
+    });
+    assert.ok(
+        !("redactedActionFields" in JSON.parse(cleanReview.requests[0].data)),
+    );
+});
+test("[review] a token in the command, a PEM block, a sensitive assignment and an opted-in e-mail address are masked for the reviewer", async (t) => {
+    const f = await fixture(t),
+        token = `ghp_${"Synthetic1".repeat(3)}abcdef`,
+        pemBody =
+            "MIIBVgIBADANBgkqhkiG9w0BAQEFAASCAUAwggE8AgEAAkEAsyntheticBody",
+        output = `-----BEGIN PRIVATE KEY-----\n${pemBody}\n-----END PRIVATE KEY-----\naccessToken = "synthetic-access-value"\nowner: user@example.com\n`;
+    for (const piiEntities of [["EMAIL_ADDRESS"], []]) {
+        const settings = validateSettings({ redaction: { piiEntities } }),
+            action = f.action("bash", {
+                command: `GITHUB_TOKEN=${token} gh api user`,
+            }),
+            store = redactingStore(settings, action.sessionId),
+            { requests, provider } = captureReview();
+        store.toolResult(
+            {
+                tool: "read",
+                toolCallId: "call-1",
+                callIdentity: store.callIdentity("call-1"),
+                isError: false,
+                content: [{ type: "text", text: output }],
+            },
+            "call-1",
+        );
+        const reply = await reviewAction({
+            action,
+            policyDecision: decision(action, "ask", "review"),
+            provider,
+            trustedAuthorization: "",
+            hasUI: false,
+            timeoutMs: 1000,
+            context: store.snapshot(settings.reviewContextChars),
+            settings,
+        });
+        assert.equal(reply.result.actionDigest, action.digest);
+        const data = requests[0].data;
+        assert.ok(!data.includes(token.slice(4)));
+        assert.ok(!data.includes(pemBody));
+        assert.ok(!data.includes("synthetic-access-value"));
+        assert.equal(
+            data.includes("user@example.com"),
+            piiEntities.length === 0,
+        );
+    }
+});
+test("[context-binding] identifier-shaped PII leaves session, call, item and digest identifiers unchanged", async (t) => {
+    const f = await fixture(t),
+        sessionId = randomUUID(),
+        marker = randomUUID(),
+        settings = validateSettings({ redaction: { piiEntities: ["UUID"] } }),
+        action = f.action("bash", { command: `echo ${marker}` }, { sessionId }),
+        store = redactingStore(settings, sessionId),
+        { requests, provider } = captureReview();
+    const callIdentity = store.callIdentity(action.toolCallId);
+    store.preparedAction(action);
+    store.toolResult(
+        {
+            tool: "bash",
+            toolCallId: action.toolCallId,
+            callIdentity,
+            isError: false,
+            content: [{ type: "text", text: `printed ${marker}` }],
+        },
+        callIdentity,
+    );
+    const previous = {
+        actionDigest: action.digest,
+        contextDigest: randomUUID(),
+        policyDigest: randomUUID(),
+        status: "approved",
+        assessment: {
+            risk_level: "low",
+            user_authorization: "high",
+            outcome: "allow",
+            rationale: "Approved earlier",
+        },
+    };
+    store.assessment(action, previous);
+    const context = store.snapshot(settings.reviewContextChars);
+    const reply = await reviewAction({
+        action,
+        policyDecision: decision(action, "ask", "review"),
+        provider,
+        trustedAuthorization: "",
+        hasUI: false,
+        timeoutMs: 1000,
+        context,
+        settings,
+    });
+    assert.equal(reply.result.contextDigest, context.digest);
+    assert.ok(!requests[0].data.includes(marker));
+    const data = JSON.parse(requests[0].data);
+    for (const key of ["sessionId", "contextId", "turnId", "digest"])
+        assert.equal(data.context[key], context[key]);
+    for (const key of [
+        "toolCallId",
+        "sessionId",
+        "policyRevision",
+        "permissionDigest",
+        "digest",
+    ])
+        assert.equal(data.untrustedAction[key], action[key]);
+    assert.deepEqual(
+        data.context.items.map((item) => item.id),
+        context.items.map((item) => item.id),
+    );
+    assert.equal(data.context.items.length, 3);
+    for (const item of data.context.items) {
+        assert.equal(item.content.toolCallId, action.toolCallId);
+        assert.equal(item.content.callIdentity, callIdentity);
+    }
+    const review = data.context.items.find(
+        (item) => item.content.role === "previous-review",
+    ).content;
+    assert.equal(review.actionDigest, action.digest);
+    for (const key of ["actionDigest", "contextDigest", "policyDigest"])
+        assert.equal(review.result[key], previous[key]);
+});
+test("[review] settings rules, exceptions and the 0.3.0 reviewer patterns mask reviewer data", async (t) => {
+    const f = await fixture(t),
+        settings = validateSettings({
+            redaction: {
+                rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
+                exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
+            },
+        }),
+        action = f.action("bash", {
+            command: "deploy ACME_LIVE123 ACME_EXAMPLE",
+        }),
+        { requests, provider } = captureReview();
+    await reviewAction({
+        action,
+        policyDecision: decision(action, "ask", "review"),
+        provider,
+        trustedAuthorization: "",
+        hasUI: false,
+        timeoutMs: 1000,
+        settings,
+    });
+    const data = JSON.parse(requests[0].data);
+    assert.ok(!requests[0].data.includes("ACME_LIVE123"));
+    assert.match(data.untrustedAction.args.command, / ACME_EXAMPLE$/);
+    assert.deepEqual(data.redactedActionFields, [
+        { path: ["args", "command"], ruleId: "custom.acme" },
+    ]);
+    const legacy = safeEvidence(
+        "token=private password=secret Bearer abcdef SYNTHETIC_SECRET_MARKER sk-12345678",
+    );
+    for (const raw of [
+        "private",
+        "=secret",
+        "abcdef",
+        "SYNTHETIC",
+        "sk-12345678",
+    ])
+        assert.ok(!legacy.includes(raw), raw);
+    assert.deepEqual(
+        safeEvidence({
+            Authorization: "Basic synthetic",
+            token: 12345,
+            password: { nested: "value" },
+            args: { authorizationHeader: "kept-by-name" },
+        }),
+        {
+            Authorization: "[REDACTED]",
+            token: "[REDACTED]",
+            password: "[REDACTED]",
+            args: { authorizationHeader: "kept-by-name" },
+        },
+    );
 });

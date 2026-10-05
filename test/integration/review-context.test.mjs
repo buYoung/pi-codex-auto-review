@@ -9,6 +9,14 @@ import {
     SettingsManager,
 } from "@earendil-works/pi-coding-agent";
 import { digest } from "../../packages/pi-codex-auto-review/dist/contracts.js";
+import { validateSettings } from "../../packages/pi-codex-auto-review/dist/policy/index.js";
+import {
+    AUTHORIZATION_ENTRY,
+    REVIEW_CONTEXT_ENTRY,
+    ReviewContextStore,
+    safeEvidence,
+} from "../../packages/pi-codex-auto-review/dist/review/context.js";
+import { reviewRedactor } from "../../packages/pi-codex-auto-review/dist/review/redaction.js";
 import { fixture } from "../harness/fixtures.mjs";
 import { FAKE_MODEL, guardedFixture, planStream } from "../harness/pi.mjs";
 
@@ -546,4 +554,80 @@ test("[review-context] live compaction adds its summary as evidence without repl
         await readFile(join(f.outside, "sentinel.txt"), "utf8"),
         "unchanged",
     );
+});
+test("[review-context] masked evidence written by this version and 0.3.0 masked text reload unchanged", () => {
+    const settings = validateSettings({
+            redaction: { piiEntities: ["EMAIL_ADDRESS"] },
+        }),
+        redactor = () => reviewRedactor(settings.redaction),
+        persisted = [],
+        store = new ReviewContextStore(
+            (item) => persisted.push(item),
+            redactor,
+        );
+    store.reset("session");
+    store.toolResult(
+        {
+            tool: "read",
+            toolCallId: "call-1",
+            callIdentity: store.callIdentity("call-1"),
+            isError: false,
+            content: [
+                {
+                    type: "text",
+                    text: 'accessToken = "synthetic-access-value"\nowner: ops@example.com',
+                },
+            ],
+        },
+        "call-1",
+    );
+    const entries = [
+        {
+            type: "custom",
+            customType: AUTHORIZATION_ENTRY,
+            id: "current",
+            data: {
+                text: safeEvidence(
+                    "Deploy with token=private Bearer abcdef and notify ops@example.com",
+                    redactor(),
+                ),
+                source: "interactive",
+            },
+        },
+        {
+            type: "custom",
+            customType: AUTHORIZATION_ENTRY,
+            id: "legacy",
+            data: {
+                text: "token=[REDACTED] password=[REDACTED] Bearer [REDACTED] [REDACTED]",
+                source: "rpc",
+            },
+        },
+        ...persisted.map((item) => ({
+            type: "custom",
+            customType: REVIEW_CONTEXT_ENTRY,
+            id: `entry-${item.id}`,
+            data: item,
+        })),
+    ];
+    store.reset("session", { getBranch: () => entries });
+    const reloaded = Object.fromEntries(
+        store
+            .snapshot(settings.reviewContextChars)
+            .items.map((item) => [item.id, item.content]),
+    );
+    assert.equal(reloaded.current, entries[0].data.text);
+    assert.equal(reloaded.legacy, entries[1].data.text);
+    assert.deepEqual(reloaded["result:call-1"], persisted[0].content);
+    for (const raw of [
+        "private",
+        "abcdef",
+        "ops@example.com",
+        "synthetic-access-value",
+    ])
+        assert.ok(!JSON.stringify(reloaded).includes(raw), raw);
+    const version = store.scopeVersion;
+    store.authorize(entries[0].data.text, "current");
+    store.authorize(entries[1].data.text, "legacy");
+    assert.equal(store.scopeVersion, version);
 });

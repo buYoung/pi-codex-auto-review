@@ -409,3 +409,57 @@ test("[settings] corrupt or weakening settings fail closed and read-only file wr
     await writeFile(path, "{bad");
     await assert.rejects(loadSettings(path), /could not be loaded/);
 });
+test("[settings] reviewer redaction settings default to empty lists and reject entries without echoing values", () => {
+    assert.deepEqual(validateSettings({}).redaction, {
+        sensitiveFields: [],
+        rules: [],
+        exceptions: [],
+        piiEntities: [],
+    });
+    const redaction = {
+        sensitiveFields: ["sessionKey"],
+        rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
+        exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
+        piiEntities: ["EMAIL_ADDRESS"],
+    };
+    const settings = validateSettings({ redaction });
+    assert.deepEqual(settings.redaction, redaction);
+    assert.deepEqual(
+        validateSettings(JSON.parse(JSON.stringify(settings))),
+        settings,
+    );
+    for (const invalid of [
+        null,
+        [],
+        { switchedOff: true },
+        { sensitiveFields: "PRIVATE_FIELD_VALUE" },
+        { rules: [{ id: "custom.bad", pattern: "PRIVATE_PATTERN_((" }] },
+        { rules: [{ id: "acme", pattern: "PRIVATE_PATTERN_ID" }] },
+        {
+            rules: [
+                {
+                    id: "custom.flagged",
+                    pattern: "PRIVATE_PATTERN_FLAGS",
+                    flags: "g",
+                },
+            ],
+        },
+        {
+            exceptions: [
+                {
+                    ruleId: "custom.acme",
+                    value: "PRIVATE_EXCEPTION_VALUE",
+                    note: "x",
+                },
+            ],
+        },
+        { piiEntities: ["EMAIL"] },
+    ])
+        assert.throws(
+            () => validateSettings({ redaction: invalid }),
+            (error) =>
+                error.code === "INVALID_SETTINGS" &&
+                /^Invalid redaction/.test(error.message) &&
+                !/PRIVATE_|Invalid regular expression/.test(error.message),
+        );
+});

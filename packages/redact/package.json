@@ -1,0 +1,55 @@
+{
+    "name": "@buyong/redact",
+    "version": "0.1.0",
+    "description": "Host-independent masking of credentials, private keys, and opt-in PII in text and JSON before it reaches logs or language models.",
+    "license": "Apache-2.0",
+    "keywords": [
+        "redaction",
+        "secrets",
+        "credentials",
+        "pii",
+        "masking"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/buYoung/pi-codex-auto-review.git",
+        "directory": "packages/redact"
+    },
+    "homepage": "https://github.com/buYoung/pi-codex-auto-review/tree/master/packages/redact#readme",
+    "bugs": {
+        "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "type": "module",
+    "sideEffects": false,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "generate:pii-data": "node scripts/generate-pii-data.mjs",
+        "verify:rust-differential": "node scripts/rust-differential/run.mjs",
+        "prepack": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "24.0.0",
+        "typescript": "6.0.3"
+    },
+    "engines": {
+        "node": ">=22.19.0"
+    },
+    "files": [
+        "dist/**/*.js",
+        "dist/**/*.d.ts",
+        "dist/**/*.js.map",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
+        "NOTICE"
+    ]
+}

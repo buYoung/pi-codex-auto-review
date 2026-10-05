@@ -27,6 +27,7 @@
         "test:integration": "node scripts/run-tests.mjs integration",
         "test:e2e": "node scripts/run-tests.mjs e2e",
         "test:conformance": "node scripts/run-tests.mjs conformance",
+        "test:redaction": "node scripts/run-tests.mjs redaction",
         "verify:guard": "node scripts/verify-guard.mjs",
         "verify:platform": "node scripts/verify-platform.mjs",
         "verify:windows": "node scripts/verify-windows.mjs",

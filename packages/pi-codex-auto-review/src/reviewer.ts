@@ -7,6 +7,7 @@ import {
     type GuardAction,
     GuardError,
     immutable,
+    type Json,
     type PermissionProfile,
     type PolicyDecision,
     type ReviewAssessment,
@@ -20,6 +21,11 @@ import {
     type ReviewInvestigation,
 } from "./review/investigation.js";
 import { reviewPolicy } from "./review/policy.js";
+import {
+    isRequestStructure,
+    redactReviewData,
+    reviewRedactor,
+} from "./review/redaction.js";
 import { type Clock, deadlineSignal, withSignal } from "./signals.js";
 
 export interface ReviewRequest {
@@ -314,6 +320,7 @@ export async function reviewAction(options: {
         options.clock,
     );
     const policy = reviewPolicy(options.settings?.reviewPolicy);
+    const redactor = reviewRedactor(options.settings?.redaction);
     const context = options.context ?? {
         sessionId: action.sessionId,
         contextId: "legacy",
@@ -323,7 +330,7 @@ export async function reviewAction(options: {
                 id: "legacy-user",
                 source: "user",
                 trust: "authorization",
-                content: safeEvidence(options.trustedAuthorization),
+                content: safeEvidence(options.trustedAuthorization, redactor),
             },
         ],
     };
@@ -356,21 +363,10 @@ export async function reviewAction(options: {
                 "REVIEW_CONTEXT",
                 "Review permission context differs from the bound action",
             );
-        // The action must remain exact: refusing a credential-bearing request is safer than silently rewriting it.
-        if (
-            canonicalJson(
-                safeEvidence(
-                    action as unknown as import("./contracts.js").Json,
-                ),
-            ) !== canonicalJson(action)
-        )
-            throw new GuardError(
-                "REVIEW_CONTEXT",
-                "Exact action contains credential material that cannot enter the reviewer prompt",
-            );
-        const request = {
-            systemPrompt: policy.text,
-            data: canonicalJson({
+        // The reviewer reads a masked copy; binding, grants and execution keep the exact action.
+        const masked = redactReviewData(
+            redactor,
+            {
                 context,
                 untrustedAction: action,
                 requestedPermissionDelta: policyDecision.delta,
@@ -385,6 +381,19 @@ export async function reviewAction(options: {
                     requiresUserInput:
                         policyDecision.requiresUserInput ?? false,
                 },
+            } as unknown as Json,
+            isRequestStructure,
+        );
+        const redactedActionFields = masked.maskedLocations
+            .filter(({ path }) => path[0] === "untrustedAction")
+            .map(({ path, ruleId }) => ({ path: path.slice(1), ruleId }));
+        const request = {
+            systemPrompt: policy.text,
+            data: canonicalJson({
+                ...(masked.value as Record<string, Json>),
+                ...(redactedActionFields.length
+                    ? { redactedActionFields }
+                    : {}),
             }),
         };
         if (

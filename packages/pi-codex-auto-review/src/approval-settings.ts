@@ -2,12 +2,16 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { canonicalJson, GuardError } from "./contracts.js";
-import { type GuardSettings, validateSettings } from "./policy/index.js";
+import {
+    type GuardSettings,
+    type GuardSettingsInput,
+    validateSettings,
+} from "./policy/index.js";
 
 export class ApprovalSettingsStore {
     constructor(
         readonly path: string,
-        private readonly defaults: Partial<GuardSettings> = {},
+        private readonly defaults: GuardSettingsInput = {},
         private readonly isRequired = false,
     ) {}
     async load(): Promise<GuardSettings> {
@@ -18,7 +22,7 @@ export class ApprovalSettingsStore {
             validateSettings(stored);
             return validateSettings({
                 ...this.defaults,
-                ...(stored as Partial<GuardSettings>),
+                ...(stored as GuardSettingsInput),
             });
         } catch (error) {
             if (

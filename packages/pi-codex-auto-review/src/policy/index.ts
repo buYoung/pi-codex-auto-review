@@ -3,6 +3,12 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+    formatIssue,
+    type NormalizedRedactionConfig,
+    normalizeRedactionConfig,
+    type RedactionConfig,
+} from "@buyong/redact";
+import {
     type ApprovalPolicy,
     createProfile,
     decision,
@@ -72,7 +78,13 @@ export interface GuardSettings {
     readonly projectDocMaxBytes: number;
     readonly projectDocFallbackFilenames: readonly string[];
     readonly projectRootMarkers: readonly string[] | null;
+    /** Additions to reviewer-bound masking; reviewer redaction itself cannot be disabled. */
+    readonly redaction: NormalizedRedactionConfig;
 }
+/** Settings as callers supply them; validation fills omitted keys, including omitted redaction lists. */
+export type GuardSettingsInput = Partial<Omit<GuardSettings, "redaction">> & {
+    readonly redaction?: RedactionConfig;
+};
 export const DEFAULT_SETTINGS: GuardSettings = immutable({
     mode: "workspace-write",
     commandRules: [],
@@ -95,6 +107,12 @@ export const DEFAULT_SETTINGS: GuardSettings = immutable({
     projectDocMaxBytes: 32768,
     projectDocFallbackFilenames: [],
     projectRootMarkers: null,
+    redaction: {
+        sensitiveFields: [],
+        rules: [],
+        exceptions: [],
+        piiEntities: [],
+    },
 });
 export function validateSettings(value: unknown): GuardSettings {
     if (!value || typeof value !== "object" || Array.isArray(value))
@@ -228,7 +246,25 @@ export function validateSettings(value: unknown): GuardSettings {
                 "Unknown command rule field",
             );
     }
-    return immutable(JSON.parse(JSON.stringify(settings)));
+    const redaction =
+        settings.redaction &&
+        typeof settings.redaction === "object" &&
+        !Array.isArray(settings.redaction)
+            ? normalizeRedactionConfig(settings.redaction)
+            : undefined;
+    // Issues name only the key and index, never a pattern, value or parser message.
+    if (!redaction || redaction.issues.length)
+        throw new GuardError(
+            "INVALID_SETTINGS",
+            redaction
+                ? `Invalid redaction: ${redaction.issues.map(formatIssue).join("; ")}`
+                : "Invalid redaction",
+        );
+    return immutable(
+        JSON.parse(
+            JSON.stringify({ ...settings, redaction: redaction.config }),
+        ),
+    );
 }
 export async function loadSettings(path: string): Promise<GuardSettings> {
     try {
