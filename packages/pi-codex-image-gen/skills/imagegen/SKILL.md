@@ -9,8 +9,8 @@ Modified copy of the "imagegen" skill bundled with OpenAI Codex
 Copyright 2025 OpenAI. Licensed under the Apache License, Version 2.0 (see LICENSE.txt and NOTICE).
 Modified for Pi's `image_gen` tool: the CLI fallback mode and its files were removed, the Codex
 image-viewing tool became Pi's `read` tool, local files are edited through `referenced_image_paths`,
-the save path is the Pi agent directory, and the tool reuses Pi's supported `openai` provider
-and its existing ChatGPT subscription login without changing the chat provider.
+the save path is the Pi agent directory, and the tool reuses Pi's existing `openai-codex`
+ChatGPT subscription login without changing the chat provider.
 -->
 
 # Image Generation Skill
@@ -19,13 +19,13 @@ Generates or edits images for the current project (for example website assets, g
 
 ## Tool and rules
 
-This skill uses the `image_gen` tool for image generation, editing, and transparent-image requests. It uses Pi's supported `openai` provider, including the ChatGPT subscription sign-in already managed by Pi. If authentication is not configured, use `/login openai` and choose Sign in with ChatGPT. Reuse the existing login; a separate image login or chat-model/provider change is not required.
+This skill uses the `image_gen` tool for image generation, editing, and transparent-image requests. It uses the ChatGPT Plus/Pro subscription login that Pi manages for the `openai-codex` provider. If that login is not configured, use `/login openai-codex`. Reuse the existing login; a chat-model/provider change is not required.
 
 Rules:
 - Use the `image_gen` tool for normal image generation and editing requests.
 - For transparent images, ask `image_gen` for a transparent background and preserve the generated alpha.
 - If the user asks for many assets or says to batch-generate assets, issue one `image_gen` call per requested asset or variant.
-- If the `image_gen` tool cannot be used (it is not available or it fails), tell the user. If the cause is missing authentication, ask the user to use `/login openai`; reuse an existing login rather than asking them to log in again. Never ask the user to paste tokens or keys in chat. Do not switch to a legacy provider, create a separate login flow, or create one-off API runners or scripts as a substitute.
+- If the `image_gen` tool cannot be used (it is not available or it fails), tell the user. If the cause is missing authentication, ask the user to use `/login openai-codex`; reuse an existing login rather than asking them to log in again. Never ask the user to paste tokens or keys in chat. Do not create a separate login flow or one-off API runners or scripts as a substitute.
 
 Save-path policy:
 - `image_gen` saves generated images under the Pi agent directory (default `~/.pi/agent`) as `generated_images/<session>/<call>.png` by default, and the tool result names the saved path.

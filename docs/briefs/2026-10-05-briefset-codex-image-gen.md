@@ -1,10 +1,10 @@
 # Brief Set: Codex image_gen as a Pi extension package
 
 ## Purpose
-- Ship `@buyong/pi-codex-image-gen`, a TypeScript-only Pi package preserving the image_gen tool contract and using only Pi's supported `openai` provider, including its native ChatGPT subscription authentication, as designed in `docs/FDD/codex-image-gen.md`.
-- Bundle the Pi-adapted `imagegen` skill and gate tool/skill exposure on Pi's configured OpenAI auth without overriding user choices.
+- Ship `@buyong/pi-codex-image-gen`, a TypeScript-only Pi package preserving the image_gen tool contract and authenticating image requests with Pi's `openai-codex` ChatGPT subscription login (chat provider unchanged), as designed in `docs/FDD/codex-image-gen.md`.
+- Bundle the Pi-adapted `imagegen` skill and gate tool/skill exposure on Pi's configured `openai-codex` auth without overriding user choices.
 
-> 최종 정정(2026-10-05): 구독 인증 자체도 Pi의 정식 `openai`를 사용하며 `openai-codex` 의존과 별도 Responses 방식 전환은 사용하지 않습니다. 아래 실행 순서·자식 브리프와 `07`·`08` 인계는 기존 단계의 이력을 유지합니다. 현재 인증·주소·헤더 계약은 FDD §9.1/§9.9와 `docs/handoffs/image-gen/09-openai-provider.json`을 따릅니다. 추가 실제 이미지 호출은 하지 않았으며, 과거 legacy 생성 성공을 현재 구현의 성공으로 전용하지 않습니다.
+> 최종 정정(2026-10-05): Pi `openai` 토큰의 이미지 요청은 서버가 거부해(401/401/400), 이미지 인증을 `openai-codex` 로그인과 ChatGPT Images 경로로 확정했습니다. 채팅 공급자는 그대로입니다. 아래 실행 순서·자식 브리프와 `07`~`09` 인계는 기존 단계의 이력입니다. 현재 계약은 FDD §9.1/§9.5/§9.9와 `docs/handoffs/image-gen/11-openai-codex-image-auth.json`을 따릅니다. 실제 Pi에서 생성 1회를 확인했고 실제 편집·투명 배경은 미확인입니다.
 
 ## Child Briefs
 - [ ] `docs/briefs/2026-10-05-feat-codex-image-gen-01-tool-contract.md` — Scaffold the package and land the Codex-identical tool contract; exists because the schema, argument check order, error strings, and credential resolver are the stable surface every other child consumes (S1).

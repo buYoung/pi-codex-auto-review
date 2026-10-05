@@ -30,7 +30,7 @@ type ExposureContext = Pick<
     "modelRegistry" | "sessionManager"
 >;
 
-/** FDD §9.9 predicate: Pi's supported OpenAI auth is configured, without a network call. */
+/** FDD §9.9 predicate: Pi's ChatGPT subscription login is configured, without a network call. */
 export function isImageAuthConfigured(
     ctx: Pick<ExtensionContext, "modelRegistry">,
 ): boolean {

@@ -34,7 +34,7 @@ export {
 
 /**
  * Pi extension entry: registers the Codex-compatible `image_gen` tool and gates its exposure
- * (and the bundled `imagegen` skill) on Pi's existing OpenAI auth at session start and before each
+ * (and the bundled `imagegen` skill) on Pi's `openai-codex` login at session start and before each
  * user prompt (FDD §9.9, §9.10).
  */
 const imageGenExtension: ExtensionFactory = (pi) => {

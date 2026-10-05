@@ -397,11 +397,15 @@ export interface ImagesClientOptions {
     random?: () => number;
 }
 
+/** `ImageReference::Inline` data URL (`into_data_url` in Codex). */
+function imageDataUrl(image: ReferenceImage): string {
+    return `data:${image.mimeType};base64,${Buffer.from(image.bytes).toString("base64")}`;
+}
+
 /**
- * Images client using Pi's OpenAI auth for `POST {baseUrl}/images/generations` and
- * `POST {baseUrl}/images/edits` (multipart, per the OpenAI Images API contract), with Codex's retry policy and failure text
- * (`ImagesClient` in Codex
- * `codex-api/src/endpoint/images.rs`).
+ * Images client for the ChatGPT Images backend: JSON `POST {baseUrl}/images/generations` and
+ * `POST {baseUrl}/images/edits`, with Codex's request bodies, retry policy, and failure text
+ * (`ImagesClient` in Codex `codex-api/src/endpoint/images.rs`).
  */
 export class ImagesClient {
     private readonly fetchImpl: typeof fetch;
@@ -428,10 +432,7 @@ export class ImagesClient {
         });
         return this.post(
             "images/generations",
-            () => ({
-                body,
-                headers: { "Content-Type": "application/json" },
-            }),
+            body,
             "image generation",
             signal,
         );
@@ -442,34 +443,20 @@ export class ImagesClient {
         images: readonly ReferenceImage[],
         signal?: AbortSignal,
     ): Promise<ImageResponse> {
-        return this.post(
-            "images/edits",
-            () => {
-                const form = new FormData();
-                for (const image of images) {
-                    form.append(
-                        "image[]",
-                        new Blob([image.bytes.slice()], {
-                            type: image.mimeType,
-                        }),
-                        image.fileName,
-                    );
-                }
-                form.append("prompt", plan.prompt);
-                form.append("background", plan.background);
-                form.append("model", plan.model);
-                form.append("quality", plan.quality);
-                form.append("size", plan.size);
-                return { body: form, headers: {} };
-            },
-            "image edit",
-            signal,
-        );
+        const body = JSON.stringify({
+            images: images.map((image) => ({ image_url: imageDataUrl(image) })),
+            prompt: plan.prompt,
+            background: plan.background,
+            model: plan.model,
+            quality: plan.quality,
+            size: plan.size,
+        });
+        return this.post("images/edits", body, "image edit", signal);
     }
 
     private async post(
         path: string,
-        makeBody: () => { body: BodyInit; headers: Record<string, string> },
+        body: string,
         operation: string,
         signal: AbortSignal | undefined,
     ): Promise<ImageResponse> {
@@ -477,7 +464,7 @@ export class ImagesClient {
         let text: string;
         try {
             text = await this.runWithRetry(
-                () => this.send(url, makeBody(), signal),
+                () => this.send(url, body, signal),
                 signal,
             );
         } catch (error) {
@@ -520,25 +507,19 @@ export class ImagesClient {
     /** One HTTP attempt: returns the success body text or throws `TransportError`. */
     private async send(
         url: string,
-        request: { body: BodyInit; headers: Record<string, string> },
+        body: string,
         signal: AbortSignal | undefined,
     ): Promise<string> {
         throwIfAborted(signal);
         let response: Response;
         try {
             const headers = new Headers(this.credentials.headers);
-            for (const [name, value] of Object.entries(request.headers)) {
-                headers.set(name, value);
-            }
-            if (request.body instanceof FormData) {
-                // fetch must generate the boundary matching this multipart body.
-                headers.delete("Content-Type");
-            }
+            headers.set("Content-Type", "application/json");
             headers.set("Authorization", `Bearer ${this.credentials.apiKey}`);
             response = await this.fetchImpl(url, {
                 method: "POST",
                 headers,
-                body: request.body,
+                body,
                 signal,
             });
         } catch (error) {

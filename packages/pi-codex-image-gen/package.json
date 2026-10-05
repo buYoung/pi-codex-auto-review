@@ -1,7 +1,7 @@
 {
     "name": "@buyong/pi-codex-image-gen",
     "version": "0.1.0",
-    "description": "Codex-compatible image_gen tool for Pi using Pi's supported openai provider and native ChatGPT subscription authentication. Bundles the adapted imagegen skill without a separate image login or chat provider change.",
+    "description": "Codex-compatible image_gen tool for Pi using Pi's openai-codex ChatGPT subscription login for image requests, without changing the chat provider. Bundles the adapted imagegen skill.",
     "license": "Apache-2.0",
     "keywords": [
         "pi-package",

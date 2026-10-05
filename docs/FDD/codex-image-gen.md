@@ -26,7 +26,7 @@ not:
 - **결정 권한**:
   - 다음 결정은 사용자가 정했습니다.
     - "Codex의 `image_gen`을 Pi 플러그인으로 만든다"는 방향
-    - 이미지 구독 인증도 Pi의 정식 `openai` 공급자만 사용한다는 최종 결정. `openai-codex` 의존·대체 경로와 별도 Responses 방식 전환은 사용하지 않습니다([9.1](#91-공급자와-인증-정책), [Revision History](#revision-history)).
+    - 이미지 요청에는 Pi `openai-codex`(ChatGPT Plus/Pro) 구독 로그인을 쓰고, 채팅 모델·공급자(예: `openai`)는 그대로 두는 최종 결정. Pi `openai` 토큰은 이미지 요청이 거부돼 사용하지 않습니다([9.1](#91-공급자와-인증-정책), [Revision History](#revision-history)).
     - "저장 위치는 Codex와 동일하게 한다"는 결정([9.7](#97-저장-정책))
     - "자격 증명이 없으면 사용할 수 없고, 사용자가 끈 도구는 다시 켜지 않는다"는 결정([9.9](#99-자격-증명-미설정-시-노출-정책))
     - 도구 설명은 Codex 원문에서 [9.3](#93-도구-설명-정책)의 네 가지만 바꾸고(그중 `python` 문장 삭제는 사용자가 직접 확정), 시스템 프롬프트에는 문구를 넣지 않는 결정
@@ -36,7 +36,7 @@ not:
     - 도구가 숨겨지면 스킬도 함께 숨기는 결정([9.10](#910-이미지-생성-스킬-정책))
   - 사용자 결정과 Pi 런타임 때문에 Codex와 달라지는 부분은 [9.11](#911-codex-동일성-원칙)에 모아 두었습니다.
 - **검토 범위**: 최초 초안은 2026-10-05에 Codex 로컬 사본 `tmp/codex-main`, Pi 패키지 0.99.1, 공개 API용 OpenAI SDK 7.19.0을 기준으로 작성하고 독립 검토했습니다. 이후 사용자는 기존 Pi 구독 인증 재사용을 승인했습니다. 이번 부분 수정은 그 결정, 실제 호출 기록, 인증·노출·요청 형식의 구현을 반영합니다. 최초 독립 검토가 이번 구독 경로 변경까지 검증했다는 뜻은 아닙니다.
-- **실제 호출 이력**: 기존 `openai-codex` 시험에서 이미지 생성 1회가 HTTP 200으로 성공한 기록은 보존합니다(`07-subscription-live.json`). 그러나 사용자가 지정한 최종 `openai` 구현의 성공 근거로 사용하지 않습니다. 앞선 `openai` 이미지 요청은 401이었으며, 이번 정정 뒤 실제 이미지 호출은 추가하지 않았습니다. 인증 조회·빌드·로컬 동작 검증과 실제 이미지 성공을 구분합니다(`09-openai-provider.json`).
+- **실제 호출 이력**: Pi `openai` 토큰의 이미지 요청은 세 경로 모두 거부됐습니다(`/v1/images/generations` 401, ChatGPT Images 경로 401, `/v1/responses`의 `image_generation` 400). `openai-codex` 로그인을 쓴 최종 패키지는 실제 Pi에서 `openai` 채팅 모델이 `image_gen`을 호출해 1254×1254 PNG를 생성·저장했습니다(`11-openai-codex-image-auth.json`). 실제 편집·투명 배경은 호출하지 않았습니다.
 - **구현 검증 범위**: worktree의 미커밋 구현을 빌드와 로컬 검증으로 확인합니다. 정확한 커밋 기준의 문서 전체 구현 적합성은 아직 확인하지 않았으므로 `verified-against`는 `unverified`입니다. `last-verified` 날짜는 최초 설계 검증 날짜를 유지합니다. 공식 웹 문서는 확인하지 않았습니다.
 
 ---
@@ -47,7 +47,7 @@ Pi 0.99.1에는 대화 중에 모델이 이미지를 만들거나 편집하는 �
 
 Codex는 `image_gen.imagegen` 도구로 이 기능을 제공합니다. Codex에서 사용자는 "이 장면을 그려줘", "방금 만든 이미지의 배경을 지워줘" 같은 요청만 하면 되고, 모델이 도구를 골라 이미지를 생성하거나 편집합니다. 결과는 화면에 표시되고 파일로도 저장됩니다.
 
-Codex 원본은 자체 이미지 요청 경로와 헤더를 사용하지만, 이 패키지의 인증 기준은 사용자가 지정한 Pi의 정식 `openai` 공급자입니다. Pi 1.0.2 소스의 이 공급자는 ChatGPT 로그인을 `isSubscription: true`로 정의합니다. 패키지가 별도 구독 유형을 만들거나 legacy 자격 증명으로 우회하지 않고 Pi가 관리하는 인증 계약을 따르는 정책은 [9.1](#91-공급자와-인증-정책)에 정의합니다.
+Codex는 ChatGPT 로그인일 때 이미지 요청을 ChatGPT Images 경로(`chatgpt.com/backend-api/codex/images/*`)로 보냅니다. 이 경로는 Codex 앱 로그인 토큰만 받으며, Pi에서는 `openai-codex` 로그인이 여기에 해당합니다. Pi `openai`(Sign in with ChatGPT) 토큰은 채팅에는 쓰이지만 이미지 요청은 서버가 거부합니다. 인증 정책은 [9.1](#91-공급자와-인증-정책)에 정의합니다.
 
 ---
 
@@ -87,8 +87,8 @@ Codex image_gen Pi 확장은 채팅 공급자를 바꾸지 않고 기존 Pi Chat
 
 - **품질·크기·모델 선택 노출**: 모델이나 사용자가 품질, 크기, 이미지 모델을 고르게 하지 않습니다. Codex가 이 값을 고정해 도구 사용법을 단순하게 유지하기 때문입니다.
 - **한 번에 여러 장 생성**: 한 호출에서 여러 이미지를 만들지 않습니다. Codex도 결과 중 첫 장만 사용합니다.
-- **모든 이미지 공급자 지원**: Google·OpenRouter 등 다른 이미지 공급자를 지원하지 않습니다. 별도 인증 유형이나 API 키 대체 실행 경로를 만들지 않고 Pi의 `openai` 인증 선택을 그대로 따릅니다.
-- **Codex 전체 백엔드 계약 재현**: 도구 계약을 이식하되 통신은 Pi 정식 `openai`에 맞추며, Codex 전용 주소·헤더·사용량 한도 이벤트와 분석 체계를 재현하지 않습니다.
+- **모든 이미지 공급자 지원**: Google·OpenRouter 등 다른 이미지 공급자를 지원하지 않습니다. 별도 인증 유형이나 API 키 대체 실행 경로를 만들지 않고 Pi가 관리하는 `openai-codex` 구독 로그인만 씁니다.
+- **Codex 전체 백엔드 계약 재현**: 이미지 요청 주소·헤더·본문은 Codex와 같게 보내지만, Codex 전용 사용량 한도 이벤트와 분석 체계는 재현하지 않습니다.
 
 ---
 
@@ -120,7 +120,7 @@ Codex image_gen Pi 확장은 채팅 공급자를 바꾸지 않고 기존 Pi Chat
 | 최근 대화 이미지 | 현재 세션 분기에서 가장 최근에 등장한 이미지들입니다. `num_last_images_to_include`로 개수를 지정합니다. |
 | 저장 파일(artifact) | 결과 이미지를 저장한 PNG 파일입니다. |
 | 경로 안내(output hint) | 저장 위치와 그 파일을 다루는 방법을 모델에게 알리는 문구입니다. |
-| OpenAI 구독 인증 | Pi `openai` 공급자가 관리하는 기존 ChatGPT 로그인입니다. 인증 값의 해석·선택·갱신은 Pi에 맡기고 패키지가 다른 구독이나 legacy 로그인을 요구하지 않습니다. |
+| 이미지 구독 인증 | Pi `openai-codex` 공급자가 관리하는 ChatGPT Plus/Pro 로그인입니다. 로그인·선택·갱신은 Pi에 맡기고, 패키지는 토큰의 계정 ID만 메모리에서 읽습니다. |
 
 ---
 
@@ -128,8 +128,8 @@ Codex image_gen Pi 확장은 채팅 공급자를 바꾸지 않고 기존 Pi Chat
 
 | Existing Feature | Relationship |
 | ---------------- | ------------ |
-| Pi `openai` 공급자 | 유일한 인증 기준입니다. 기존 ChatGPT 구독 로그인, 주소·추가 헤더·갱신을 그대로 재사용하며 공급자 설정은 변경하지 않습니다([9.1](#91-공급자와-인증-정책)). |
-| Pi `openai-codex` 공급자(legacy) | 사용하지 않습니다. 자격 증명 조회·대체 경로·로그인 안내·자격 증명 이름 변경 모두 금지합니다. |
+| Pi `openai-codex` 공급자 | 이미지 인증의 유일한 기준입니다. 기존 로그인·갱신·주소·추가 헤더를 재사용하며 공급자 설정은 바꾸지 않습니다([9.1](#91-공급자와-인증-정책)). |
+| Pi `openai` 공급자 | 채팅에는 그대로 씁니다. 이 토큰의 이미지 요청은 서버가 거부하므로 이미지 인증에는 쓰지 않습니다. |
 | Pi `/login` | 재사용합니다. 자격 증명을 설정하면 다음 요청부터 도구를 쓸 수 있습니다([9.9](#99-자격-증명-미설정-시-노출-정책)). |
 | Pi `read` 도구 | 함께 씁니다. 모델이 아직 보지 못한 로컬 이미지를 편집 전에 확인하는 수단입니다. Codex의 `view_image`를 대신합니다. |
 | Pi 도구 결과의 이미지 표시 | 재사용합니다. 결과 이미지를 TUI에 표시하고 모델에 전달합니다. |
@@ -181,12 +181,12 @@ Codex image_gen Pi 확장은 채팅 공급자를 바꾸지 않고 기존 Pi Chat
 ```text
 자격 증명이 없는 상태에서 사용자가 이미지를 요청한다
   -> 모델에게 image_gen이 보이지 않아 도구를 호출하지 않는다
-  -> OpenAI 인증이 없으면 사용자가 /login openai에서 ChatGPT 로그인을 선택한다
+  -> 구독 로그인이 없으면 사용자가 /login openai-codex로 ChatGPT Plus/Pro 로그인을 한다
      (기존 로그인이 있으면 다시 로그인하거나 API 키를 설정할 필요 없음)
   -> 다음 프롬프트부터 image_gen을 쓸 수 있다
 
 도구가 보이는 동안 구독 자격 증명을 쓸 수 없게 됐다(로그아웃, 토큰 갱신 실패 등)
-  -> 요청을 보내지 않고, /login openai를 안내하는 오류를 모델에 돌려준다
+  -> 요청을 보내지 않고, /login openai-codex를 안내하는 오류를 모델에 돌려준다
 
 인자가 잘못됐다(선택자 둘 다 지정, 경로 6개, 대화 이미지 부족, 읽을 수 없는 파일 등)
   -> 요청을 보내지 않고, Codex와 같은 오류 문구를 모델에 돌려준다(9.6)
@@ -213,7 +213,7 @@ OpenAI가 오류를 반환했다
 
 **요청 종류 결정.** 인자 조합에 따라 생성, 편집, 거부 중 하나가 됩니다([9.4](#94-요청-라우팅-정책)). 이 판단과 모든 인자 검증은 네트워크 요청 전에 끝납니다.
 
-**OpenAI 이미지 요청.** 생성과 편집은 Pi `openai`가 제공하는 기준 주소에 보냅니다. 인증·헤더는 [9.1](#91-공급자와-인증-정책), 직접 이미지 본문은 [9.5](#95-요청-값-정책)을 따릅니다. 다른 공급자나 별도 Responses 실행 방식으로 자동 전환하지 않습니다.
+**이미지 요청.** 생성과 편집은 Codex와 같은 ChatGPT Images 경로(`{base}` = `openai-codex` 기준 주소 + `/codex`)에 보냅니다. 인증·헤더는 [9.1](#91-공급자와-인증-정책), 본문은 [9.5](#95-요청-값-정책)을 따릅니다. 다른 공급자나 API 키 경로로 자동 전환하지 않습니다.
 
 - 생성: `POST {base}/images/generations`
 - 편집: `POST {base}/images/edits`
@@ -265,7 +265,7 @@ Pi는 이 이미지를 TUI에 표시하고 모델 문맥에 넣습니다. 결과
 | 인자 오류 | Codex와 같은 문구로 오류를 돌려줍니다([9.6](#96-오류-문구-정책)). | 보내지 않음 | 없음 |
 | 참조 파일 읽기·처리 오류 | 해당 경로를 포함한 오류를 돌려줍니다([9.6](#96-오류-문구-정책), [9.4](#94-요청-라우팅-정책)). | 보내지 않음 | 없음 |
 | 대화 이미지 부족 | 요청 개수와 실제 개수를 포함한 오류를 돌려줍니다. | 보내지 않음 | 없음 |
-| 자격 증명 없음 | 평소에는 도구가 노출되지 않습니다([9.9](#99-자격-증명-미설정-시-노출-정책)). 노출된 상태에서 호출 시점에 OpenAI 자격 증명을 쓸 수 없으면 `/login openai`를 안내하는 오류를 돌려줍니다([9.1](#91-공급자와-인증-정책)). | 보내지 않음 | 없음 |
+| 자격 증명 없음 | 평소에는 도구가 노출되지 않습니다([9.9](#99-자격-증명-미설정-시-노출-정책)). 노출된 상태에서 호출 시점에 구독 자격 증명(계정 ID 포함)을 쓸 수 없으면 `/login openai-codex`를 안내하는 오류를 돌려줍니다([9.1](#91-공급자와-인증-정책)). | 보내지 않음 | 없음 |
 | 로그인 토큰 갱신 실패 | 저장된 로그인이 있으면 도구는 노출되지만, 호출 시점에 만료된 토큰을 갱신하지 못하면 자격 증명 없음과 같은 안내 오류를 돌려줍니다([9.1](#91-공급자와-인증-정책)). | 보내지 않음 | 없음 |
 | OpenAI HTTP 오류·통신 오류 | 재시도 대상이면 재시도하고, 최종 실패는 [9.6](#96-오류-문구-정책)의 Codex 문구로 돌려줍니다. | 보냄 | 없음 |
 | 응답 해석 실패 | [9.6](#96-오류-문구-정책)의 해석 오류 문구로 돌려줍니다. | 보냄 | 없음 |
@@ -283,22 +283,21 @@ Pi는 이 이미지를 TUI에 표시하고 모델 문맥에 넣습니다. 결과
 
 Decision:
 
-- 이미지 구독 인증도 Pi의 정식 `openai` 공급자만 사용합니다. 기존 ChatGPT 로그인을 재사용하고, 사용자 설정·현재 채팅 모델·공급자 선택은 바꾸지 않습니다.
-- 자격 증명은 Pi 모델 레지스트리의 `getProviderAuth("openai")`로만 조회합니다. 로그인·인증 선택·갱신·저장은 Pi에 맡기며, 파일 직접 읽기나 별도 인증 저장소를 만들지 않습니다.
-- 반환된 인증 값은 그대로 사용합니다. JWT인지 검사하거나 legacy 계정 클레임을 요구하지 않으며 토큰을 변환·이름 변경·이관하지 않습니다.
-- 기준 주소는 인증의 base URL, `openai` 공급자의 base URL, 기본값 `https://api.openai.com/v1` 순서로 선택합니다. 끝의 `/`만 정리하고 `/codex`를 붙이거나 다른 백엔드로 바꾸지 않습니다.
-- Pi가 제공한 추가 헤더를 보존하고, 클라이언트는 JSON 전송 헤더와 `Authorization: Bearer <인증 값>`을 적용합니다. legacy 계정·originator·턴 헤더를 만들어 넣지 않습니다.
-- 인증을 얻지 못하거나 갱신에 실패하면 요청 전에 `/login openai`와 ChatGPT 로그인을 안내합니다. 정상적인 기존 로그인에는 재로그인이나 별도 이미지 로그인이 필요하지 않습니다.
-- `openai-codex` 조회·대체 경로·로그인 안내는 사용하지 않습니다. 직접 이미지 도구 계약을 유지하며 별도 Responses 방식으로 전환하지 않습니다.
-- 인증 값과 추가 인증 헤더는 결과·로그에 넣지 않습니다. 서버 오류에 반사된 비밀값도 제거합니다.
+- 이미지 요청은 Pi `openai-codex`(ChatGPT Plus/Pro) 구독 로그인으로 인증합니다. 현재 채팅 모델·공급자(예: `openai`)와 사용자 설정은 바꾸지 않습니다.
+- 자격 증명은 Pi 모델 레지스트리의 `getProviderAuth("openai-codex")`로만 조회합니다. 로그인·인증 선택·갱신·저장은 Pi에 맡기며, 파일 직접 읽기나 별도 인증 저장소를 만들지 않습니다.
+- 토큰의 `https://api.openai.com/auth` 클레임에서 `chatgpt_account_id`를 메모리에서만 읽습니다. Pi의 `openai-codex` 채팅 요청과 같은 방식입니다. 클레임이 없으면 요청 전에 거부합니다.
+- 기준 주소는 인증의 base URL, `openai-codex` 공급자의 base URL, 기본값 `https://chatgpt.com/backend-api` 순서로 고르고, 끝의 `/`를 정리한 뒤 `/codex`를 한 번만 붙입니다(Codex `to_api_provider()`의 ChatGPT 인증 주소).
+- 헤더: Pi가 준 추가 헤더를 보존하고 `Authorization: Bearer <토큰>`, `chatgpt-account-id`, `originator: pi`(Pi의 `openai-codex` 요청과 같은 값), `x-codex-image-turn-id`(도구 호출 ID), `Content-Type: application/json`을 보냅니다.
+- 인증을 얻지 못하거나 갱신에 실패하거나 계정 ID가 없으면 요청 전에 `/login openai-codex`를 안내합니다. 정상적인 기존 로그인에는 재로그인이 필요하지 않습니다.
+- Pi `openai` 토큰이나 API 키로 대체하지 않습니다.
+- 인증 값과 계정 ID는 결과·로그에 넣지 않습니다. 서버 오류에 반사된 비밀값도 제거합니다.
 
 Rationale:
 
-- 사용자가 정식 `openai` 구독 흐름을 쓰겠다는 조건을 다시 명확히 했습니다. 로컬 Pi 소스도 이 공급자의 ChatGPT 로그인을 `isSubscription: true`로 정의합니다.
-- 구독 처리에 관해 패키지가 별도 모델을 만들지 않고 Pi의 공식 공급자 계약을 그대로 따르는 것이 최종 사용자 결정입니다.
-- 과거의 legacy 생성 성공은 보존하지만 이 구현의 성공 근거로 전용하지 않습니다. `openai`로 실제 이미지 요청이 성공했는지와 인증 조회가 정상인지도 구분합니다([13](#13-risks--open-questions)).
+- Pi `openai` 토큰(Sign in with ChatGPT, `dynamic_agent_client`)으로 이미지 요청을 세 경로에서 실제로 시험했고 모두 거부됐습니다. `/v1/images/generations`는 401 `hardened_oauth_rule_missing`, ChatGPT Images 경로는 401 `no_matching_rule`, `/v1/responses`의 `image_generation`은 400 `subscription_sharing_unsupported_capability`입니다. 토큰에 계정 ID 클레임도 없습니다.
+- Codex 앱 로그인 토큰(Pi `openai-codex`)은 Codex와 같은 ChatGPT Images 경로에서 PoC와 최종 패키지 모두 실제 생성에 성공했습니다. 사용자가 이 로그인으로 지원하기로 결정했습니다.
 
-**Superseded decisions (2026-10-05).** 최초 초안의 `openai` 인증 방향 뒤에 실제 생성 시험을 위해 `openai-codex` 인증과 구독 백엔드를 채택한 중간 결정이 있었습니다(`07`·`08` 인계). 최종 사용자 조건에 따라 이 중간 결정의 legacy 인증·계정 클레임 요구·주소 변경·헤더 생성은 모두 제거했습니다. 과거 기록은 [Revision History](#revision-history)에 보존합니다.
+**Superseded decisions (2026-10-05).** 이미지 인증도 Pi `openai`만 쓰고 본문을 공개 Images API 형식으로 보내던 결정(`09` 인계)은 위 거부 결과로 대체했습니다. 과거 기록은 [Revision History](#revision-history)에 보존합니다.
 
 ### 9.2 인자 계약 정책
 
@@ -393,13 +392,13 @@ Decision:
 - `quality: "auto"`, `size: "auto"`
 - `background`: `transparent_background`가 참이면 `"transparent"`, 아니면 `"opaque"`
 - `n`은 보내지 않습니다.
-- 생성은 JSON으로 보냅니다. 편집은 OpenAI Images API용 SDK와 같은 multipart로 보내며, `image[]` 파일 파트에 참조 이미지의 바이트·MIME·파일 이름을 담고 고정값은 텍스트 필드로 보냅니다. multipart 경계와 Content-Type은 `fetch`가 함께 생성합니다. 이미지 순서는 참조 경로의 인자 순서 또는 최근 이미지의 시간순을 유지합니다([9.4](#94-요청-라우팅-정책)).
+- 생성과 편집 모두 JSON으로 보냅니다. 편집 본문은 Codex `ImageEditRequest`와 같이 `images: [{ image_url: "data:<MIME>;base64,<바이트>" }]` 뒤에 고정값을 두며, 이미지 순서는 참조 경로의 인자 순서 또는 최근 이미지의 시간순을 유지합니다([9.4](#94-요청-라우팅-정책)).
 
 Rationale:
 
-- 도구의 인자·고정값·참조 이미지·결과·저장 계약은 유지합니다. 내부 편집 전송은 Pi 정식 `openai`의 Images API 계약에 맞춰 설치된 OpenAI SDK의 multipart 형식을 따릅니다. 별도 Responses 방식으로 바꾸지 않습니다. 실제 수용 여부는 미확인이며 소스·mock 검증을 서비스 성공으로 간주하지 않습니다.
+- 요청 경로가 Codex와 같은 ChatGPT Images 경로이므로 본문도 Codex 형식을 따릅니다. 도구의 인자·고정값·참조 이미지·결과·저장 계약은 그대로입니다. 실제 편집 수용은 호출하지 않아 mock 검증까지만 확인했습니다.
 
-**Superseded decision (2026-10-05).** 중간 legacy 구현의 JSON `images` 배열 전송은 현재 미사용입니다. 최초 multipart 방향으로 돌아오되 인증은 Pi 정식 `openai`가 관리하도록 통일했습니다([Revision History](#revision-history)).
+**Superseded decision (2026-10-05).** `openai` 공개 Images API에 맞춘 multipart 편집 전송(`09` 인계)은 인증 경로 변경과 함께 대체했습니다([Revision History](#revision-history)).
 
 ### 9.6 오류 문구 정책
 
@@ -463,10 +462,10 @@ Rationale:
 
 Decision:
 
-- Pi의 `openai` 인증이 설정되지 않았으면 `image_gen`을 모델에 노출하지 않습니다. 인증 종류와 사용 가능 여부의 선택은 Pi에 맡기고, 패키지가 `openai-codex`나 별도 이미지 구독을 요구하지 않습니다.
+- Pi의 `openai-codex` 인증이 설정되지 않았으면 `image_gen`을 모델에 노출하지 않습니다. 채팅 공급자가 무엇이든 같은 기준입니다.
 - 사용 가능 여부는 세션이 시작될 때와 사용자가 프롬프트를 보낼 때마다 다시 판단합니다. 그래서 세션 중 `/login`을 마치면 다음 프롬프트부터 도구가 보이고, 자격 증명이 사라지면 다음 프롬프트부터 보이지 않습니다.
   - 한 프롬프트 안의 이어지는 모델 호출, 후속·조정(follow-up·steer) 메시지에서는 다시 판단하지 않습니다. 그 사이에 자격 증명이 사라지는 경우는 호출 시점 확인이 처리합니다.
-  - 노출 판단은 네트워크 없이 `openai` 인증의 설정 여부만 확인합니다. 토큰의 실제 사용 가능 여부와 갱신 실패는 호출 시점에 처리합니다([9.1](#91-공급자와-인증-정책)).
+  - 노출 판단은 네트워크 없이 `openai-codex` 인증의 설정 여부만 확인합니다. 토큰의 실제 사용 가능 여부와 갱신 실패는 호출 시점에 처리합니다([9.1](#91-공급자와-인증-정책)).
 - 이 기능은 `image_gen`의 노출 여부만 바꿉니다. 다른 도구의 활성 상태는 건드리지 않습니다.
 - 사용자가 끈 `image_gen`은 자격 증명이 있어도 다시 켜지 않습니다. 끄는 방법에 따라 보장 방식이 다릅니다.
   - **실행 옵션으로 끈 경우**: `-t`/`--tools`에서 빼거나, `-xt`/`--exclude-tools`로 제외하거나, `-nt`/`--no-tools`를 쓴 경우입니다. Pi가 도구를 등록 목록에서 아예 빼므로 이 기능은 다시 켤 수 없습니다. Pi가 보장합니다.
@@ -495,13 +494,13 @@ Decision:
   - `view_image`를 Pi의 `read` 도구로 바꿉니다.
   - "Built-in edit semantics" 문단과 Workflow 7단계를 실제 도구에 맞게 고칩니다. 원문은 "로컬 파일을 먼저 `view_image`로 대화에 올린 뒤 편집"하고 "임의의 파일 경로 편집을 약속하지 말라"고 하지만, 이 기능은 `referenced_image_paths`로 로컬 파일을 바로 편집합니다([9.4](#94-요청-라우팅-정책)). 도구 설명의 두 선택자 규칙과 같은 내용이 되게 합니다.
   - `$CODEX_HOME/generated_images/...` 저장 위치를 이 기능의 저장 위치로 바꿉니다([9.7](#97-저장-정책)).
-  - 인증 안내는 [9.1](#91-공급자와-인증-정책)에 맞춥니다. Pi에 이미 저장된 ChatGPT 구독 로그인을 재사용하며, 없을 때만 `/login openai`에서 ChatGPT 로그인을 선택하도록 안내합니다. API 키 설정이나 채팅 공급자 변경을 요구하지 않습니다.
+  - 인증 안내는 [9.1](#91-공급자와-인증-정책)에 맞춥니다. Pi에 이미 저장된 `openai-codex` 구독 로그인을 재사용하며, 없을 때만 `/login openai-codex`를 안내합니다. API 키 설정이나 채팅 공급자 변경을 요구하지 않습니다.
   - Codex UI 메타데이터(`agents/openai.yaml`, `assets/`)는 포함하지 않습니다.
 - CLI 대체 모드는 파일과 문장 모두에서 지웁니다.
   - 파일: `scripts/image_gen.py`, `scripts/remove_chroma_key.py`, `references/cli.md`, `references/image-api.md`, `references/codex-network.md`
   - `SKILL.md`: "Top-level modes and rules"의 CLI 모드와 `gpt-image-1.5` 전환 규칙, Execution strategy의 CLI `generate-batch`와 `n` 설명(`n`은 이 도구의 인자가 아님), Workflow의 CLI 관련 단계(1, 4, 17, 18단계의 CLI 부분), "gpt-image-2 guidance for CLI fallback" 절, "Fallback CLI mode only" 절
   - `references/prompting.md`와 `references/sample-prompts.md`: CLI 전용 문장과 지워지는 참조 파일을 가리키는 연결, "CLI `gpt-image-2` does not support `background=transparent`; ask before using `gpt-image-1.5`" 같은 CLI 기준 모델 안내
-  - 원문에서 CLI 대체 안내가 있던 자리("built-in 도구가 실패하거나 없으면")에는 "`image_gen` 도구를 쓸 수 없으면 사용자에게 알리고, OpenAI 인증이 없는 경우 `/login openai`를 안내하라"는 지침을 둡니다. 스킬은 도구와 함께 숨겨지므로, 이 지침은 사용자가 `/skill:imagegen`으로 직접 부른 경우에 쓰입니다.
+  - 원문에서 CLI 대체 안내가 있던 자리("built-in 도구가 실패하거나 없으면")에는 "`image_gen` 도구를 쓸 수 없으면 사용자에게 알리고, 구독 로그인이 없는 경우 `/login openai-codex`를 안내하라"는 지침을 둡니다. 스킬은 도구와 함께 숨겨지므로, 이 지침은 사용자가 `/skill:imagegen`으로 직접 부른 경우에 쓰입니다.
 - 다음은 CLI 관련 문장을 빼고 유지합니다.
   - "When to use" / "When not to use" 판단 기준
   - 생성·편집 의도 판단과 프롬프트 정리 지침(`references/prompting.md`, `references/sample-prompts.md`)
@@ -538,7 +537,7 @@ Decision:
   - 대기 시간은 200ms에서 시작해 재시도마다 두 배로 늘리고 ±10% 무작위 흔들림을 줍니다. 응답에 `Retry-After`가 있으면 그 값을 따릅니다.
   - 사용자가 중단하면 재시도도 멈춥니다.
 - Codex와 달라질 수밖에 없는 부분은 다음뿐입니다.
-  - **Pi 정식 인증·전송 계약**: Pi `openai`의 인증·주소·추가 헤더를 그대로 사용하며 Codex 전용 계정·턴 헤더를 만들지 않습니다. 편집은 해당 Images API용 multipart 형식이고 현재 채팅 설정은 그대로입니다([9.1](#91-공급자와-인증-정책), [9.5](#95-요청-값-정책)).
+  - **인증 출처와 헤더 값**: 토큰은 Codex 자체 로그인 대신 Pi `openai-codex` 로그인에서 얻고, `originator`는 Pi의 값(`pi`), 턴 ID는 도구 호출 ID를 씁니다. 주소·본문 형식은 Codex와 같고 현재 채팅 설정은 그대로입니다([9.1](#91-공급자와-인증-정책), [9.5](#95-요청-값-정책)).
   - **Codex 백엔드 전용 이벤트**: Pi 도구 결과에는 Codex의 별도 사용량 한도 이벤트와 imagegen 분석 이벤트 구조가 없으므로, `limit_id == "image_gen"` 전용 이벤트·무료 요금제 사전 차단·요청 ID 분석은 구현하지 않습니다. 백엔드가 거부한 요청은 HTTP 오류로 전달합니다.
   - **비밀값 보호**: 서버가 토큰이나 계정 ID를 오류에 되돌려 보낸 경우에는 그 값만 제거합니다. 나머지 오류 형식은 유지합니다.
   - **사용자 결정으로 달라지는 부분**: 도구 이름과 설명 변경([9.3](#93-도구-설명-정책)), 저장 루트([9.7](#97-저장-정책)), 자격 증명에 따른 노출([9.9](#99-자격-증명-미설정-시-노출-정책)), 스킬 수정([9.10](#910-이미지-생성-스킬-정책))
@@ -559,25 +558,25 @@ Rationale:
 
 ## 10. Alternatives Considered
 
-### Alternative: `openai-codex` 공급자와 ChatGPT 백엔드 사용 — 최초 제외 결정 대체
+### Alternative: Pi `openai` 토큰으로 이미지 요청 — 서버 거부로 제외
 
 Description:
 
-- Codex와 똑같이 `chatgpt.com/backend-api/codex/images/*`에 계정·턴 헤더와 JSON 편집 형식으로 요청합니다. 채팅은 현재 공급자로 유지합니다.
+- 채팅에 쓰는 Pi `openai`(Sign in with ChatGPT) 토큰으로 공개 Images API, ChatGPT Images 경로, 또는 Responses의 `image_generation` 도구를 호출합니다.
 
-Why not chosen (superseded, 2026-10-05):
+Why not chosen:
 
-- 이 경로는 최초에 제외됐다가 생성 시험과 중간 구현에서 채택된 이력이 있습니다. 최종 사용자는 deprecated 공급자 대신 정식 `openai`를 요구했으므로 현재 다시 제외합니다. 과거 성공 기록은 해당 시험의 근거로만 보존합니다.
+- 세 경로 모두 실제 호출에서 거부됐습니다(401 `hardened_oauth_rule_missing`, 401 `no_matching_rule`, 400 `subscription_sharing_unsupported_capability`). Responses 거부 메시지는 구독 공유가 `web_search`와 개발자 정의 도구만 지원한다고 밝힙니다. 한동안 이 방식을 채택했던 이력은 [Revision History](#revision-history)에 있습니다.
 
-### Alternative: 정식 `openai` 인증과 직접 Images 계약 — 현재 채택
+### Alternative: `openai-codex` 로그인과 ChatGPT Images 경로 — 현재 채택
 
 Description:
 
-- Pi `openai`가 제공하는 주소·인증·추가 헤더를 사용합니다. 별도 구독 인증이나 토큰 이관 없이 직접 이미지 도구 계약을 유지합니다.
+- Codex와 같이 `chatgpt.com/backend-api/codex/images/*`에 계정·턴 헤더와 JSON 본문으로 요청합니다. 채팅은 현재 공급자로 유지합니다.
 
 Decision history:
 
-- 한 차례 이미지 요청이 401을 반환해 legacy 경로를 시험했으나, 사용자는 정식 `openai`를 계속 쓰겠다고 명확히 했습니다. 이 경로를 현재 채택하되 이미지 요청의 실제 수용 여부는 검증 이력과 위험에 따로 기록합니다. 별도 Responses 실행 방식 전환은 승인하지 않았습니다.
+- 최초 제외 → PoC 성공으로 중간 채택(`07`·`08`) → `openai` 전용 요구로 제외(`09`) → `openai` 거부 확인 후 사용자 결정으로 다시 채택했습니다(`11`).
 
 ### Alternative: pi-ai `generateImages()` 레지스트리에 OpenAI 이미지 공급자 등록
 
@@ -597,7 +596,7 @@ Description:
 
 Why not chosen:
 
-- Node 22에 내장된 `fetch`, `FormData`, `Blob`만으로 두 요청을 만들 수 있습니다. 사용자 작업 지침(전역 AGENTS.md)은 외부 의존성을 꼭 필요할 때만 추가하도록 요구합니다.
+- Node 22에 내장된 `fetch`와 `Buffer`만으로 두 JSON 요청을 만들 수 있고, SDK는 ChatGPT Images 경로의 계정·턴 헤더와 본문 형식을 기본으로 다루지 않습니다. 사용자 작업 지침(전역 AGENTS.md)은 외부 의존성을 꼭 필요할 때만 추가하도록 요구합니다.
 
 ---
 
@@ -669,9 +668,9 @@ Why not chosen:
 
 ### Risks
 
-- **현재 이미지 요청 검증**: 과거 `openai` 이미지 요청의 401 기록은 남아 있고, legacy 인증으로 성공한 생성은 최종 구현의 성공 근거가 아닙니다. 이번 정정은 인증·주소·헤더를 Pi의 정식 계약으로 통일한 변경이며, 그 뒤 실제 생성은 추가하지 않았습니다. 정식 구독 로그인 지원과 특정 이미지 요청의 수용 결과를 같은 검증으로 취급하지 않습니다.
-- **실제 편집**: 설치된 OpenAI SDK와 로컬 mock에서 multipart `image[]`, MIME·바이트·순서를 확인하지만 최종 `openai` 경로에서 실제 편집 호출은 하지 않았습니다. 사용자는 실제 검증을 이미지 한 장 생성으로 제한했습니다.
-- **투명 배경**: 도구는 Codex와 같은 `background: transparent` 값을 전달합니다. 최종 `openai` 경로의 수용 여부나 실제 결과의 투명도는 확인하지 않았습니다.
+- **`openai-codex` 의존**: Pi 1.0.2는 이 공급자를 `OpenAI Codex (legacy)`로 표시합니다. Pi가 이 공급자나 로그인을 없애면 이미지 인증 경로도 다시 정해야 합니다. ChatGPT Images 경로는 공개 문서화된 API가 아니어서 서버 계약이 예고 없이 바뀔 수 있습니다.
+- **실제 편집**: 로컬 mock에서 JSON `images` 데이터 URL의 MIME·바이트·순서를 확인했지만, 실제 편집 호출은 하지 않았습니다.
+- **투명 배경**: 도구는 Codex와 같은 `background: transparent` 값을 전달합니다. 실제 결과의 투명도는 확인하지 않았습니다.
 - **토큰 갱신**: Pi 0.99.1 소스에서는 자격 증명을 얻을 때 만료가 가까운 로그인 토큰을 갱신하고, 실패하면 오류를 냅니다. 또 저장된 로그인이 있으면 자격 증명이 있다고 판단하므로, 도구가 노출됐는데 호출 시점에 거부될 수 있습니다([8.3](#83-failure-handling)). 실제 호출로는 확인하지 않았습니다.
 - **요청 대기 시간**: Node 내장 `fetch`의 기본 대기 시간이 모델의 생성 시간보다 짧을 수 있습니다. 저장소에서는 확인하지 못했습니다.
 - **빈 이미지 응답**: Codex와 같이 `b64_json`이 빈 문자열이면 성공으로 처리하므로, 빈 저장 파일과 빈 이미지 결과가 생길 수 있습니다.
@@ -686,7 +685,7 @@ Why not chosen:
 
 ### Open Questions
 
-- 공급자 선택은 `openai`로 확정됐습니다. legacy 의존 제거와 로컬 검증이 서비스에서의 실제 이미지 성공을 뜻하지는 않으며, 위 미확인 사항은 그대로 남깁니다.
+- 이미지 인증은 `openai-codex`로 확정됐습니다. 남은 미확인 사항은 위 위험 목록과 같습니다.
 
 ---
 
@@ -694,7 +693,7 @@ Why not chosen:
 
 ### 14.1 Common Design
 
-- 런타임은 Node 22.19 이상입니다(저장소 `engines` 기준). 내장 `fetch`, `Headers`, `Buffer`, `FormData`, `Blob`을 써서 Pi OpenAI 인증, 생성 JSON, 편집 multipart를 처리합니다.
+- 런타임은 Node 22.19 이상입니다(저장소 `engines` 기준). 내장 `fetch`, `Headers`, `Buffer`를 써서 계정 ID 클레임 읽기, 생성·편집 JSON을 처리합니다.
 - 패키지는 TypeScript로만 구성하므로 운영체제별 네이티브 바이너리가 없습니다([9.11](#911-codex-동일성-원칙)).
 - 타입·빌드 기준은 저장소에 설치된 Pi 0.99.1입니다. 기존 인증 조회와 실제 구독 생성은 로컬 Pi 1.0.2에서도 확인했습니다. 다른 버전을 모두 검증했다는 뜻은 아닙니다.
 - 경로 조합과 폴더 생성은 운영체제의 경로 규칙을 따릅니다.
@@ -746,10 +745,11 @@ Why not chosen:
 | 엔드포인트, 응답 구조 | `tmp/codex-main/codex-rs/codex-api/src/endpoint/images.rs`, `codex-api/src/images.rs` |
 | Codex 노출 조건 | `tmp/codex-main/codex-rs/core/src/tools/spec_plan.rs`: `image_generation_available()` |
 | 공개 API 필드, 모델 목록, 편집 제한 | `node_modules/openai/resources/images.d.ts`, `images.js` (openai 7.19.0) |
-| `openai` 공급자 base URL, 인증 방식 | `node_modules/@earendil-works/pi-ai/dist/providers/openai.js`, `dist/auth/oauth/openai-chatgpt.js` |
-| 정식 OpenAI 구독 정의·로그인 | `node_modules/@earendil-works/pi-ai/dist/providers/openai.js`, `dist/auth/oauth/openai-chatgpt.js`: `isSubscription: true` |
-| 중간 legacy 시험의 주소·헤더 근거(현재 미사용) | `node_modules/@earendil-works/pi-ai/dist/providers/openai-codex.js`, `dist/auth/oauth/openai-codex.js`, `dist/api/openai-codex-responses.js` |
-| 최종 `openai` 의존 정정과 검증 범위 | `docs/handoffs/image-gen/09-openai-provider.json` |
+| `openai` 로그인 방식(이미지 미사용 근거) | `node_modules/@earendil-works/pi-ai/dist/providers/openai.js`, `dist/auth/oauth/openai-chatgpt.js`: `dynamic_agent_client`, `resource: https://api.openai.com/v1` |
+| `openai-codex` 주소·계정 헤더·`originator` | `node_modules/@earendil-works/pi-ai/dist/providers/openai-codex.js`, `dist/auth/oauth/openai-codex.js`, `dist/api/openai-codex-responses.js`: `extractAccountId()`, `buildBaseCodexHeaders()` |
+| 이미지 턴 헤더 | `tmp/codex-main/codex-rs/ext/image-generation/src/backend.rs`: `X_CODEX_IMAGE_TURN_ID_HEADER` |
+| `openai` 거부 기록과 `openai-codex` 최종 실제 검증 | `docs/handoffs/image-gen/11-openai-codex-image-auth.json` |
+| 이전 `openai` 전용 구현의 검증 범위(대체됨) | `docs/handoffs/image-gen/09-openai-provider.json` |
 | Codex 인증별 주소 선택 | `tmp/codex-main/codex-rs/model-provider-info/src/lib.rs`: `to_api_provider()` |
 | 실제 구독 생성 결과와 로컬 Pi 인증 경로 | `docs/handoffs/image-gen/07-subscription-live.json` |
 | 정식 패키지 반영과 오프라인 검증 범위 | `docs/handoffs/image-gen/08-package-completion.json` |
@@ -766,8 +766,8 @@ Why not chosen:
 
 - 도구 등록은 `pi.registerTool(ToolDefinition)`입니다. 주요 필드는 `name`, `label`, `description`, `promptSnippet`, `promptGuidelines`, TypeBox `parameters`, `annotations`, `execute(toolCallId, params, signal, onUpdate, ctx)`입니다. `Type`은 `@earendil-works/pi-ai`가 다시 내보냅니다.
 - `execute()`는 `{ content: (TextContent | ImageContent)[], details, isError? }`를 돌려줍니다. 이미지 블록은 `{ type: "image", data, mimeType }` 형태입니다.
-- 활성 도구 목록은 `pi.getActiveTools()`와 `pi.setActiveTools()`로 다루고, `session_start`와 `before_agent_start` 이벤트를 받을 수 있습니다. `before_agent_start` 처리 중에 `setActiveTools()`를 부르면 그 요청에 바로 반영됩니다. 핸들러가 끝난 뒤 실제 활성 목록으로 이번 요청의 도구 구성을 만들기 때문입니다(`agent-session.js`의 `emitBeforeAgentStart()` 직후 처리). `ctx.modelRegistry.getProviderAuthStatus("openai")`는 `{ configured, source }`를 돌려줍니다.
-- `ctx.modelRegistry.getProviderAuth("openai")`는 `{ auth: { apiKey, headers, baseUrl }, env, source }`를 돌려주고, `getProvider("openai")`는 정식 공급자 정의를 돌려줍니다. 패키지는 인증 값을 해석하거나 다른 공급자로 바꾸지 않습니다.
+- 활성 도구 목록은 `pi.getActiveTools()`와 `pi.setActiveTools()`로 다루고, `session_start`와 `before_agent_start` 이벤트를 받을 수 있습니다. `before_agent_start` 처리 중에 `setActiveTools()`를 부르면 그 요청에 바로 반영됩니다. 핸들러가 끝난 뒤 실제 활성 목록으로 이번 요청의 도구 구성을 만들기 때문입니다(`agent-session.js`의 `emitBeforeAgentStart()` 직후 처리). `ctx.modelRegistry.getProviderAuthStatus("openai-codex")`는 `{ configured, source }`를 돌려줍니다.
+- `ctx.modelRegistry.getProviderAuth("openai-codex")`는 `{ auth: { apiKey, headers, baseUrl }, env, source }`를 돌려주고(필요하면 Pi가 토큰을 갱신), `getProvider("openai-codex")`는 기준 주소 `https://chatgpt.com/backend-api`를 가진 공급자 정의를 돌려줍니다.
 - `ctx.sessionManager.buildSessionProjection().messages`는 모델이 실제로 보는 문맥(현재 분기, 압축과 문맥 편집 반영)을 돌려줍니다. `buildContextEntries()`는 문맥 편집(`context_edit`)을 반영하지 않습니다. 메시지 역할에는 `user`, `assistant`, `toolResult`, `custom`, `system`, `bashExecution`, `branchSummary`, `compactionSummary` 등이 있고, 이미지는 `user`, `custom`, `toolResult` 메시지에 담길 수 있습니다.
 - 인자는 `execute()` 전에 TypeBox 스키마로 검사되고, 실패하면 `Validation failed for tool "<name>": ...` 오류가 돌아갑니다(`pi-agent-core` `agent-loop.js`의 `validateToolArguments`).
 - 시작·재개·`/reload` 때 Pi는 확장 도구를 모두 켭니다(`agent-session.js`, `includeAllExtensionTools: true`). 분기 기록에서 도구 상태를 되살리는 것은 `/tree` 이동뿐입니다(`_restoreToolsFromTranscript()`). `--tools`, `--exclude-tools`, `--no-tools`로 빠진 도구는 등록 목록에서 제거됩니다(`isAllowedTool`). 설정 `defaultTools`의 `-name`은 기본 도구 목록에서만 빼므로 확장 도구에는 효과가 없습니다(`settings-manager.js` `resolveDefaultTools()`).
@@ -790,3 +790,9 @@ Why not chosen:
 - 인증 조회·노출·로그인 안내를 `openai`로 통일하고, 계정 클레임 요구·토큰 해석·legacy 주소 변경·전용 헤더 생성을 제거합니다. Pi가 반환한 값·주소·추가 헤더를 보존하며 직접 이미지 도구 계약은 유지합니다. 편집의 내부 전송은 설치된 OpenAI Images SDK의 multipart 형식으로 맞추고, Responses 방식 전환은 하지 않습니다.
 - 근거: 사용자 최종 조건, 로컬 Pi 1.0.2의 `openai` 구독 정의와 모델 레지스트리 계약, 정식 패키지 코드 및 `09-openai-provider.json` 검증 범위. `07`·`08`은 이전 단계의 이력으로 보존합니다.
 - 이번 변경에서 추가 실제 이미지를 만들지 않았고, 이전 legacy 생성 성공을 최종 `openai` 구현의 성공으로 보고하지 않습니다.
+
+### 2026-10-05 — 이미지 인증을 `openai-codex`로 확정
+
+- Pi `openai` 토큰의 이미지 요청을 세 경로에서 실제로 시험했고 모두 거부됐습니다(401, 401, 400 `subscription_sharing_unsupported_capability`). 사용자는 이미지를 `openai-codex` 로그인으로 지원하기로 결정했습니다. 채팅은 기존 공급자를 그대로 씁니다.
+- [9.1](#91-공급자와-인증-정책)의 인증·주소·헤더, [9.5](#95-요청-값-정책)의 JSON 편집, [9.9](#99-자격-증명-미설정-시-노출-정책)의 노출 기준, [9.10](#910-이미지-생성-스킬-정책)의 로그인 안내와 관련 문맥·대안·위험을 고쳤습니다. 도구 설명·스키마·저장·결과 안내는 그대로입니다.
+- 검증: 빌드·정적 검사·로컬 검사와, 실제 Pi(`openai/gpt-6-astra` 채팅)에서 `image_gen` 1회 호출로 1254×1254 PNG 생성·저장을 확인했습니다(`11-openai-codex-image-auth.json`). 실제 편집·투명 배경은 미확인입니다.

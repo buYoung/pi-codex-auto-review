@@ -1,5 +1,6 @@
 {
     "status": "complete",
+    "supersededBy": "docs/handoffs/image-gen/11-openai-codex-image-auth.json — openai token image requests were rejected (401/401/400); image auth moved to openai-codex",
     "scope": "최종 사용자 조건인 Pi 정식 openai 공급자 사용과 legacy 의존 제거의 구현·로컬 검증 완료. 실제 서비스 이미지 생성 성공을 뜻하지 않음.",
     "verifiedOn": "2026-10-05",
     "model2_5FollowUp": "docs/handoffs/image-gen/10-models-2-5.json — later user-approved requests for both 2.5 models each returned 401 with the same authentication policy error; this follow-up did not change the production default or establish model availability",

@@ -59,6 +59,8 @@ export const IMAGE_GEN_SCHEMA = {
 export type { ImageGenDetails };
 
 const PROGRESS_TEXT = "Generating image…";
+/** `X_CODEX_IMAGE_TURN_ID_HEADER` in Codex `ext/image-generation/src/backend.rs`. */
+const IMAGE_TURN_ID_HEADER = "x-codex-image-turn-id";
 
 /** Reference images for edit plans, resolved before any progress or network activity. */
 async function collectReferenceImages(
@@ -101,7 +103,13 @@ async function executeImageGen(
         return errorResult(auth.error, details);
     }
     signal?.throwIfAborted();
-    const client = new ImagesClient(auth.credentials);
+    const client = new ImagesClient({
+        ...auth.credentials,
+        headers: {
+            ...auth.credentials.headers,
+            [IMAGE_TURN_ID_HEADER]: toolCallId,
+        },
+    });
     let response: ImageResponse;
     try {
         response =
