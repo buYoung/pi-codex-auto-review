@@ -56,6 +56,16 @@ const requiredFiles = {
         "docs/computer-use/usage.md",
         "docs/computer-use/usage.ko.md",
     ],
+    "@buyong/pi-codex-fast-mode": [
+        "dist/index.js",
+        "dist/index.d.ts",
+        "dist/config.js",
+        "dist/fast-controller.js",
+        "dist/fast-ui.js",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
+    ],
 };
 
 async function verifyPackage(packageDirectory) {
