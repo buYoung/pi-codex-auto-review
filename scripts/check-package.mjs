@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const packageDirectory = fileURLToPath(
@@ -50,6 +51,26 @@ assert.ok(
     ),
     "The package must not contain native binaries, development dependencies, or removed sandbox assets",
 );
+const [manifest, engine] = await Promise.all(
+    ["pi-codex-auto-review", "redact"].map(async (name) =>
+        JSON.parse(
+            await readFile(
+                new URL(`../packages/${name}/package.json`, import.meta.url),
+                "utf8",
+            ),
+        ),
+    ),
+);
+assert.deepEqual(
+    manifest.dependencies,
+    { "@buyong/redact": engine.version },
+    "The package must depend on exactly the workspace @buyong/redact version",
+);
+assert.ok(
+    !manifest.bundleDependencies?.length &&
+        !manifest.bundledDependencies?.length,
+    "The package must not bundle its runtime dependency",
+);
 const { evaluateRules } = await import(
     "../packages/pi-codex-auto-review/dist/policy/rules.js"
 );
@@ -64,5 +85,5 @@ const result = await evaluateRules(
 );
 assert.equal(result.matches[0][0].decision, "prompt");
 console.log(
-    "Package verified: JavaScript rule engine and worker; no platform binaries or bundled Pi dependencies",
+    "Package verified: JavaScript rule engine and worker; @buyong/redact runtime dependency; no platform binaries or bundled Pi dependencies",
 );

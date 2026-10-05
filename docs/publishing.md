@@ -16,7 +16,7 @@ Use a terminal with Node.js 24.14.0 and pnpm 10 available. Install dependencies 
 npm ci --ignore-scripts
 ```
 
-The repository is an npm workspaces monorepo: each published package lives in `packages/<package>`, and Turborepo runs the package builds. Tests, scripts, and documents stay at the repository root. Dependency installation and CI builds use the root `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. The current package does not bundle sandbox dependencies and uses the Pi host as a peer dependency.
+The repository is an npm workspaces monorepo: each published package lives in `packages/<package>`, and Turborepo runs the package builds. Tests, scripts, and documents stay at the repository root. Dependency installation and CI builds use the root `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. The current package does not bundle sandbox dependencies and uses the Pi host as a peer dependency. Its one runtime dependency is `@buyong/redact` from `packages/redact`.
 
 ### npm Trusted Publisher
 
@@ -46,6 +46,17 @@ npm deprecate pi-codex-auto-review "Renamed to @buyong/pi-codex-auto-review"
 
 `prepack` runs the build and the pre-publish checks. `npm deprecate` points the earlier name, `pi-codex-auto-review`, to the new one. After publishing, add a connection in the new package's **Settings → Trusted publishing** with the same values as the table above. From then on, publish it by selecting the package in `pnpm release`. A directly published version cannot be published again, so choose a higher version.
 
+### Release order with `@buyong/redact`
+
+`@buyong/pi-codex-auto-review` pins an exact `@buyong/redact` version in `dependencies`. Publish that `@buyong/redact` version first: an auto-review release that refers to an unpublished version cannot be installed. The first `@buyong/redact` version is published directly, as described above, and then connected to the Trusted Publisher:
+
+```sh
+npm login
+npm publish --workspace packages/redact --access public
+```
+
+When a change needs a new engine version, release `@buyong/redact` first, update the pinned version in `packages/pi-codex-auto-review/package.json` and the root `package-lock.json`, and then release `@buyong/pi-codex-auto-review`.
+
 ## Version selection and release
 
 Run after committing changes on `master`.
@@ -71,7 +82,7 @@ An npm version cannot be published again. If the currently prepared version has 
 Pushing a `<package>@<version>` tag starts `.github/workflows/npm-package.yml`.
 
 1. Install the official development dependencies from the npm lockfile on `ubuntu-22.04`.
-2. Find the workspace package named by the tag, check that the tag matches the version in its `package.json`, and check that the tagged commit is included in `origin/master`. Then build the package with Turborepo. For `@buyong/pi-codex-auto-review`, also run policy tests, including the captured Codex result corpus.
+2. Find the workspace package named by the tag, check that the tag matches the version in its `package.json`, and check that the tagged commit is included in `origin/master`. Then build the package with Turborepo. For `@buyong/pi-codex-auto-review`, also run policy tests, including the captured Codex result corpus. For `@buyong/redact`, run the redaction tests.
 3. `npm pack --workspace <package>` runs the package's prepack step. For `@buyong/pi-codex-auto-review`, prepack compiles TypeScript, copies the README, LICENSE, NOTICE, and documents listed in `files` from the repository root, checks required files, and exercises the JavaScript rule worker. It rejects archives containing native binaries, `.node` or `.wasm` files, or bundled dependencies. Postpack removes the copied documents.
 4. Save the verified `<package>-<version>.tgz` in the `npm-package` artifact.
 5. A separate publish job downloads that same artifact and publishes it to npm through OIDC.

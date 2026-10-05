@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
+import type { Redactor } from "@buyong/redact";
 import type {
     BeforeAgentStartEvent,
     ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { redact } from "../audit.js";
 import {
     canonicalJson,
     digest,
@@ -15,24 +15,25 @@ import {
     type ReviewContextItem,
     type ReviewResult,
 } from "../contracts.js";
+import {
+    isContentStructure,
+    redactReviewData,
+    reviewRedactor,
+} from "./redaction.js";
 
 export const AUTHORIZATION_ENTRY = "pi-codex-auto-review.authorization.v1";
 export const REVIEW_CONTEXT_ENTRY = "pi-codex-auto-review.context.v1";
-export function safeEvidence(value: Json): Json {
-    if (typeof value === "string") return redact(value);
-    if (Array.isArray(value)) return value.map(safeEvidence);
-    if (value && typeof value === "object")
-        return Object.fromEntries(
-            Object.entries(value).map(([key, item]) => [
-                key,
-                /^(authorization|api[_-]?key|token|password|secret)$/i.test(key)
-                    ? "[REDACTED]"
-                    : safeEvidence(item),
-            ]),
-        );
-    return value;
+/** Mask reviewer-bound evidence; content envelope identifiers stay unchanged. */
+export function safeEvidence(
+    value: Json,
+    redactor: Redactor = reviewRedactor(),
+): Json {
+    return redactReviewData(redactor, value, isContentStructure).value;
 }
-function visibleMessage(message: unknown): Json | undefined {
+function visibleMessage(
+    message: unknown,
+    redactor: Redactor,
+): Json | undefined {
     if (!message || typeof message !== "object") return;
     const raw = message as {
         role?: string;
@@ -64,13 +65,18 @@ function visibleMessage(message: unknown): Json | undefined {
                     return []; // Private reasoning, signatures and binary payloads never enter review.
                 })
               : [];
-    return safeEvidence({
-        role,
-        content,
-        ...(raw.toolCallId ? { toolCallId: raw.toolCallId } : {}),
-        ...(raw.toolName ? { tool: raw.toolName } : {}),
-        ...(typeof raw.isError === "boolean" ? { isError: raw.isError } : {}),
-    });
+    return safeEvidence(
+        {
+            role,
+            content,
+            ...(raw.toolCallId ? { toolCallId: raw.toolCallId } : {}),
+            ...(raw.toolName ? { tool: raw.toolName } : {}),
+            ...(typeof raw.isError === "boolean"
+                ? { isError: raw.isError }
+                : {}),
+        },
+        redactor,
+    );
 }
 
 /** Retains genuine authorization separately from summaries and extension-generated messages. */
@@ -82,7 +88,11 @@ export class ReviewContextStore {
     private authorizationVersion = 0;
     private instructionOptions?: BeforeAgentStartEvent["systemPromptOptions"];
     private nativeResultIds = new Set<string>();
-    constructor(private readonly persist?: (item: ReviewContextItem) => void) {}
+    constructor(
+        private readonly persist?: (item: ReviewContextItem) => void,
+        /** Read at each addition, so settings changes apply to later evidence only. */
+        private readonly redactor: () => Redactor = reviewRedactor,
+    ) {}
     get identity(): string {
         return this.contextId;
     }
@@ -239,7 +249,7 @@ export class ReviewContextStore {
             this.nativeResultIds.delete(raw.toolCallId)
         )
             return;
-        const content = visibleMessage(message);
+        const content = visibleMessage(message, this.redactor());
         if (content !== undefined)
             this.add(
                 (message as { role: string }).role === "toolResult"
@@ -331,7 +341,7 @@ export class ReviewContextStore {
         shouldPersist = false,
         isTruncated = false,
     ): void {
-        let safe = safeEvidence(content);
+        let safe = safeEvidence(content, this.redactor());
         const text = canonicalJson(safe),
             maxChars =
                 source === "tool-call" || source === "tool-result"

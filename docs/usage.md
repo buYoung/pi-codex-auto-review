@@ -149,6 +149,7 @@ A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve
 | `writableRoots` | `[]` | Additional writable roots |
 | `excludeSlashTmp`, `excludeTmpdir` | `false` | Excludes the default temporary paths (`/tmp`, `os.tmpdir()`) from allowed writes |
 | `projectDocMaxBytes`, `projectDocFallbackFilenames`, `projectRootMarkers` | 32768, `[]`, `null` | Combined project instruction limit, fallback filenames, and root markers (`null` means `.git`; `[]` disables parent traversal) |
+| `redaction` | four empty lists | Additions to the masking applied before review: `sensitiveFields`, `rules`, `exceptions`, `piiEntities`. See [Reviewer redaction](#reviewer-redaction) |
 
 ## Rule files
 
@@ -189,6 +190,38 @@ Evaluation exposes only Starlark values and policy functions, with no host file 
 - Review input includes the current approval policy, path and domain scope, final execution arguments, linked tool calls and results, and the actual approval dialog's questions and answers. Shell environment evidence includes explicit non-secret values and the names of omitted variables; it is not described as the full process environment.
 - Final prepared calls, results, review assessments, and user confirmations are saved in Pi session custom records for extension reloads and active branch restoration. Audit logs still omit raw arguments. Large evidence is limited with omission markers. If user authorization and the full current review target exceed the budget, execution is not automatic.
 - A statement from an ordinary tool that “the user approved” is evidence. Only answers observed by the protected adapter through actual Pi `select`, `confirm`, and `input` APIs are recorded as user confirmations with their questions. Answers to questions marked as password or API key input are masked in the record.
+
+### Reviewer redaction
+
+Everything sent to the reviewer passes the [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/packages/redact/README.md) engine first: context items, investigation output, saved user input, direct user shell authorization, and every field of the review request, including the exact action. No setting turns this off.
+
+- Built-in rules mask provider tokens, `Authorization` and `Bearer` values, URL passwords, webhook paths, PEM private keys, and values assigned to sensitive names. The patterns masked by 0.3.0 remain covered: `SYNTHETIC_` markers, short `sk-` keys and `Bearer` values, `api_key`, `token`, `password`, and `secret` assignments, and the `authorization` field.
+- An action that contains a detected value is no longer refused. The reviewer receives a masked copy plus `redactedActionFields`, which lists the JSON path and rule id of each masked action field without its value. Approval, grants, digests, and execution use the original action. A masked span in a shell command does not by itself cause a denial or a user prompt; the reviewer policy states that masked text is unknown evidence.
+- Session, context, call, and item identifiers and digests keep their original values.
+- Masking happens before evidence budgets and excerpts are applied. A settings change applies to evidence added afterwards; stored items stay as they were stored.
+- Audit logs, `/approvals`, and notifications keep their existing masking.
+
+The `redaction` setting adds to the built-in rules:
+
+| Key | Entry | Effect |
+| --- | --- | --- |
+| `sensitiveFields` | Field name | Masks the whole value of fields with this name, compared after keeping letters and digits and lowercasing |
+| `rules` | `{"id": "custom.<name>", "pattern": "<JavaScript RegExp>", "flags": "i"}` | Masks matches. A `(?<secret>…)` group limits masking to that group. `flags` may contain `i`, `m`, `s`, and `u` |
+| `exceptions` | `{"ruleId": "<rule id>", "value": "<exact value>"}` | Keeps one exact value visible for one rule |
+| `piiEntities` | PII entity name such as `EMAIL_ADDRESS` | Opts in to local PII detection. Off by default |
+
+```json
+{
+  "redaction": {
+    "sensitiveFields": ["sessionKey"],
+    "rules": [{"id": "custom.acme", "pattern": "ACME_[A-Z0-9]+"}],
+    "exceptions": [{"ruleId": "custom.acme", "value": "ACME_EXAMPLE"}],
+    "piiEntities": ["EMAIL_ADDRESS"]
+  }
+}
+```
+
+An invalid entry stops startup with `INVALID_SETTINGS`; the message names the key and index, never the pattern or value. Settings saved by this version contain `redaction`, and earlier releases reject such a file with `Unknown setting: redaction`. Remove the key before downgrading.
 
 ### Context files
 

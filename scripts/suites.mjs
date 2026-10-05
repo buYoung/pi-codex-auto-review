@@ -73,6 +73,23 @@ export const suites = {
         kind: "workflow",
         behavior: ["workflow", "package", "cleanup"],
     },
+    redaction: {
+        files: [
+            "test/unit/redaction.test.mjs",
+            "test/unit/redaction-pii.test.mjs",
+        ],
+        kind: "unit-doubles",
+        behavior: [
+            "core-parity",
+            "rules",
+            "masking",
+            "json",
+            "configuration",
+            "properties",
+            "linear-time",
+            "pii",
+        ],
+    },
     conformance: {
         files: [
             "test/conformance/auto-review.test.mjs",

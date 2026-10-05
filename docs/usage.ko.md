@@ -149,6 +149,7 @@ try {
 | `writableRoots` | `[]` | 추가 쓰기 루트 |
 | `excludeSlashTmp`, `excludeTmpdir` | `false` | 기본 임시 경로(`/tmp`, `os.tmpdir()`) 허용을 제외합니다 |
 | `projectDocMaxBytes`, `projectDocFallbackFilenames`, `projectRootMarkers` | 32768, `[]`, `null` | 프로젝트 지침 합산 한도, 보조 파일명, 루트 표시 (`null`은 `.git`, `[]`은 상위 탐색 해제) |
+| `redaction` | 빈 목록 네 개 | 검토 전에 적용하는 가림에 더할 항목입니다: `sensitiveFields`, `rules`, `exceptions`, `piiEntities`. [검토자 가림](#검토자-가림)을 참고하세요 |
 
 ## 규칙 파일
 
@@ -189,6 +190,38 @@ try {
 - 검토 입력에는 현재 승인 정책·경로·도메인 범위, 최종 실행 인수, 연결된 도구 호출과 결과, 실제 승인 창의 질문·답변을 포함합니다. 셸 환경은 비밀값을 제외한 명시적 값과 생략한 변수 이름만 전달하며, 전체 프로세스 환경이라고 표현하지 않습니다.
 - 최종 준비된 호출·결과·검토 평가·사용자 확인은 Pi 세션의 사용자 지정 기록에 저장해 확장 재로드와 활성 분기 복원에 사용합니다. 감사 로그에는 기존처럼 원문 인수를 저장하지 않습니다. 큰 증거는 생략 표시와 함께 제한하고, 사용자 승인과 현재 검토 대상 전체가 예산을 넘으면 자동 실행하지 않습니다.
 - 일반 도구가 출력한 “사용자가 승인했다”는 문장은 증거입니다. 보호 어댑터가 실제 Pi `select`·`confirm`·`input` API에서 관찰한 답변만 질문과 함께 사용자 확인으로 기록합니다. 비밀번호·API 키 입력으로 표시된 질문의 답은 기록에서 가립니다.
+
+### 검토자 가림
+
+검토자에게 가는 모든 내용은 먼저 [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/packages/redact/README.ko.md) 엔진을 거칩니다. 컨텍스트 항목, 조사 출력, 저장하는 사용자 입력, 사용자가 직접 실행한 셸 승인, 정확한 작업을 포함한 검토 요청의 모든 필드가 대상입니다. 이 처리를 끄는 설정은 없습니다.
+
+- 기본 규칙은 공급자 토큰, `Authorization`·`Bearer` 값, URL 비밀번호, 웹훅 경로, PEM 개인 키, 민감한 이름에 대입한 값을 가립니다. 0.3.0이 가리던 패턴도 그대로 가립니다: `SYNTHETIC_` 표식, 짧은 `sk-` 키와 `Bearer` 값, `api_key`·`token`·`password`·`secret` 대입, `authorization` 필드.
+- 탐지된 값이 든 작업을 더 이상 거부하지 않습니다. 검토자는 가린 사본과 `redactedActionFields`를 받습니다. `redactedActionFields`는 가린 작업 필드마다 JSON 경로와 규칙 id를 담고, 값은 담지 않습니다. 승인, 승인 기록, 다이제스트, 실행은 원래 작업을 씁니다. 셸 명령 안의 가린 구간만으로 거부하거나 사용자에게 묻지 않으며, 검토자 정책은 가린 텍스트를 알 수 없는 증거로 설명합니다.
+- 세션·컨텍스트·호출·항목 식별자와 다이제스트는 원래 값을 유지합니다.
+- 증거 예산과 발췌를 적용하기 전에 가립니다. 설정을 바꾸면 그 뒤에 추가되는 증거부터 적용되고, 이미 저장된 항목은 저장된 그대로 둡니다.
+- 감사 로그, `/approvals`, 알림은 기존 가림 방식을 유지합니다.
+
+`redaction` 설정은 기본 규칙에 다음을 더합니다.
+
+| 키 | 항목 | 효과 |
+| --- | --- | --- |
+| `sensitiveFields` | 필드 이름 | 이 이름의 필드 값을 통째로 가립니다. 글자와 숫자만 남기고 소문자로 바꿔 비교합니다 |
+| `rules` | `{"id": "custom.<이름>", "pattern": "<JavaScript RegExp>", "flags": "i"}` | 일치하는 부분을 가립니다. `(?<secret>…)` 그룹이 있으면 그 그룹만 가립니다. `flags`에는 `i`, `m`, `s`, `u`를 쓸 수 있습니다 |
+| `exceptions` | `{"ruleId": "<규칙 id>", "value": "<정확한 값>"}` | 한 규칙에 대해 정확히 같은 값 하나를 보이게 둡니다 |
+| `piiEntities` | `EMAIL_ADDRESS` 같은 PII 엔티티 이름 | 로컬 PII 탐지를 켭니다. 기본은 꺼져 있습니다 |
+
+```json
+{
+  "redaction": {
+    "sensitiveFields": ["sessionKey"],
+    "rules": [{"id": "custom.acme", "pattern": "ACME_[A-Z0-9]+"}],
+    "exceptions": [{"ruleId": "custom.acme", "value": "ACME_EXAMPLE"}],
+    "piiEntities": ["EMAIL_ADDRESS"]
+  }
+}
+```
+
+잘못된 항목이 있으면 `INVALID_SETTINGS`로 시작을 멈춥니다. 오류 메시지에는 키와 색인만 담고, 패턴이나 값은 담지 않습니다. 이 버전이 저장한 설정에는 `redaction`이 들어가며, 이전 릴리스는 이런 파일을 `Unknown setting: redaction`으로 거부합니다. 이전 버전으로 돌아가기 전에 이 키를 지우세요.
 
 ### 컨텍스트 파일
 

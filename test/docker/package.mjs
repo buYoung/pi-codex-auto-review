@@ -30,6 +30,30 @@ const [packed] = JSON.parse(
 const tarball = join(artifacts, packed.filename);
 await exec("tar", ["-xzf", tarball, "-C", consumer]);
 await mkdir(join(consumer, "package/node_modules"), { recursive: true });
+// Install the runtime dependency from its own packed artifact, as npm would.
+const [redactPacked] = JSON.parse(
+    (
+        await exec("npm", [
+            "pack",
+            "--workspace",
+            "packages/redact",
+            "--ignore-scripts",
+            "--json",
+            "--pack-destination",
+            artifacts,
+        ])
+    ).stdout,
+);
+const redactTarball = join(artifacts, redactPacked.filename),
+    redactDirectory = join(consumer, "package/node_modules/@buyong/redact");
+await mkdir(redactDirectory, { recursive: true });
+await exec("tar", [
+    "-xzf",
+    redactTarball,
+    "-C",
+    redactDirectory,
+    "--strip-components=1",
+]);
 await symlink(
     "/opt/pi-guard/node_modules/@earendil-works",
     join(consumer, "package/node_modules/@earendil-works"),
@@ -56,8 +80,17 @@ await writeFile(
                     .digest("hex"),
                 integrity: packed.integrity,
             },
+            runtimeDependencies: {
+                [redactPacked.name]: {
+                    version: redactPacked.version,
+                    sha256: createHash("sha256")
+                        .update(await readFile(redactTarball))
+                        .digest("hex"),
+                    integrity: redactPacked.integrity,
+                },
+            },
             installation:
-                "npm ci with locked provider; npm pack artifact extracted into an isolated SDK consumer with explicitly linked host peers",
+                "npm ci with locked provider; npm pack artifacts of the plugin and its runtime dependency extracted into an isolated SDK consumer with explicitly linked host peers",
         },
         null,
         2,
