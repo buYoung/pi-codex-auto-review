@@ -34,7 +34,7 @@
         "build": "tsc",
         "generate:pii-data": "node scripts/generate-pii-data.mjs",
         "verify:rust-differential": "node scripts/rust-differential/run.mjs",
-        "prepack": "tsc"
+        "prepack": "tsc && node ../../scripts/check-package.mjs ."
     },
     "devDependencies": {
         "@types/node": "24.0.0",
@@ -51,5 +51,6 @@
         "README.ko.md",
         "LICENSE",
         "NOTICE"
-    ]
+    ],
+    "sharedFiles": []
 }

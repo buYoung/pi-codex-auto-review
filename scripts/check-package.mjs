@@ -66,6 +66,38 @@ const requiredFiles = {
         "README.ko.md",
         "LICENSE",
     ],
+    "@buyong/pi-codex-image-gen": [
+        "dist/index.js",
+        "dist/index.d.ts",
+        "dist/tool.js",
+        "dist/backend.js",
+        "dist/auth.js",
+        "dist/artifact.js",
+        "dist/reference-images.js",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
+        "skills/imagegen/SKILL.md",
+        "skills/imagegen/LICENSE.txt",
+        "skills/imagegen/NOTICE",
+        "skills/imagegen/references/prompting.md",
+        "skills/imagegen/references/sample-prompts.md",
+    ],
+    "@buyong/redact": [
+        "dist/index.js",
+        "dist/index.d.ts",
+        "dist/redactor.js",
+        "dist/text.js",
+        "dist/json.js",
+        "dist/pii/index.js",
+        "dist/pii/data/catalog.js",
+        "dist/pii/data/iban-formats.js",
+        "dist/pii/data/validation-data.js",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
+        "NOTICE",
+    ],
 };
 
 async function verifyPackage(packageDirectory) {
@@ -162,7 +194,11 @@ async function verifyPackage(packageDirectory) {
                 ),
                 `${manifest.name}: unexpected archive file`,
             );
-            assert.deepEqual(manifest.pi.extensions, ["./dist/index.js"]);
+            if (manifest.name !== "@buyong/redact") {
+                assert.deepEqual(manifest.pi.extensions, ["./dist/index.js"]);
+                if (manifest.name === "@buyong/pi-codex-image-gen")
+                    assert.deepEqual(manifest.pi.skills, ["./skills"]);
+            }
             assert.equal(manifest.publishConfig.access, "public");
         }
         // Lifecycle hooks must not contaminate `npm pack --json` on stdout.

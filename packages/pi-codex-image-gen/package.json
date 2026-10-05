@@ -14,7 +14,7 @@
         "url": "git+https://github.com/buYoung/pi-codex-auto-review.git",
         "directory": "packages/pi-codex-image-gen"
     },
-    "homepage": "https://github.com/buYoung/pi-codex-auto-review#readme",
+    "homepage": "https://github.com/buYoung/pi-codex-auto-review/tree/master/packages/pi-codex-image-gen#readme",
     "bugs": {
         "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
     },
@@ -37,7 +37,9 @@
         ]
     },
     "scripts": {
-        "build": "tsc"
+        "build": "tsc",
+        "prepack": "tsc && node ../../scripts/package-shared-files.mjs copy && node ../../scripts/check-package.mjs .",
+        "postpack": "node ../../scripts/package-shared-files.mjs remove"
     },
     "peerDependencies": {
         "@earendil-works/pi-ai": ">=0.99.1",
@@ -58,8 +60,14 @@
         "dist/**/*.js",
         "dist/**/*.d.ts",
         "dist/**/*.js.map",
+        "README.md",
+        "README.ko.md",
+        "LICENSE",
         "skills/**/*.md",
         "skills/**/LICENSE.txt",
         "skills/**/NOTICE"
+    ],
+    "sharedFiles": [
+        "LICENSE"
     ]
 }

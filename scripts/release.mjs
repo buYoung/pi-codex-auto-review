@@ -5,11 +5,16 @@ import { fileURLToPath } from "node:url";
 import { input, select } from "@inquirer/prompts";
 import release, { Config } from "release-it";
 import semver from "semver";
+import { listPublishablePackages } from "./release-packages.mjs";
 import {
     InquirerPrompt,
     ReleaseStopped,
     requireAnswer,
 } from "./release-prompts.mjs";
+import {
+    readPublishedVersions,
+    verifyPublishedWorkspaceDependencies,
+} from "./release-registry.mjs";
 
 const root = realpathSync(fileURLToPath(new URL("../", import.meta.url)));
 const guardPath = fileURLToPath(
@@ -41,29 +46,7 @@ const git = (...args) =>
 let headBefore;
 let hasReportedReleaseError = false;
 
-function listPublishablePackages() {
-    const workspaces = JSON.parse(
-        execFileSync("npm", ["query", ".workspace"], {
-            cwd: root,
-            encoding: "utf8",
-            stdio: ["ignore", "pipe", "pipe"],
-            shell: process.platform === "win32",
-        }),
-    );
-    return (
-        workspaces
-            .filter((workspace) => workspace.private !== true)
-            // npm redacts UUID-like segments in printed absolute paths, so use location.
-            .map(({ name, location }) => ({
-                name,
-                path: realpathSync(join(root, location)),
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name))
-    );
-}
-
-async function choosePackage() {
-    const packages = listPublishablePackages();
+async function choosePackage(packages) {
     if (!packages.length)
         throw new Error("릴리스할 수 있는 작업 공간 패키지가 없습니다.");
     return requireAnswer(
@@ -88,7 +71,7 @@ function hasLocalTag(tagName) {
     }
 }
 
-async function chooseVersion(currentVersion) {
+async function chooseVersion(currentVersion, publishedVersions) {
     const increments = [
         ["patch", "패치"],
         ["minor", "마이너"],
@@ -115,9 +98,15 @@ async function chooseVersion(currentVersion) {
             };
         })
         .filter(
-            (choice) => choice.value && semver.gt(choice.value, currentVersion),
+            (choice) =>
+                choice.value &&
+                semver.gt(choice.value, currentVersion) &&
+                !publishedVersions.has(choice.value),
         );
-    if (!hasLocalTag(`${selectedPackage.name}@${currentVersion}`)) {
+    if (
+        !publishedVersions.has(currentVersion) &&
+        !hasLocalTag(`${selectedPackage.name}@${currentVersion}`)
+    ) {
         choices.unshift({
             value: currentVersion,
             name: `현재 준비 버전 ${currentVersion} 출시 (첫 태그 생성)`,
@@ -137,12 +126,18 @@ async function chooseVersion(currentVersion) {
     const entered = await requireAnswer(
         input({
             message: `다음 버전 (현재 ${currentVersion})`,
-            validate: (value) =>
-                !semver.valid(value) ||
-                !semver.gt(value, currentVersion) ||
-                semver.parse(value).build.length
-                    ? `${currentVersion}보다 큰 SemVer를 입력하세요. 빌드 메타데이터는 사용할 수 없습니다.`
-                    : true,
+            validate: (value) => {
+                const version = semver.valid(value);
+                if (
+                    !version ||
+                    !semver.gt(version, currentVersion) ||
+                    semver.parse(version).build.length
+                )
+                    return `${currentVersion}보다 큰 SemVer를 입력하세요. 빌드 메타데이터는 사용할 수 없습니다.`;
+                return publishedVersions.has(version)
+                    ? `${version}은 이미 npm에 게시되어 있습니다. 다른 버전을 입력하세요.`
+                    : true;
+            },
         }),
         "버전",
     );
@@ -202,7 +197,21 @@ try {
     ) {
         throw new Error("릴리스 브랜치는 origin/master를 추적해야 합니다.");
     }
-    selectedPackage = await choosePackage();
+    const packages = listPublishablePackages(root);
+    selectedPackage = await choosePackage(packages);
+    const manifest = JSON.parse(
+        readFileSync(join(selectedPackage.path, "package.json"), "utf8"),
+    );
+    const publishedVersions = await readPublishedVersions(manifest.name);
+    if (!publishedVersions.size) {
+        throw new Error(
+            `${manifest.name}은 npm에 등록되지 않았습니다. 저장소 루트에서 최초 게시를 완료하세요:\n\nnpm login --registry=https://registry.npmjs.org/\nnpm publish --workspace ${manifest.name} --access public --registry=https://registry.npmjs.org/\n\n게시 후 npm Settings → Trusted publishing에 npm-package.yml을 연결하고 pnpm release를 다시 실행하세요. 자세한 절차: docs/publishing.ko.md`,
+        );
+    }
+    await verifyPublishedWorkspaceDependencies(
+        manifest,
+        new Set(packages.map((workspace) => workspace.name)),
+    );
     for (const file of [
         relative(root, join(selectedPackage.path, "package.json")),
         "package-lock.json",
@@ -210,6 +219,8 @@ try {
         "scripts/release.mjs",
         "scripts/release-prompts.mjs",
         "scripts/release-lockfile.mjs",
+        "scripts/release-packages.mjs",
+        "scripts/release-registry.mjs",
     ]) {
         git("ls-files", "--error-unmatch", "--", file);
     }
@@ -244,7 +255,10 @@ try {
         throw new Error(
             "package.json에 빌드 메타데이터 없는 SemVer가 필요합니다.",
         );
-    const selectedVersion = await chooseVersion(currentVersion);
+    const selectedVersion = await chooseVersion(
+        currentVersion,
+        publishedVersions,
+    );
     const packageName = selectedPackage.name;
     const tagName = `${packageName}@${selectedVersion}`;
     try {
