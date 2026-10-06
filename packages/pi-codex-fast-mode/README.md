@@ -24,14 +24,14 @@ Do not also enable this extension through `@buyong/pi-codex`. In Pi:
 
 1. Select a model in the [local Fast allowlist](#supported-models-and-payloads).
 2. Run `/codex-fast` and enable Fast.
-3. Run `/openai-tier` to confirm that the desired tier is active for the selected model.
+3. Run `/codex-fast status` to confirm that the desired tier is active for the selected model.
 4. Send a short prompt to make a model request, for example:
 
 ```text
 Reply with READY only. Do not use tools.
 ```
 
-Run `/openai-tier` again. An active choice shows a footer such as `gpt-6.1-sol fast`; a matching request records `priority` as the last injection. **Active means the extension's local checks passed.** The injection record shows a payload field prepared by the hook, not proof that the provider received it or used that tier. Disable acceleration with `/codex-fast off`.
+Run `/codex-fast status` again. An active choice shows a footer such as `gpt-6.1-sol fast`; a matching request records `priority` as the last injection. **Active means the extension's local checks passed.** The injection record shows a payload field prepared by the hook, not proof that the provider received it or used that tier. Disable acceleration with `/codex-fast off`.
 
 ## Select a tier
 
@@ -43,20 +43,17 @@ Run `/openai-tier` again. An active choice shows a footer such as `gpt-6.1-sol f
 | `/codex-fast off` | Select Standard; turn off both accelerated modes |
 | `/codex-fast fast on` / `/codex-fast fast off` | Toggle Fast; turning off an inactive mode preserves the other mode |
 | `/codex-fast ultrafast on` / `/codex-fast ultrafast off` | Toggle Ultrafast; unsupported activation leaves the previous choice unchanged |
-| `/openai-tier` | Show the desired tier, activation, settings path, and last injection |
-| `/openai-tier standard`, `/openai-tier fast`, `/openai-tier ultrafast` | Select a tier directly |
-| `/openai-settings` | Choose `fast.enabled` or `serviceTier` through dialogs |
+| `/codex-fast status` | Show the desired tier, activation, model, settings path, persistence, and last injection without changing the preference |
 
-Explicit arguments also work without a UI. RPC uses a repeating Fast/Ultrafast picker. `/openai-settings` supports:
-
-```text
-/openai-settings fast.enabled on
-/openai-settings serviceTier standard
-```
-
-`fast.enabled` toggles only Fast; `serviceTier` selects a tier. Commands wait for the current agent run to become idle. Adding `--fast` to the Pi startup command selects Fast over the saved tier at initialization.
+Explicit arguments also work without a UI. RPC uses the same repeating Fast/Ultrafast picker. Mode changes wait for the current agent run to become idle. `status` does not save settings or make a model request. Adding `--fast` to the Pi startup command selects Fast over the saved tier at initialization.
 
 A Fast preference on an unsupported model is retained but adds no tier; switching back to a supported model activates it. An existing Ultrafast preference is also retained on unsupported models without injecting a fallback tier. Selecting Ultrafast through a command first requires the current model/authentication checks to pass.
+
+## Migrating from earlier commands
+
+This checkout registers only `/codex-fast`; `/openai-tier` and `/openai-settings` have been removed, not kept as aliases. Use `/codex-fast status` for diagnostics, the named-mode commands above for Fast/Ultrafast, and `/codex-fast off` for Standard. The existing `/codex-fast on` and `off` shortcuts remain supported.
+
+Update scripts that call the removed commands. Settings keys, precedence, and storage paths are unchanged, including legacy boolean settings. Published releases can differ from this checkout; use a release containing this change or the source build below.
 
 ## Settings and persistence
 

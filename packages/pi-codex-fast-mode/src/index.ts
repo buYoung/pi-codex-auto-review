@@ -9,7 +9,6 @@ import {
     DEFAULT_CONFIG,
     type FastConfig,
     FastSettingsStore,
-    isServiceTier,
     type ServiceTier,
 } from "./config.js";
 import { FastController } from "./fast-controller.js";
@@ -19,7 +18,6 @@ const SERVICE_TIER = "priority";
 const COMMAND_NAME = "codex-fast";
 const STATUS_KEY = "codex-fast-mode";
 const SETTINGS_DIRECTORY = "codex-fast-mode";
-const TIERS: readonly ServiceTier[] = ["standard", "fast", "ultrafast"];
 
 export function defaultSettingsPath(): string {
     return join(getAgentDir(), SETTINGS_DIRECTORY, "settings.json");
@@ -64,6 +62,23 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
                   ? "Active"
                   : "Unsupported by this model; preference retained";
         return `OpenAI service tier: ${fastController.desiredTier} · ${application} · ${model}`;
+    };
+    const showStatus = (ctx: ExtensionContext) => {
+        fastController.applyDesiredState(ctx, cfg);
+        const last = fastController.lastPayloadInjection;
+        report(
+            ctx,
+            [
+                describeState(ctx),
+                `Settings: ${store?.settingsPath ?? defaultSettingsPath()}`,
+                cfg.persistState
+                    ? "Mode changes are saved to the settings file."
+                    : "Mode changes apply only to this session.",
+                last
+                    ? `Last payload injection: ${last.at} · ${last.model} · ${last.tier} (request only; server processing and billing not verified)`
+                    : "No service tier has been injected into a request during this session.",
+            ].join("\n"),
+        );
     };
     const persist = async () => {
         if (cfg.persistState && store)
@@ -127,7 +142,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         if (!ctx.hasUI) {
             report(
                 ctx,
-                `${describeState(ctx)}\nUsage: /${COMMAND_NAME} fast on|off or /${COMMAND_NAME} ultrafast on|off`,
+                `${describeState(ctx)}\nUsage: /${COMMAND_NAME} [status|on|off] or /${COMMAND_NAME} <fast|ultrafast> <on|off>`,
             );
             return;
         }
@@ -145,11 +160,11 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         default: false,
     });
     pi.registerCommand(COMMAND_NAME, {
-        description:
-            "Toggle Fast and Ultrafast modes. Use Tab or Enter to switch on/off.",
+        description: "Configure Fast and Ultrafast, or show detailed status.",
         getArgumentCompletions: (prefix) =>
             completions(
                 [
+                    "status",
                     "on",
                     "off",
                     "fast on",
@@ -163,6 +178,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
             runCommand(ctx, async () => {
                 const value = args.trim();
                 if (!value) return openFastSettings(ctx);
+                if (value === "status") return showStatus(ctx);
                 if (value === "on" || value === "off") {
                     await changeTier(value === "on" ? "fast" : "standard", ctx);
                     return;
@@ -178,99 +194,9 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
                 }
                 report(
                     ctx,
-                    `Usage: /${COMMAND_NAME} [on|off] or /${COMMAND_NAME} <fast|ultrafast> <on|off>`,
+                    `Usage: /${COMMAND_NAME} [status|on|off] or /${COMMAND_NAME} <fast|ultrafast> <on|off>`,
                     "error",
                 );
-            }),
-    });
-    pi.registerCommand("openai-tier", {
-        description:
-            "Show or select the OpenAI service tier: standard, fast, or ultrafast.",
-        getArgumentCompletions: (prefix) => completions(TIERS, prefix),
-        handler: (args, ctx) =>
-            runCommand(ctx, async () => {
-                const value = args.trim();
-                if (!value) {
-                    fastController.applyDesiredState(ctx, cfg);
-                    const last = fastController.lastPayloadInjection;
-                    report(
-                        ctx,
-                        [
-                            describeState(ctx),
-                            `Settings: ${store?.settingsPath ?? defaultSettingsPath()}`,
-                            cfg.persistState
-                                ? "Mode changes are saved to the settings file."
-                                : "Mode changes apply only to this session.",
-                            last
-                                ? `Last payload injection: ${last.at} · ${last.model} · ${last.tier} (request only; server processing and billing not verified)`
-                                : "No service tier has been injected into a request during this session.",
-                        ].join("\n"),
-                    );
-                    return;
-                }
-                if (!isServiceTier(value)) {
-                    report(
-                        ctx,
-                        "Usage: /openai-tier [standard|fast|ultrafast]",
-                        "error",
-                    );
-                    return;
-                }
-                await changeTier(value, ctx);
-            }),
-    });
-    pi.registerCommand("openai-settings", {
-        description: "Configure Fast mode and the OpenAI service tier.",
-        getArgumentCompletions: (prefix) =>
-            completions(
-                [
-                    "fast.enabled on",
-                    "fast.enabled off",
-                    ...TIERS.map((tier) => `serviceTier ${tier}`),
-                ],
-                prefix,
-            ),
-        handler: (args, ctx) =>
-            runCommand(ctx, async () => {
-                const words = args.trim().split(/\s+/).filter(Boolean);
-                if (words.length) {
-                    const [key, value] = words;
-                    if (words.length === 2) {
-                        if (key === "serviceTier" && isServiceTier(value))
-                            return changeTier(value, ctx);
-                        if (
-                            key === "fast.enabled" &&
-                            ["on", "off", "true", "false"].includes(value)
-                        )
-                            return changeMode(
-                                "fast",
-                                value === "on" || value === "true",
-                                ctx,
-                            );
-                    }
-                    report(
-                        ctx,
-                        "Usage: /openai-settings [fast.enabled on|off or serviceTier standard|fast|ultrafast]",
-                        "error",
-                    );
-                    return;
-                }
-                if (!ctx.hasUI) {
-                    report(ctx, describeState(ctx));
-                    return;
-                }
-                await ctx.waitForIdle();
-                const field = await ctx.ui.select("OpenAI settings", [
-                    `fast.enabled: ${fastController.desiredTier === "fast" ? "on" : "off"}`,
-                    `serviceTier: ${fastController.desiredTier}`,
-                ]);
-                if (field?.startsWith("fast.enabled:"))
-                    return openFastSettings(ctx);
-                if (!field?.startsWith("serviceTier:")) return;
-                const tier = await ctx.ui.select("OpenAI service tier", [
-                    ...TIERS,
-                ]);
-                if (isServiceTier(tier)) await changeTier(tier, ctx);
             }),
     });
 

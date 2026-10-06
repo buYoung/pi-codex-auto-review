@@ -97,7 +97,7 @@ Use bash to run exactly node --version and report the result. Do not install any
 | `@buyong/pi-codex-auto-review` | 자동 승인 검토. 이 README와 [사용법](docs/usage.ko.md)에서 설명합니다. |
 | [`@buyong/pi-codex`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex/README.ko.md) | 확장 4개와 `imagegen` 스킬. 같은 개별 패키지를 함께 활성화하지 마세요. |
 | [`@buyong/pi-codex-computer-use`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.ko.md) | 설치된 Codex Desktop 런타임의 Computer Use·Chrome Browser Use. Linux는 미지원입니다. |
-| [`@buyong/pi-codex-fast-mode`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.ko.md) | 지원하는 공급자·모델·인증 조합의 Standard·Fast·Ultrafast 선택 |
+| [`@buyong/pi-codex-fast-mode`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.ko.md) | `/codex-fast`로 지원하는 공급자·모델·인증 조합의 Standard·Fast·Ultrafast를 선택하고 `/codex-fast status`로 로컬 진단 확인 |
 | [`@buyong/pi-codex-image-gen`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.ko.md) | Pi의 `openai-codex` 구독 로그인으로 이미지 생성·편집 |
 | [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/redact/README.ko.md) | 자격 증명·개인 키·선택적 개인정보 가림. Pi 확장이 아닌 라이브러리입니다. |
 

@@ -24,14 +24,14 @@ pi
 
 1. [로컬 Fast 허용 목록](#지원-모델과-요청-값)의 모델을 선택합니다.
 2. `/codex-fast`에서 Fast를 켭니다.
-3. `/openai-tier`로 선택한 등급이 현재 모델에서 적용되는지 확인합니다.
+3. `/codex-fast status`로 선택한 등급이 현재 모델에서 적용되는지 확인합니다.
 4. 짧은 프롬프트로 모델 요청을 만듭니다. 예를 들어 다음과 같이 요청합니다.
 
 ```text
 Reply with READY only. Do not use tools.
 ```
 
-`/openai-tier`를 다시 확인합니다. 활성 선택은 하단에 `gpt-6.1-sol fast`처럼 표시하고 일치하는 요청은 마지막 주입에 `priority`를 기록합니다. **활성은 확장의 로컬 조건을 통과했다는 뜻입니다.** 기록은 훅이 준비한 요청 필드이며 공급자가 받거나 해당 등급을 사용했다는 근거가 아닙니다. 가속을 끄려면 `/codex-fast off`를 실행하세요.
+`/codex-fast status`를 다시 확인합니다. 활성 선택은 하단에 `gpt-6.1-sol fast`처럼 표시하고 일치하는 요청은 마지막 주입에 `priority`를 기록합니다. **활성은 확장의 로컬 조건을 통과했다는 뜻입니다.** 기록은 훅이 준비한 요청 필드이며 공급자가 받거나 해당 등급을 사용했다는 근거가 아닙니다. 가속을 끄려면 `/codex-fast off`를 실행하세요.
 
 ## 등급 선택
 
@@ -43,20 +43,17 @@ Reply with READY only. Do not use tools.
 | `/codex-fast off` | Standard 선택. 두 가속 모드를 모두 끕니다. |
 | `/codex-fast fast on` / `/codex-fast fast off` | Fast 변경. 이미 꺼진 모드를 끄면 다른 모드를 유지합니다. |
 | `/codex-fast ultrafast on` / `/codex-fast ultrafast off` | Ultrafast 변경. 지원 조건이 없으면 기존 선택을 유지합니다. |
-| `/openai-tier` | 선택한 등급, 적용 상태, 설정 경로와 마지막 주입 표시 |
-| `/openai-tier standard`, `/openai-tier fast`, `/openai-tier ultrafast` | 등급 직접 선택 |
-| `/openai-settings` | 대화상자에서 `fast.enabled`·`serviceTier` 선택 |
+| `/codex-fast status` | 선택한 등급, 적용 상태, 모델, 설정 경로, 저장 여부와 마지막 주입을 표시합니다. 선택은 바꾸지 않습니다. |
 
-명시적 인자는 UI 없이도 사용할 수 있습니다. RPC는 Fast·Ultrafast 반복 선택창을 사용합니다. `/openai-settings`는 다음 인자를 받습니다.
-
-```text
-/openai-settings fast.enabled on
-/openai-settings serviceTier standard
-```
-
-`fast.enabled`는 Fast만 바꾸고 `serviceTier`는 등급을 선택합니다. 명령은 현재 에이전트 작업이 멈출 때까지 기다립니다. Pi 시작 명령에 `--fast`를 추가하면 초기화할 때 저장된 등급보다 Fast를 우선합니다.
+명시적 인자는 UI 없이도 사용할 수 있습니다. RPC는 같은 Fast·Ultrafast 반복 선택창을 사용합니다. 모드 변경은 현재 에이전트 작업이 멈출 때까지 기다립니다. `status`는 설정을 저장하거나 모델을 호출하지 않습니다. Pi 시작 명령에 `--fast`를 추가하면 초기화할 때 저장된 등급보다 Fast를 우선합니다.
 
 미지원 모델에서도 Fast 선택을 유지하지만 등급을 추가하지 않습니다. 지원 모델로 돌아가면 활성화합니다. 기존 Ultrafast 선택도 미지원 모델에서 유지하며 다른 등급을 대신 주입하지 않습니다. 명령으로 Ultrafast를 고를 때는 현재 모델·인증 조건을 먼저 통과해야 합니다.
+
+## 이전 명령에서 전환
+
+이 체크아웃은 `/codex-fast`만 등록합니다. `/openai-tier`·`/openai-settings`는 별칭을 남기지 않고 제거했습니다. 진단에는 `/codex-fast status`, Fast·Ultrafast에는 위의 모드별 명령, Standard에는 `/codex-fast off`를 사용하세요. 기존 `/codex-fast on`·`off` 축약형은 계속 지원합니다.
+
+이전 명령을 호출하는 스크립트는 갱신해야 합니다. 기존 불리언을 포함한 설정 키·우선순위·저장 경로는 바뀌지 않습니다. 게시된 릴리스는 체크아웃과 다를 수 있으므로 이 변경이 포함된 릴리스나 아래 소스 빌드를 사용하세요.
 
 ## 설정과 저장
 

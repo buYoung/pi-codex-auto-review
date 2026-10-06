@@ -97,7 +97,7 @@ Each npm workspace has its own version and release. Choose the package for the f
 | `@buyong/pi-codex-auto-review` | Automatic approval review; this README and the [usage guide](docs/usage.md) |
 | [`@buyong/pi-codex`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex/README.md) | All four extensions and the `imagegen` skill; do not also enable the same individual packages |
 | [`@buyong/pi-codex-computer-use`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.md) | Computer Use and Chrome Browser Use with an installed Codex Desktop runtime; Linux is unsupported |
-| [`@buyong/pi-codex-fast-mode`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.md) | Standard, Fast, and Ultrafast selection for supported provider/model/authentication combinations |
+| [`@buyong/pi-codex-fast-mode`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.md) | `/codex-fast` selects Standard, Fast, or Ultrafast for supported provider/model/authentication combinations; `/codex-fast status` reports local diagnostics |
 | [`@buyong/pi-codex-image-gen`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.md) | Image generation and editing using Pi's `openai-codex` subscription login |
 | [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/redact/README.md) | Credential, private-key, and opt-in personal-information masking; a library, not a Pi extension |
 

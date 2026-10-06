@@ -54,12 +54,12 @@ Use bash to run exactly node --version and report the result. Do not install any
 | 목표 | 진입점 | 확인할 결과 |
 | --- | --- | --- |
 | 앱·Chrome 조작 | `/computer-use-check`, 그다음 `/computer-use` | 누락된 요구 사항을 해결하고 필요한 기능을 켭니다. 연결된 런타임이 `mcp__cua_repl__js`를 제공하며 앱·출처 접근은 런타임 승인을 따릅니다. |
-| 더 빠른 서비스 등급 요청 | `/codex-fast`, 그다음 `/openai-tier` | 선택한 등급과 로컬 적용 여부를 함께 확인합니다. 마지막 주입 기록은 실제 서버 처리·과금의 확인이 아닙니다. |
+| 더 빠른 서비스 등급 요청 | `/codex-fast`, 그다음 `/codex-fast status` | 선택한 등급과 로컬 적용 여부를 함께 확인합니다. 마지막 주입 기록은 실제 서버 처리·과금의 확인이 아닙니다. |
 | 이미지 생성 | `/login openai-codex`, 그다음 `/codex-imagen` | 로그인하고 이미지 모델을 선택한 뒤 `image_gen` 사용을 요청합니다. 결과에 이미지를 포함하며 저장은 실패할 수 있습니다. |
 
 Computer Use를 쓰지 않으면 두 기능을 모두 끕니다. 서비스 등급·이미지 모델 선택은 대화 모델을 바꾸지 않지만, 등급 적용은 그 모델의 호환 조건을 따릅니다. 기존 저장 선택은 위 표의 초기 상태보다 우선합니다.
 
-개별 안내는 `/approve-model`·`/approve retry`·`/openai-settings`, 설정 파일과 실패 처리도 설명합니다. 앱의 영구 권한을 주거나 유료 서비스 등급을 쓰기 전에 확인하세요.
+개별 안내는 `/approve-model`·`/approve retry`, Fast 모드의 통합 명령, 설정 파일과 실패 처리도 설명합니다. 앱의 영구 권한을 주거나 유료 서비스 등급을 쓰기 전에 확인하세요.
 
 ## 보호 시작은 별도 선택
 

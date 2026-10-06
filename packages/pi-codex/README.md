@@ -54,12 +54,12 @@ Configure other features separately:
 | Goal | Entry point | Result to check |
 | --- | --- | --- |
 | Operate apps or Chrome | `/computer-use-check`, then `/computer-use` | Resolve missing prerequisites and enable the surfaces you need. A connected runtime exposes `mcp__cua_repl__js`; runtime approval governs app/origin access. |
-| Request a faster service tier | `/codex-fast`, then `/openai-tier` | Check both the desired tier and local activation. The last injection record is not confirmation of server processing or billing. |
+| Request a faster service tier | `/codex-fast`, then `/codex-fast status` | Check both the desired tier and local activation. The last injection record is not confirmation of server processing or billing. |
 | Generate an image | `/login openai-codex`, then `/codex-imagen` | Sign in, choose an image model, and ask Pi to use `image_gen`. The result includes an image; saving is best-effort. |
 
 Turn both Computer Use surfaces off if you do not use them. Choosing a service tier or image model does not switch the conversation model; tier activation still depends on that model's compatibility. Existing saved preferences override the initial states listed above.
 
-The component guides also cover `/approve-model`, `/approve retry`, `/openai-settings`, settings files, and failures. Follow them before granting persistent app permissions or using a paid service tier.
+The component guides also cover `/approve-model`, `/approve retry`, Fast mode's consolidated command, settings files, and failures. Follow them before granting persistent app permissions or using a paid service tier.
 
 ## Protected startup is a separate choice
 
