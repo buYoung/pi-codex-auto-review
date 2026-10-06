@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const requiredFiles = {
+    "@buyong/pi-codex": ["README.md", "LICENSE"],
     "@buyong/pi-codex-auto-review": [
         "dist/index.js",
         "dist/startup.js",
@@ -107,6 +108,7 @@ async function verifyPackage(packageDirectory) {
         readFileSync(join(packageDirectory, "package.json"), "utf8"),
     );
     const expected = requiredFiles[manifest.name];
+    const isAggregate = manifest.name === "@buyong/pi-codex";
     assert.ok(expected, `Unknown package: ${manifest.name}`);
     // A root-level check also works outside prepack. Stage only missing shared files and remove
     // only what this invocation copied; package-local READMEs and prepack's files stay intact.
@@ -144,14 +146,73 @@ async function verifyPackage(packageDirectory) {
         assert.ok(
             ![...files].some(
                 (path) =>
-                    /^(src|test|tmp|vendor|native|node_modules)\//.test(path) ||
+                    /^(src|test|tmp|vendor|native)\//.test(path) ||
+                    (!isAggregate && /^node_modules\//.test(path)) ||
                     /^dist\/(sandbox|native)\//.test(path) ||
                     /\.(node|wasm|exe)$/.test(path) ||
                     /(^|\/)(cua_node|@oai)(\/|$)|\.app(\/|$)/.test(path),
             ),
             "The package must not contain native binaries, development dependencies, or OpenAI runtime files",
         );
-        if (manifest.name === "@buyong/pi-codex-auto-review") {
+        if (isAggregate) {
+            const names = [
+                "@buyong/pi-codex-auto-review",
+                "@buyong/pi-codex-computer-use",
+                "@buyong/pi-codex-fast-mode",
+                "@buyong/pi-codex-image-gen",
+            ];
+            const dependencies = Object.fromEntries(
+                names.map((name) => [
+                    name,
+                    JSON.parse(
+                        readFileSync(
+                            join(
+                                repository,
+                                "packages",
+                                name.split("/").at(-1),
+                                "package.json",
+                            ),
+                            "utf8",
+                        ),
+                    ).version,
+                ]),
+            );
+            assert.deepEqual(manifest.dependencies, dependencies);
+            assert.deepEqual(manifest.bundleDependencies, names);
+            assert.deepEqual(
+                manifest.pi.extensions,
+                names.map((name) => `./node_modules/${name}/dist/index.js`),
+            );
+            assert.deepEqual(manifest.pi.skills, [
+                "./node_modules/@buyong/pi-codex-image-gen/skills",
+            ]);
+            for (const name of [...names, "@buyong/redact"]) {
+                assert.ok(packageInfo.bundled.includes(name));
+                for (const path of requiredFiles[name])
+                    assert.ok(
+                        files.has(`node_modules/${name}/${path}`),
+                        `${manifest.name}: missing dependency file: ${name}/${path}`,
+                    );
+            }
+            assert.ok(
+                [...files].every(
+                    (path) =>
+                        path === "package.json" ||
+                        expected.includes(path) ||
+                        path.startsWith("node_modules/"),
+                ),
+                "The aggregate package must only contain metadata, docs, and runtime dependencies",
+            );
+            assert.ok(
+                ![...files].some((path) =>
+                    /node_modules\/@earendil-works\/pi-(ai|agent-core|coding-agent|tui)\//.test(
+                        path,
+                    ),
+                ),
+                "The aggregate package must not bundle Pi host packages",
+            );
+            assert.equal(manifest.publishConfig.access, "public");
+        } else if (manifest.name === "@buyong/pi-codex-auto-review") {
             const { evaluateRules } = await import(
                 "../packages/pi-codex-auto-review/dist/policy/rules.js"
             );
@@ -205,7 +266,7 @@ async function verifyPackage(packageDirectory) {
         }
         // Lifecycle hooks must not contaminate `npm pack --json` on stdout.
         console.error(
-            `${manifest.name}: package verified (${files.size} files); no bundled runtimes or host dependencies`,
+            `${manifest.name}: package verified (${files.size} files); no native binaries or bundled host dependencies`,
         );
     } finally {
         for (const path of staged) rmSync(path, { force: true });

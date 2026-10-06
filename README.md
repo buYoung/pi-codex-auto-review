@@ -75,6 +75,8 @@ npm run verify:guard
 
 ## Other workspace packages
 
+[`@buyong/pi-codex`](packages/pi-codex/README.md) installs automatic approval review, Computer Use and Browser Use, Fast mode, and image generation together, including the `imagegen` skill. It depends on the existing packages and preserves their settings and requirements; see the package README for installation and migration.
+
 [`@buyong/pi-codex-computer-use`](packages/pi-codex-computer-use/README.md) is an independent pi extension for Codex Desktop's Computer Use and Browser Use runtime. It has its own installation requirements and feature switches; see its [usage guide](docs/computer-use/usage.md).
 
 ## Documentation

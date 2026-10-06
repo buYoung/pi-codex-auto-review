@@ -4,17 +4,18 @@
 
 Choose a package and a version in `pnpm release` and confirm the commit, tag, and push. GitHub Actions then builds and verifies that JavaScript package and publishes it to npm. The local command does not use npm credentials. Version `0.2.0` uses this JavaScript-only workflow; the published `0.1.4` still contains the earlier native executables.
 
-Select any of the four Pi extensions or their dependency library, `@buyong/redact`, for an independent release. Git tags use the full scoped `<package name>@<version>`. npm dist-tags use `latest` for stable versions and `next` for prereleases.
+Select any of the four Pi extensions, their dependency library `@buyong/redact`, or the combined package `@buyong/pi-codex` for an independent release. Git tags use the full scoped `<package name>@<version>`. npm dist-tags use `latest` for stable versions and `next` for prereleases.
 
 | Package | Git tag for the current file version | npm registration |
 | --- | --- | --- |
 | `@buyong/pi-codex-auto-review` | `@buyong/pi-codex-auto-review@0.3.0` | `0.3.0` published |
-| `@buyong/pi-codex-computer-use` | `@buyong/pi-codex-computer-use@0.1.0` | Not registered |
-| `@buyong/pi-codex-fast-mode` | `@buyong/pi-codex-fast-mode@0.1.0` | Not registered |
-| `@buyong/pi-codex-image-gen` | `@buyong/pi-codex-image-gen@0.1.0` | Not registered |
-| `@buyong/redact` | `@buyong/redact@0.1.0` | Not registered |
+| `@buyong/pi-codex-computer-use` | `@buyong/pi-codex-computer-use@0.1.0` | `0.1.0` published |
+| `@buyong/pi-codex-fast-mode` | `@buyong/pi-codex-fast-mode@0.1.0` | `0.1.0` published |
+| `@buyong/pi-codex-image-gen` | `@buyong/pi-codex-image-gen@0.2.1` | `0.2.1` published |
+| `@buyong/redact` | `@buyong/redact@0.1.0` | `0.1.0` published |
+| `@buyong/pi-codex` | `@buyong/pi-codex@0.1.0` | Not registered |
 
-Registration was checked against the public npm registry on 2026-10-05. Git tags in the table are naming examples, not confirmation that those tags exist or were pushed. The release command checks registration again when it runs.
+Registration was checked against the public npm registry on 2026-10-06. Git tags in the table are naming examples, not confirmation that those tags exist or were pushed. The release command checks registration again when it runs.
 
 ## One-time setup
 
@@ -28,11 +29,11 @@ Use a terminal with Node.js 24.14.0 and pnpm 10 available. Install dependencies 
 npm ci --ignore-scripts
 ```
 
-The repository is an npm workspaces monorepo: each published package lives in `packages/<package>`, and Turborepo runs the package builds. Tests, scripts, and documents stay at the repository root. Dependency installation and CI builds use the root `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. The current package does not bundle sandbox dependencies and uses the Pi host as a peer dependency. Its one runtime dependency is `@buyong/redact` from `packages/redact`.
+The repository is an npm workspaces monorepo: each published package lives in `packages/<package>`, and Turborepo runs the package builds. Tests, scripts, and documents stay at the repository root. Dependency installation and CI builds use the root `package-lock.json`. `pnpm` serves as the entry point for the release script; it does not switch installation to `pnpm-lock.yaml`. `@buyong/pi-codex-auto-review` does not bundle sandbox dependencies, uses the Pi host as a peer dependency, and has one runtime dependency: `@buyong/redact` from `packages/redact`. The combined package `@buyong/pi-codex` bundles the four existing extensions and their transitive runtime dependencies while keeping the Pi host as a peer dependency.
 
 ### npm Trusted Publisher
 
-Add a GitHub Actions connection in **Settings → Trusted publishing** on npm for each package published from this repository, such as `@buyong/pi-codex-auto-review`. Every package uses the same workflow.
+Add a GitHub Actions connection in **Settings → Trusted publishing** on npm for each package published from this repository, such as `@buyong/pi-codex-auto-review`. Every package uses the same workflow. Configure a separate connection for `@buyong/pi-codex`; its dependencies' connections do not automatically apply to it.
 
 | Field | Value |
 | --- | --- |
@@ -50,7 +51,7 @@ The publish job has `id-token: write` permission and checks for npm 11.5.1 or la
 
 Trusted Publisher connections are configured in a package's Settings, so register a package once before using this repository's OIDC workflow. Prepare an npm account with two-factor authentication (2FA) and permission to publish under `@buyong`. For a personal scope, the npm username must be `buyong`; for an organization scope, the account needs publishing permission in that organization. See [npm's scoped public package publishing guide](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/).
 
-From the repository root, publish the unregistered packages with these commands. Register `@buyong/redact` first so auto-review's pinned dependency can be installed. Skip commands for packages already registered.
+From the repository root, publish the unregistered packages with these commands. Register `@buyong/redact` first so auto-review's pinned dependency can be installed. Register the combined package after publishing all its pinned extension versions. Skip commands for packages already registered.
 
 ```sh
 npm login --registry=https://registry.npmjs.org/
@@ -59,6 +60,7 @@ npm publish --workspace packages/redact --access public --registry=https://regis
 npm publish --workspace packages/pi-codex-computer-use --access public --registry=https://registry.npmjs.org/
 npm publish --workspace packages/pi-codex-fast-mode --access public --registry=https://registry.npmjs.org/
 npm publish --workspace packages/pi-codex-image-gen --access public --registry=https://registry.npmjs.org/
+npm publish --workspace packages/pi-codex --access public --registry=https://registry.npmjs.org/
 ```
 
 Every package's `prepack` builds and verifies its archive contents. Respond to the 2FA prompt during publishing, then confirm that each command below returns `0.1.0`.
@@ -68,6 +70,7 @@ npm view @buyong/redact@0.1.0 version --registry=https://registry.npmjs.org/
 npm view @buyong/pi-codex-computer-use@0.1.0 version --registry=https://registry.npmjs.org/
 npm view @buyong/pi-codex-fast-mode@0.1.0 version --registry=https://registry.npmjs.org/
 npm view @buyong/pi-codex-image-gen@0.1.0 version --registry=https://registry.npmjs.org/
+npm view @buyong/pi-codex@0.1.0 version --registry=https://registry.npmjs.org/
 ```
 
 After publishing, add a connection in **each package's Settings → Trusted publishing** with the values above. Check the existing auto-review connection too. Then use `pnpm release` and choose a version higher than the first directly published version. Selecting an unregistered package prints its initial publishing commands and this guide's path, then stops before changing versions, commits, or tags.
@@ -89,6 +92,12 @@ npm publish --workspace packages/redact --access public
 
 When a change needs a new engine version, release `@buyong/redact` first, update the pinned version in `packages/pi-codex-auto-review/package.json` and the root `package-lock.json`, and then release `@buyong/pi-codex-auto-review`.
 
+### Release order for the combined package
+
+`@buyong/pi-codex` pins `@buyong/pi-codex-auto-review@0.3.0`, `@buyong/pi-codex-computer-use@0.1.0`, `@buyong/pi-codex-fast-mode@0.1.0`, and `@buyong/pi-codex-image-gen@0.2.1`. Publish these versions before registering the combined package and connecting it to the Trusted Publisher above.
+
+To include an updated extension, release that extension first, then update the combined package's pinned dependency and the root lockfile. Select `@buyong/pi-codex` in `pnpm release` to release the combined package afterward.
+
 ## Version selection and release
 
 Run after committing changes on `master`.
@@ -107,6 +116,8 @@ Each confirmation defaults to approval. Entering `n` or pressing `Ctrl+C` stops 
 
 Version selection does not automatically apply a version such as `0.1.2`. release-it updates the version in the selected package's `package.json` without running npm version lifecycle scripts, and the release plugin records the same version in the root `package-lock.json` for the release commit. The local process does not rebuild the package or publish to npm.
 
+After registering the combined package at `0.1.0`, select `@buyong/pi-codex` and **patch** to release `0.1.1`. GitHub Actions performs the npm publish after the tag push.
+
 An npm version cannot be published again. If the currently prepared version has already been published, choose a higher version. Prereleases use npm's `next` tag; stable releases use `latest`.
 
 ## What GitHub Actions does
@@ -117,10 +128,11 @@ Pushing a `<package>@<version>` tag starts `.github/workflows/npm-package.yml`.
 2. Find the workspace package named by the tag, check that the tag matches the version in its `package.json`, and check that the tagged commit is included in `origin/master`. For tag publishing, recheck initial registration, duplicate versions, and publication of workspace runtime dependencies. Then build the package with Turborepo. For `@buyong/pi-codex-auto-review`, also run policy tests, including the captured Codex result corpus. For `@buyong/redact`, run the redaction tests.
 3. `npm pack --workspace <package>` runs the package's prepack step. For `@buyong/pi-codex-auto-review`, prepack compiles TypeScript, copies the README, LICENSE, NOTICE, and documents listed in `files` from the repository root, checks required files, and exercises the JavaScript rule worker. It rejects archives containing native binaries, `.node` or `.wasm` files, or bundled dependencies. Postpack removes the copied documents.
    The other four packages also verify required JavaScript, declarations, documents, and allowed archive contents. image-gen checks its image tool, bundled skill, license, and attribution notices; redact checks its masking engine and PII recognition data.
+   The combined package builds its dependencies first and packages their original extension entry points and the `imagegen` skill with runtime dependencies. Archive checks verify pinned versions and required files and reject bundled Pi host packages, native binaries, and the private Codex runtime.
 4. Save the verified `<package>-<version>.tgz` in the `npm-package` artifact.
 5. A separate publish job downloads that same artifact and publishes it to npm through OIDC.
 
-Running **Actions → npm 배포 → Run workflow** manually prepares the archive for one of the five selectable packages and skips publishing. Unregistered packages can be checked this way too. For tag publishing, use a tag-triggered run of the same workflow.
+Running **Actions → npm 배포 → Run workflow** manually prepares the archive for one of the six selectable packages and skips publishing. Unregistered packages can be checked this way too. For tag publishing, use a tag-triggered run of the same workflow.
 
 One JavaScript archive serves all platforms; it has no rule-engine CPU or libc dependency. Actual Pi availability, path behavior, and shell support still depend on the host. The separate OS workflow retains Linux and Windows execution checks without installing Rust. Follow the [verification guide](testing/auto-review-protection.md) for the executed scope.
 
@@ -151,6 +163,15 @@ pi
 
 For later releases, replace the version with the one selected. `0.1.2` uses the earlier sandbox structure; `0.1.3` removes the sandbox and adds approval settings commands. `0.1.4` improves English approval descriptions, model scope integration, user reapproval, and review context passing and restoration. `0.2.0` replaces the Rust rule engine with TypeScript compiled to JavaScript and removes the repackaged development SDK. From `0.2.2`, the package is published as `@buyong/pi-codex-auto-review`; earlier versions remain under `pi-codex-auto-review`. After installation, check `/approve`'s English descriptions, `/approve-model`'s `/scoped-models` integration, and that saved choices survive a restart. See the [usage guide](usage.md) for settings files and the SDK entry point.
 
+After publishing combined package version `0.1.1`, verify it as follows. When switching from individual extensions, follow the [combined package's installation guide](https://github.com/buYoung/pi-codex-auto-review/tree/master/packages/pi-codex#readme).
+
+```sh
+npm view @buyong/pi-codex@0.1.1 version --registry=https://registry.npmjs.org/
+npm view @buyong/pi-codex dist-tags --registry=https://registry.npmjs.org/
+pi install npm:@buyong/pi-codex@0.1.1
+pi list
+```
+
 ## Preparing an archive locally
 
 Use this when you need to inspect the publishable archive directly. Install the development dependencies first; no platform artifacts are required.
@@ -159,6 +180,7 @@ Use this when you need to inspect the publishable archive directly. Install the 
 npm run build
 mkdir -p tmp/npm-release
 npm pack --workspace packages/pi-codex-auto-review --pack-destination tmp/npm-release
+npm pack --workspace packages/pi-codex --pack-destination tmp/npm-release
 ```
 
 `npm run build` creates the JavaScript modules and rule evaluation entry points in `packages/pi-codex-auto-review/dist`. Prepack verifies their inclusion and rejects leftover native artifacts. Do not skip prepack with `--ignore-scripts` when preparing an actual release.

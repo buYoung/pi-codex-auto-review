@@ -5,6 +5,10 @@
         "build": {
             "dependsOn": ["^build"],
             "outputs": ["dist/**"]
+        },
+        "@buyong/pi-codex#build": {
+            "dependsOn": ["^build"],
+            "cache": false
         }
     }
 }

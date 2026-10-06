@@ -1,0 +1,68 @@
+{
+    "name": "@buyong/pi-codex",
+    "version": "0.1.0",
+    "description": "Pi용 Codex 통합 패키지: 자동 승인 검토, Computer Use, Fast 모드, 이미지 생성을 함께 설치합니다.",
+    "license": "Apache-2.0",
+    "keywords": [
+        "pi-package",
+        "pi-extension",
+        "codex"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/buYoung/pi-codex-auto-review.git",
+        "directory": "packages/pi-codex"
+    },
+    "homepage": "https://github.com/buYoung/pi-codex-auto-review/tree/master/packages/pi-codex#readme",
+    "bugs": {
+        "url": "https://github.com/buYoung/pi-codex-auto-review/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "type": "module",
+    "pi": {
+        "extensions": [
+            "./node_modules/@buyong/pi-codex-auto-review/dist/index.js",
+            "./node_modules/@buyong/pi-codex-computer-use/dist/index.js",
+            "./node_modules/@buyong/pi-codex-fast-mode/dist/index.js",
+            "./node_modules/@buyong/pi-codex-image-gen/dist/index.js"
+        ],
+        "skills": [
+            "./node_modules/@buyong/pi-codex-image-gen/skills"
+        ]
+    },
+    "scripts": {
+        "build": "node ../../scripts/prepare-codex-package.mjs",
+        "prepack": "npm run build --prefix ../.. -- --filter=@buyong/pi-codex && node ../../scripts/package-shared-files.mjs copy && node ../../scripts/check-package.mjs .",
+        "postpack": "node ../../scripts/package-shared-files.mjs remove"
+    },
+    "dependencies": {
+        "@buyong/pi-codex-auto-review": "0.3.0",
+        "@buyong/pi-codex-computer-use": "0.1.0",
+        "@buyong/pi-codex-fast-mode": "0.1.0",
+        "@buyong/pi-codex-image-gen": "0.2.1"
+    },
+    "bundleDependencies": [
+        "@buyong/pi-codex-auto-review",
+        "@buyong/pi-codex-computer-use",
+        "@buyong/pi-codex-fast-mode",
+        "@buyong/pi-codex-image-gen"
+    ],
+    "peerDependencies": {
+        "@earendil-works/pi-ai": ">=0.99.1",
+        "@earendil-works/pi-coding-agent": ">=0.99.1",
+        "@earendil-works/pi-tui": ">=0.99.1"
+    },
+    "engines": {
+        "node": ">=22.19.0"
+    },
+    "files": [
+        "README.md",
+        "LICENSE"
+    ],
+    "sharedFiles": [
+        "LICENSE"
+    ]
+}

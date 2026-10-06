@@ -73,6 +73,10 @@ npm run verify:guard
 - Docker 컨테이너 검증 활용은 [사용법의 Docker 절](docs/usage.ko.md#docker에서-ollama-cloud-검증)에 있습니다.
 - 각 실행은 `.reports/pi-guard/runs/<실행 ID>/<플랫폼>/`에 저장되고, 보호·허용·차단 사례는 [보호 경계 검증표](docs/testing/auto-review-protection.ko.md)에 있습니다.
 
+## 통합 패키지
+
+[`@buyong/pi-codex`](packages/pi-codex/README.md)는 자동 승인 검토, Computer Use·Browser Use, Fast 모드, 이미지 생성 확장과 `imagegen` 스킬을 한 번에 설치합니다. 기존 패키지를 의존성으로 묶고 각 기능의 설정과 요구사항을 유지합니다. 설치·전환 방법은 [통합 패키지 안내](packages/pi-codex/README.md)를 참고하세요.
+
 ## 문서
 
 - [사용법](docs/usage.ko.md) · [English](docs/usage.md) — 설치, 소스 빌드, CLI·SDK, 정책, Docker 검증

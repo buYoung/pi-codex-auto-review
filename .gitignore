@@ -22,6 +22,8 @@ dist/
 /packages/pi-codex-computer-use/docs/
 /packages/pi-codex-fast-mode/LICENSE
 /packages/pi-codex-image-gen/LICENSE
+/packages/pi-codex/LICENSE
+/packages/pi-codex/.package-*/
 
 .vscode/*
 

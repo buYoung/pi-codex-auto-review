@@ -11,6 +11,7 @@ on:
         type: choice
         default: '@buyong/pi-codex-auto-review'
         options:
+          - '@buyong/pi-codex'
           - '@buyong/pi-codex-auto-review'
           - '@buyong/pi-codex-computer-use'
           - '@buyong/pi-codex-fast-mode'
