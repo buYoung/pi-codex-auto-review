@@ -20,14 +20,12 @@ ESM 파일을 사용합니다. `.mjs`나 `"type": "module"` 패키지의 `.js`�
 
 ## 빠른 시작
 
+애플리케이션 디렉터리에 다음을 `mask.mjs`로 저장하고 `node mask.mjs`를 실행합니다. 기본 규칙이 예시 비밀번호·인증 토큰을 처리하므로 첫 결과에는 사용자 설정이 필요하지 않습니다.
+
 ```js
 import { createRedactor } from "@buyong/redact";
 
-const redactor = createRedactor({
-    sensitiveFields: ["internalCredential"],
-    rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
-    exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
-});
+const redactor = createRedactor();
 
 console.log(redactor.redactText('password = "hunter2-value"'));
 // password = "[REDACTED]"
@@ -40,7 +38,9 @@ console.log(value.command);
 // maskedLocations contains JSON paths and rule ids, never matched values.
 ```
 
-Node.js로 파일을 실행합니다. 로그·모델에는 원래 객체가 아니라 `value`를 보내세요. `maskedLocations`로 원문 값을 기록하지 않고 영향받은 필드를 확인할 수 있습니다.
+출력 두 줄에는 예시 비밀이 아니라 가린 값이 있습니다. JSON은 반환한 `value`를 전달하세요. 가림이 원래 객체를 바꾸거나 로그에 보내도 안전하게 만들지는 않습니다. `maskedLocations`는 원문 값 없이 영향받은 경로·규칙을 알려 줍니다.
+
+JSON 키와 문자열 아닌 값은 보입니다. 민감한 부모 키가 내부 객체까지 민감하게 만들지는 않으므로 부모 이름에 의존하지 말고 해당 말단 필드 이름을 설정하세요.
 
 ## 가림 계약
 
@@ -48,9 +48,11 @@ Node.js로 파일을 실행합니다. 로그·모델에는 원래 객체가 아�
 - 구간은 줄마다 따로 가리므로 CR/LF 문자와 줄 번호가 그대로 남습니다.
 - 겹치거나 맞닿은 구간은 합친 뒤 가립니다.
 - 기본 가림은 이미 가린 출력을 유지합니다. 사용자 규칙은 가림 표식과 일치할 수도 있으므로 반복 가림은 설정한 규칙에 따라 달라집니다.
-- 탐지 결과와 가린 위치에는 범위나 JSON 경로, 규칙 id, 종류만 담깁니다. 원래 값은 메타데이터, 오류, 설정 문제 보고 어디에도 남지 않습니다.
+- 탐지 결과에는 범위·규칙 id·종류가, `maskedLocations`에는 JSON 경로·규칙 id가 있습니다. 원래 일치한 값은 저장하지 않습니다. 설정 문제·오류 메시지에도 패턴·예외 값을 반복하지 않습니다.
 
 ## API
+
+텍스트 출력은 `redactText`, 요청 데이터는 `redactJson`, 필드 이름을 알면 `redactNamedValue`를 선택합니다. 발췌는 원문 전체를 한 번 스캔한 결과에서 범위를 렌더링하세요. 일부만 스캔하면 경계를 넘는 자격 증명을 놓칠 수 있습니다.
 
 | 내보내는 항목 | 용도 |
 | --- | --- |
@@ -125,6 +127,8 @@ Node.js로 파일을 실행합니다. 로그·모델에는 원래 객체가 아�
 
 ## 설정
 
+아래 예시는 빠른 시작의 `createRedactor` import를 사용합니다. 옵션은 기본 규칙에 추가하며 인스턴스를 만들 때 검증합니다. 이미 만든 인스턴스는 바꾸지 않습니다.
+
 ```ts
 interface RedactionConfig {
     sensitiveFields?: string[]; // exact names after normalization
@@ -141,10 +145,28 @@ interface RedactionConfig {
 - `exceptions[]`는 규칙 id가 같고 원래 일치한 값 전체가 같을 때만 그 탐지를 뺍니다. 따옴표 값은 바깥 따옴표를 빼고, 이스케이프를 풀지 않은 채 비교합니다. 한 규칙의 예외가 겹치는 다른 규칙의 탐지를 빼 주지는 않습니다.
 - 문제 보고에는 키와 색인만 담습니다. 패턴, 예외 값, `RegExp` 파서 메시지는 절대 다시 보여 주지 않습니다. 알 수 없는 최상위 키는 그 이름으로 보고합니다.
 
-### 호스트 추가 규칙
+### 민감한 필드·사용자 규칙 추가
+
+기본값이 다루지 않는 자격 증명 이름·형식에는 별도 설정한 인스턴스를 만듭니다.
 
 ```js
-createRedactor(userConfig, {
+const customRedactor = createRedactor({
+    sensitiveFields: ["internalCredential"],
+    rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
+    exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
+});
+console.log(customRedactor.redactNamedValue("internalCredential", "credential-value"));
+// [REDACTED]
+```
+
+예외는 `custom.acme`에서만 예시 값을 보이게 하며 다른 겹친 규칙에는 적용하지 않습니다. `RedactionConfigError`는 설정 실패로 처리하세요. 오류를 버리고 확인하지 않은 대체 목록을 쓰지 마세요.
+
+### 호스트 추가 규칙
+
+호스트는 사용자 규칙 id를 바꾸지 않고 별도 이름의 규칙을 추가할 수 있습니다.
+
+```js
+createRedactor({}, {
     rules: [{ id: "host.legacy-marker", pattern: "SYNTHETIC_[A-Z0-9_]+", flags: "i" }],
     sensitiveFields: ["authorization"],
 });
@@ -157,7 +179,7 @@ createRedactor(userConfig, {
 PII 탐지는 기본으로 꺼져 있습니다. 켤 엔티티를 `piiEntities`에 나열합니다.
 
 ```js
-const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "KR_RRN"] });
+const piiRedactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "KR_RRN"] });
 ```
 
 - 엔티티 이름은 대소문자까지 정확히 일치해야 합니다. `listSupportedPiiEntities()`는 90개 이름 전체를 카탈로그 순서로 돌려주며, 알 수 없는 이름은 그 색인의 문제로 보고합니다.
@@ -173,7 +195,7 @@ const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "K
 - 켜고 끄는 스위치와 요청 단위 활성화가 없습니다. 호출하는 쪽이 redactor를 부를지 정합니다.
 - 탐지 캐시가 없습니다.
 - 범위와 표식 길이 비교에 UTF-8 바이트 대신 UTF-16 코드 단위를 씁니다. 그래서 `한글-비밀번호`처럼 짧은 비ASCII 값은 원본의 `[REDACTED]` 대신 `*******`가 됩니다.
-- `\b`, `\w`, `\d`, `\s`는 명시한 유니코드 속성 클래스로 원래의 유니코드 의미를 유지합니다. 속성 데이터는 JavaScript 런타임의 것을 쓰고, 원본의 `regex` 1.13은 유니코드 16.0을 씁니다. 그래서 Node.js 24 이상(유니코드 17.0)에서는 17.0에 새로 추가된 문자를 글자나 숫자로 봅니다. 그런 문자 바로 옆에 붙은 값은 원본과 다르게 일치할 수 있고, 대개 원본이 가리는 값을 가리지 않는 쪽입니다(`AKIAIOSFODNN7EXAMPLE` 바로 뒤에 U+16EAA가 붙은 경우). 유니코드 16.0까지 있던 문자는 지원하는 모든 Node.js 버전에서 같게 동작합니다.
+- `\b`, `\w`, `\d`, `\s`는 명시한 유니코드 속성 클래스로 원래의 유니코드 의미를 유지합니다. 속성 데이터는 JavaScript 런타임의 것을 쓰고, 원본의 `regex` 1.13은 유니코드 16.0을 씁니다. 저장소의 Node.js 24.14.0 환경처럼 유니코드 17.0을 쓰는 런타임은 새로 추가된 문자를 글자·숫자로 봅니다. 그런 문자 바로 옆의 값은 원본과 다르게 일치할 수 있고, 대개 원본이 가리는 값을 가리지 않는 쪽입니다(`AKIAIOSFODNN7EXAMPLE` 바로 뒤에 U+16EAA가 붙은 경우). 유니코드 16.0까지 있던 문자는 지원하는 모든 Node.js 버전에서 같게 동작합니다.
 - `token.jwt`, `credential.url-password`, `credential.webhook-url`, 대입문 대체 탐지, PEM 끝 표식 검색은 원본 패턴과 같은 결과를 내는 선형 시간 스캐너를 씁니다. JavaScript로 그대로 옮기면 역추적이 2차 시간으로 늘어나기 때문입니다.
 - 같은 이유로 `EMAIL_ADDRESS` 후보 검색은 카탈로그 패턴과 같은 결과를 내는 선형 시간 스캐너를 씁니다.
 - `cases.jsonl`의 PII 범위는 UTF-8 바이트 위치이고, 엔진은 같은 구간을 UTF-16 색인으로 보고합니다.

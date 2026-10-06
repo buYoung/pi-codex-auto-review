@@ -2,9 +2,9 @@
 
 **English** | [한국어](README.ko.md)
 
-Use Codex Desktop's installed Computer Use and Browser Use runtime from Pi. This independent TypeScript extension starts the unified `cua_repl` MCP server, forwards text and images, and presents runtime approval requests in Pi. **Both features default to on**, with separate switches.
+Operate native apps and Chrome from Pi using the runtime already installed by Codex Desktop. The extension starts Codex's unified `cua_repl` MCP server, forwards its text/images, and brings runtime approval dialogs into Pi.
 
-The package is a host bridge, not an automation engine or OS sandbox. It does not bundle, download, copy, or redistribute OpenAI's proprietary runtime.
+Use it when Desktop's runtime is available on your machine; it cannot supply that runtime itself. **Computer Use and Browser Use both default to on** and can be switched separately. This is a host bridge, not an automation engine or OS sandbox, and it never bundles, downloads, copies, or redistributes OpenAI's runtime.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ Recorded live verification used macOS `ChatGPT.app` (bundle ID `com.openai.codex
 
 **Chrome is the only enabled browser backend.** `iab`, `mcpapps`, and Edge examples in Desktop's runtime documentation do not make those backends available in Pi.
 
-## Install and make a first check
+## Install and confirm the connection
 
 Install a published release:
 
@@ -34,15 +34,18 @@ Append `@<version>` to pin a release. For the current checkout or a package not 
 
 Inside Pi:
 
-1. Run `/computer-use-check` and resolve missing prerequisites. `user-owned` items require your confirmation; `unverified` is not a pass.
-2. Run `/computer-use` and enable only the features you need.
-3. Ask for an inventory without app/browser operations:
+1. Run `/computer-use-check`. Resolve missing requirements for the surfaces you plan to use. `user-owned` needs your confirmation; `unverified` is not a pass. The check can run Desktop's installed validation scripts; it is not an installer or an app/browser task.
+2. Run `/computer-use` and leave only the required surfaces on. Changing either switch restarts their shared runtime.
+3. Run `/computer-use status` and check for a running server. If it is not running, follow the reported runtime/setup problem before asking the model to operate anything.
+4. Ask for an inventory without opening tabs or operating apps:
 
 ```text
 Use mcp__cua_repl__js to run await cua.getState(). Summarize the available apps and browsers without operating them.
 ```
 
-A connected runtime exposes `mcp__cua_repl__js` and `mcp__cua_repl__js_reset` for the enabled surfaces. If discovery or startup fails, the footer reports an error and runtime tools remain hidden. A prerequisite check is not proof that a live automation task will succeed.
+The expected first result is an inventory for the enabled surfaces from `mcp__cua_repl__js`. A connection also exposes `mcp__cua_repl__js_reset`. If startup fails, the footer reports the problem and runtime tools stay hidden. A running MCP server or a passed prerequisite check is not proof that every app/browser operation will succeed.
+
+For a browser task after that check, follow the [Chrome task and approval instructions](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.md#4-run-a-task-and-answer-approvals). The runtime returns API documentation with its first entry call; the model must read it before continuing.
 
 ## Change features and inspect status
 
@@ -52,11 +55,13 @@ A connected runtime exposes `mcp__cua_repl__js` and `mcp__cua_repl__js_reset` fo
 | --- | --- |
 | `/computer-use-check` | Prerequisite report and first-use setup guide |
 | `/computer-use status` | Current switches, settings path, runtime source, and server state |
-| `/computer-use computer on` / `off` | Change Computer Use |
-| `/computer-use browser on` / `off` | Change Browser Use |
+| `/computer-use computer on` / `/computer-use computer off` | Change Computer Use |
+| `/computer-use browser on` / `/computer-use browser off` | Change Browser Use |
 | `/computer-use check` | Compatibility alias for `/computer-use-check` |
 
 RPC uses a repeating two-feature picker with a Close choice. Without UI, the bare command prints status and explicit arguments remain available. Status/check text is written to stderr in print/JSON mode.
+
+### Settings file and restart behavior
 
 Settings live at `<agentDir>/codex-computer-use/settings.json`. `agentDir` honors `PI_CODING_AGENT_DIR` and normally is `~/.pi/agent`.
 
@@ -69,7 +74,7 @@ Settings live at `<agentDir>/codex-computer-use/settings.json`. `agentDir` honor
 
 A missing file uses defaults without creating it. An existing file must contain exactly these two boolean keys. Invalid or unreadable settings force both features off; toggle commands will not overwrite an invalid file. Fix it and run `/reload` or restart Pi.
 
-Switch changes wait for the agent to become idle. Restarting clears REPL variables and app/tab bindings. With both features off, no server starts and its tools are hidden. Manual settings edits need reload or restart.
+Switch changes wait for the agent to become idle. A saved switch is a preference, not proof of a successful runtime restart: check status after changing it. Restarting clears REPL variables and app/tab bindings for both surfaces. With both features off, no server starts and its tools are hidden. Manual settings edits need reload or restart.
 
 ## Approvals and limits
 
@@ -82,7 +87,7 @@ Switch changes wait for the agent to become idle. Restarting clears REPL variabl
 
 Logs rotate at 5 MiB under `<agentDir>/codex-computer-use/mcp.log`. Key-based masking does not remove every page/app detail. Inspect and redact logs before sharing.
 
-See the [usage guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.md) for runtime discovery, task examples, approval behavior, troubleshooting, and the recorded verification scope. The npm archive also includes it at `docs/computer-use/usage.md`.
+For a missing runtime, unavailable browser, rejected approval surface, or delayed cancellation, use the [troubleshooting table](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.md#troubleshooting). The [full usage guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.md) owns discovery details, task examples, and recorded verification; the archive includes it at `docs/computer-use/usage.md`.
 
 ## Build and load from source
 

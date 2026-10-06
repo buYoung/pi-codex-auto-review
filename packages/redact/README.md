@@ -20,14 +20,12 @@ Use an ESM file (`.mjs`, or `.js` in a package with `"type": "module"`). This is
 
 ## Quick start
 
+Save the following as `mask.mjs` in the application directory, then run `node mask.mjs`. Default rules already cover the sample password and authorization token; custom configuration is not needed for this first result.
+
 ```js
 import { createRedactor } from "@buyong/redact";
 
-const redactor = createRedactor({
-    sensitiveFields: ["internalCredential"],
-    rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
-    exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
-});
+const redactor = createRedactor();
 
 console.log(redactor.redactText('password = "hunter2-value"'));
 // password = "[REDACTED]"
@@ -40,7 +38,9 @@ console.log(value.command);
 // maskedLocations contains JSON paths and rule ids, never matched values.
 ```
 
-Run the file with Node.js. Send `value`, not the original object, to the logger or model. `maskedLocations` lets you identify affected fields without recording their raw values.
+The two printed lines contain masked values, not the sample secrets. For JSON, send the returned `value` downstream: masking does not mutate or make the original object safe to log. `maskedLocations` identifies affected paths/rules without including raw matches.
+
+JSON keys and non-string values stay visible. A sensitive parent key does not make nested objects sensitive; configure the relevant leaf-field names rather than relying on the parent's name.
 
 ## Masking contract
 
@@ -48,9 +48,11 @@ Run the file with Node.js. Send `value`, not the original object, to the logger 
 - Each line of a span is masked separately, so CR/LF characters and line numbers stay in place.
 - Overlapping or touching spans merge before masking.
 - Built-in masking preserves its already-masked output. Custom rules can match mask markers, so repeated masking depends on the rules you configure.
-- Detections and masked locations carry only a range or a JSON path, a rule id, and a kind. No raw value is stored in metadata, errors, or configuration issues.
+- Detections contain a range, rule id, and kind; `maskedLocations` contains a JSON path and rule id. Neither stores the raw match. Configuration issues and error messages do not repeat pattern or exception values.
 
 ## API
+
+Choose `redactText` for text output, `redactJson` for payloads, or `redactNamedValue` when the field name is known. For excerpts, scan the full original text once and render a range from that scan; scanning only a fragment can miss a credential that spans its boundary.
 
 | Export | Purpose |
 | --- | --- |
@@ -125,6 +127,8 @@ In `full` mode, `key = value` and `key: value` assignments to sensitive keys mas
 
 ## Configuration
 
+The examples below use the `createRedactor` import from the quick start. Options add to built-in rules; they are validated when the instance is created and do not change an existing instance.
+
 ```ts
 interface RedactionConfig {
     sensitiveFields?: string[]; // exact names after normalization
@@ -141,10 +145,28 @@ interface RedactionConfig {
 - `exceptions[]` drops a detection only when its rule id matches and the entire original matched value is equal. Quoted values compare without the outer quotes and without decoding escapes. One rule's exception never exempts another rule's overlapping detection.
 - Issues report the key and the index only. They never repeat a pattern, an exception value, or a `RegExp` parser message. An unknown top-level key is reported by its name.
 
-### Host additions
+### Add sensitive fields and custom rules
+
+Create a separately configured instance when your application has credential names or formats that the defaults do not cover:
 
 ```js
-createRedactor(userConfig, {
+const customRedactor = createRedactor({
+    sensitiveFields: ["internalCredential"],
+    rules: [{ id: "custom.acme", pattern: "ACME_[A-Z0-9]+" }],
+    exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
+});
+console.log(customRedactor.redactNamedValue("internalCredential", "credential-value"));
+// [REDACTED]
+```
+
+The exception keeps the example value visible only for `custom.acme`, not for another overlapping rule. Treat `RedactionConfigError` as a failed configuration; do not discard the error and keep an unreviewed fallback list.
+
+### Host additions
+
+An embedding host can add separately named rules without changing user rule ids:
+
+```js
+createRedactor({}, {
     rules: [{ id: "host.legacy-marker", pattern: "SYNTHETIC_[A-Z0-9_]+", flags: "i" }],
     sensitiveFields: ["authorization"],
 });
@@ -157,7 +179,7 @@ Host rules use the `host.` namespace, so they never collide with user `custom.` 
 PII detection is off by default. List the entities to enable in `piiEntities`:
 
 ```js
-const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "KR_RRN"] });
+const piiRedactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "KR_RRN"] });
 ```
 
 - Entity names are exact and case-sensitive. `listSupportedPiiEntities()` returns all 90 names in catalog order; an unknown name is reported as an issue for its index.
@@ -173,7 +195,7 @@ const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "K
 - There is no enable switch and no request-scoped activation. The caller decides whether to call a redactor.
 - There is no detection cache.
 - Ranges and the marker-length comparison use UTF-16 code units instead of UTF-8 bytes. A short non-ASCII value such as `한글-비밀번호` becomes `*******` where the source printed `[REDACTED]`.
-- `\b`, `\w`, `\d`, and `\s` keep their Unicode meaning through explicit Unicode property classes. The property data comes from the JavaScript runtime, while the source's `regex` 1.13 uses Unicode 16.0. On Node.js 24 and later (Unicode 17.0), characters first assigned in Unicode 17.0 count as letters or digits, so a value written directly next to one can match differently from the source, usually staying unmasked where the source masks it (`AKIAIOSFODNN7EXAMPLE` followed by U+16EAA). Characters assigned in Unicode 16.0 or earlier behave the same on every supported Node.js version.
+- `\b`, `\w`, `\d`, and `\s` keep their Unicode meaning through explicit Unicode property classes. The property data comes from the JavaScript runtime, while the source's `regex` 1.13 uses Unicode 16.0. On a runtime using Unicode 17.0, such as this repository's Node.js 24.14.0 environment, newly assigned characters count as letters or digits. A value directly next to one can match differently from the source, usually staying unmasked where the source masks it (`AKIAIOSFODNN7EXAMPLE` followed by U+16EAA). Characters assigned in Unicode 16.0 or earlier behave the same on every supported Node.js version.
 - `token.jwt`, `credential.url-password`, `credential.webhook-url`, the assignment fallback, and the PEM end-marker search use linear-time scanners that produce the same matches as the source patterns, because the direct JavaScript translations backtrack quadratically.
 - The `EMAIL_ADDRESS` candidate search uses a linear-time scanner with the same results as the catalog pattern, for the same reason.
 - PII ranges in `cases.jsonl` are UTF-8 byte offsets; the engine reports the same spans as UTF-16 indices.

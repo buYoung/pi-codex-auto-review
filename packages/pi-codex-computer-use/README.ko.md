@@ -2,9 +2,9 @@
 
 [English](README.md) | **한국어**
 
-Codex Desktop에 설치된 Computer Use·Browser Use 런타임을 Pi에서 사용합니다. 독립 TypeScript 확장이 통합 `cua_repl` MCP 서버를 실행하고 텍스트·이미지를 전달하며, 런타임 승인 요청을 Pi에서 보여 줍니다. **두 기능은 기본으로 켜져 있고** 각각 끌 수 있습니다.
+Codex Desktop이 설치한 런타임으로 Pi에서 네이티브 앱·Chrome을 조작합니다. 확장은 통합 `cua_repl` MCP 서버를 시작하고 텍스트·이미지를 전달하며 런타임 승인 창을 Pi에서 보여 줍니다.
 
-호스트 연결을 제공하는 패키지이며 자동화 엔진이나 OS 샌드박스가 아닙니다. OpenAI 비공개 런타임을 포함·다운로드·복사·재배포하지 않습니다.
+Desktop 런타임이 있는 기기에서 사용하세요. 런타임 자체를 제공하지는 않습니다. **Computer Use·Browser Use는 기본으로 둘 다 켜지고** 각각 바꿀 수 있습니다. 호스트 연결이며 자동화 엔진이나 OS 샌드박스가 아닙니다. OpenAI 런타임을 포함·다운로드·복사·재배포하지 않습니다.
 
 ## 요구 사항
 
@@ -20,7 +20,7 @@ Codex Desktop에 설치된 Computer Use·Browser Use 런타임을 Pi에서 사�
 
 **활성 브라우저 백엔드는 Chrome뿐입니다.** Desktop 런타임 문서의 `iab`·`mcpapps`·Edge 예시는 Pi에서 해당 백엔드를 사용할 수 있다는 뜻이 아닙니다.
 
-## 설치와 첫 점검
+## 설치와 연결 확인
 
 게시된 릴리스를 설치합니다.
 
@@ -34,15 +34,18 @@ pi
 
 Pi에서 다음 순서로 진행합니다.
 
-1. `/computer-use-check`를 실행하고 누락된 요구 사항을 해결합니다. `user-owned`는 직접 확인할 항목이며 `unverified`는 통과가 아닙니다.
-2. `/computer-use`에서 필요한 기능만 켭니다.
-3. 앱·브라우저를 조작하지 않고 목록만 확인하도록 요청합니다.
+1. `/computer-use-check`에서 사용할 기능의 누락된 요구 사항을 해결합니다. `user-owned`는 직접 확인하고 `unverified`는 통과로 보지 않습니다. 점검은 Desktop의 설치된 검증 스크립트를 실행할 수 있지만 설치나 앱·브라우저 작업은 아닙니다.
+2. `/computer-use`에서 필요한 기능만 켜 둡니다. 어느 기능을 바꿔도 공용 런타임을 재시작합니다.
+3. `/computer-use status`에서 서버 실행을 확인합니다. 실행 중이 아니라면 모델에 조작을 요청하기 전에 표시된 런타임·설정 문제를 해결합니다.
+4. 탭을 열거나 앱을 조작하지 않고 목록만 확인하도록 요청합니다.
 
 ```text
 Use mcp__cua_repl__js to run await cua.getState(). Summarize the available apps and browsers without operating them.
 ```
 
-런타임이 연결되면 활성 기능에 대해 `mcp__cua_repl__js`·`mcp__cua_repl__js_reset`을 제공합니다. 탐색·시작에 실패하면 하단에 오류를 표시하고 런타임 도구는 숨깁니다. 사전 점검이 실제 자동화 작업의 성공을 보장하지는 않습니다.
+첫 결과는 `mcp__cua_repl__js`가 반환한 활성 기능의 목록입니다. 연결되면 `mcp__cua_repl__js_reset`도 제공합니다. 시작에 실패하면 하단에 문제를 표시하고 도구는 숨깁니다. MCP 서버가 실행 중이거나 사전 검사를 통과해도 모든 앱·브라우저 작업의 성공을 보장하지는 않습니다.
+
+이후 브라우저 작업은 [Chrome 작업·승인 안내](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.ko.md#4-작업-실행과-승인)를 따르세요. 런타임은 첫 진입 호출에서 API 문서를 반환하며 모델은 다음 호출 전에 읽어야 합니다.
 
 ## 기능 변경과 상태 확인
 
@@ -52,11 +55,13 @@ Use mcp__cua_repl__js to run await cua.getState(). Summarize the available apps 
 | --- | --- |
 | `/computer-use-check` | 요구 사항 보고서와 첫 사용 가이드 |
 | `/computer-use status` | 현재 기능, 설정 경로, 런타임 출처와 서버 상태 |
-| `/computer-use computer on` / `off` | Computer Use 변경 |
-| `/computer-use browser on` / `off` | Browser Use 변경 |
+| `/computer-use computer on` / `/computer-use computer off` | Computer Use 변경 |
+| `/computer-use browser on` / `/computer-use browser off` | Browser Use 변경 |
 | `/computer-use check` | `/computer-use-check`의 호환용 별칭 |
 
 RPC는 기능 두 개와 Close 항목이 있는 반복 선택창을 사용합니다. UI가 없으면 인자 없는 명령은 상태를 출력하며 명시적인 인자도 사용할 수 있습니다. print·JSON 모드의 상태·점검 문구는 stderr로 출력합니다.
+
+### 설정 파일과 재시작
 
 설정 파일은 `<agentDir>/codex-computer-use/settings.json`입니다. `agentDir`은 `PI_CODING_AGENT_DIR`을 따르며 보통 `~/.pi/agent`입니다.
 
@@ -69,7 +74,7 @@ RPC는 기능 두 개와 Close 항목이 있는 반복 선택창을 사용합니
 
 파일이 없으면 생성하지 않고 기본값을 사용합니다. 기존 파일에는 이 불리언 키 두 개가 정확히 있어야 합니다. 잘못됐거나 읽을 수 없으면 두 기능을 끄며, 토글 명령은 잘못된 파일을 덮어쓰지 않습니다. 파일을 고치고 `/reload`하거나 Pi를 재시작하세요.
 
-기능 변경은 에이전트가 멈출 때까지 기다립니다. 재시작하면 REPL 변수와 앱·탭 바인딩이 사라집니다. 둘 다 끄면 서버를 시작하지 않고 도구를 숨깁니다. 직접 설정 파일을 바꾼 뒤에는 다시 로드하거나 시작해야 합니다.
+기능 변경은 에이전트가 멈출 때까지 기다립니다. 저장된 기능은 선택이며 런타임 재시작 성공의 근거가 아니므로 변경 후 상태를 확인하세요. 재시작하면 두 기능의 REPL 변수·앱·탭 바인딩이 사라집니다. 둘 다 끄면 서버를 시작하지 않고 도구를 숨깁니다. 직접 파일을 편집한 뒤에도 다시 로드하거나 시작해야 합니다.
 
 ## 승인과 한계
 
@@ -82,7 +87,7 @@ RPC는 기능 두 개와 Close 항목이 있는 반복 선택창을 사용합니
 
 로그는 `<agentDir>/codex-computer-use/mcp.log`에 기록하고 5 MiB에서 순환합니다. 키 기반 가림이 모든 페이지·앱 내용을 제거하지는 않습니다. 공유 전에 확인하고 가리세요.
 
-런타임 탐색, 작업 예시, 승인 동작, 문제 해결과 기록된 검증 범위는 [사용법](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.ko.md)을 참고하세요. npm 압축 파일에도 `docs/computer-use/usage.ko.md`로 포함합니다.
+런타임 부재, 사용 불가 브라우저, 승인 UI 거부나 취소 지연은 [문제 해결 표](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.ko.md#문제-해결)를 참고하세요. 탐색 상세, 작업 예시와 검증 기록은 [전체 사용법](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.ko.md)에 있으며 압축 파일에도 `docs/computer-use/usage.ko.md`로 포함합니다.
 
 ## 소스 빌드와 로드
 

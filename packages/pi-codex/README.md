@@ -2,26 +2,26 @@
 
 **English** | [한국어](README.ko.md)
 
-Install four Codex-inspired Pi extensions together: automatic approval review, Computer Use and Browser Use, OpenAI Fast mode, and image generation with the `imagegen` skill. Each component keeps its original implementation, commands, and settings. The combined package adds no separate automation or approval engine.
+Install automatic approval review, Computer Use and Browser Use, OpenAI Fast mode, and image generation in one Pi package. The bundle includes the four original extensions and the `imagegen` skill; each component keeps its commands and settings.
 
-## Requirements
+Use the bundle when you want several of these features together. If you need only one, use its individual package guide below. The bundle adds no separate automation or approval engine and does not supply Codex Desktop or account access.
 
-- Node.js 22.19 or later and Pi 0.99.1 or later, as declared in the manifest. This repository builds against Pi 0.99.1; individual components have narrower verification scopes.
-- A configured Pi conversation provider and model.
-- The additional requirements of each feature you use, listed below. Installing the combined package does not install Codex Desktop or supply account access.
+## Before installing
 
-| Component | Commands or tools | Additional requirements and limits |
+- Node.js 22.19 or later and a configured Pi conversation provider/model.
+- Pi 0.99.1 or later is the manifest requirement. The repository builds against 0.99.1; component verification scopes differ. The automatic-review guarded CLI/SDK accepts only 0.99.1 or 1.0.0.
+- The feature-specific requirements in the table. You can leave unused features off.
+
+| Feature | Additional requirement | Initial state without saved settings |
 | --- | --- | --- |
-| [Automatic review](https://github.com/buYoung/pi-codex-auto-review/blob/master/README.md) | `/approve`, `/approve-model`, `/approve retry` | Uses the current model or a selected reviewer. It is not an OS sandbox. Guarded CLI/SDK startup accepts only Pi 0.99.1 or 1.0.0. |
-| [Computer Use](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.md) | `/computer-use`, `/computer-use-check`, `mcp__cua_repl__js` | Requires an installed Codex Desktop runtime; Chrome Browser Use also needs its extension/native host. macOS has recorded live verification; Windows is implemented but unverified; Linux is unsupported. |
-| [Fast mode](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.md) | `/codex-fast`, `/openai-tier`, `/openai-settings` | Applies only to supported provider/model/authentication combinations. The default is Standard. A requested tier is not confirmation of server processing or billing. |
-| [Image generation](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.md) | `image_gen`, `/codex-imagen`, `imagegen` skill | Requires Pi's `/login openai-codex` subscription login. Without login, the extension hides its image tool and skill. |
+| [Automatic review](https://github.com/buYoung/pi-codex-auto-review/blob/master/README.md) | Model access for automatic review, or user confirmation for calls needing approval | **Approve for me**; not an OS sandbox |
+| [Computer Use](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.md) | Installed Codex Desktop runtime; Chrome Browser Use also needs its extension/native host. macOS has live records, Windows is unverified, Linux is unsupported. | Computer and Browser both on; runtime startup can be attempted when Pi starts |
+| [Fast mode](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.md) | A supported provider/model/authentication combination | Standard; no acceleration selected |
+| [Image generation](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.md) | Pi's `openai-codex` subscription login | Tool and skill hidden without login |
 
-**Do not enable the same individual extensions alongside this package.** Duplicate installations can register tools, commands, and event handlers twice.
+**Do not enable the bundle alongside the same individual extensions.** Tools, commands, and event handlers can register twice. If those packages are already installed, follow [migration](#switch-from-individual-packages) before loading the bundle.
 
-## Install or switch from individual packages
-
-For a published npm release:
+## Install a published release
 
 ```sh
 pi install npm:@buyong/pi-codex
@@ -29,35 +29,43 @@ pi list
 pi
 ```
 
-An unversioned source selects the latest published release. Append `@<version>` to pin one. A local manifest version does not establish npm availability; if the package has not been registered, use the source path below.
+An unversioned source selects the latest published release; append `@<version>` to pin one. Add `--local` for a project-scoped entry, which requires project trust. A checkout version does not establish npm publication: for an unregistered package or unreleased changes, use [source loading](#build-and-load-from-source).
 
-When switching from individual extensions:
+## Switch from individual packages
 
-1. Run `pi list` and identify their installation sources.
-2. Remove overlapping entries with `pi remove <source>`. Use `pi remove --local <source>` for project-scoped entries.
-3. Install the combined package in the intended scope, then restart Pi.
+1. Run `pi list` and identify overlapping extension sources in both global and project settings.
+2. Remove those entries with `pi remove <source>`, or `pi remove --local <source>` for a project entry.
+3. Install the bundle in the intended scope and restart Pi.
 
-The component settings paths do not change, so existing settings are reused. Check both global and project entries to avoid leaving an overlapping installation active. Project installations use `pi install --local` and require project trust.
+Use the sources reported by `pi list`, not a guessed version string. Component settings paths do not change, so existing preferences remain available after switching.
 
-## Make a first useful run
+## Confirm setup before running feature tasks
 
-Inside Pi:
+Inside Pi, configure conversation access with `/login` if needed. Then run `/approve` and choose **Approve for me** or **Ask for approval**. To try a bounded approval-review task, send:
 
-1. Configure your conversation model and credentials if needed.
-2. Run `/approve` and choose **Approve for me** or **Ask for approval**.
-3. Ask Pi to read the project README and summarize how to run it without changing files.
+```text
+Use bash to run exactly node --version and report the result. Do not install anything or change files.
+```
 
-For the other features, start at their own setup commands:
+Under the default policy, the command requires review. A successful run reports the installed Node.js version; custom rules and saved approvals can change the route. Automatic review makes additional model calls.
 
-| Goal | First action | What to check |
+Configure other features separately:
+
+| Goal | Entry point | Result to check |
 | --- | --- | --- |
-| Operate apps or Chrome | `/computer-use-check`, then `/computer-use` | Resolve missing requirements; enable only the features you need. Runtime approval governs app/origin access. |
-| Request a faster service tier | `/codex-fast`, then `/openai-tier` | Select a mode and confirm whether it is active for the current model. |
-| Generate an image | `/login openai-codex`, then `/codex-imagen` | Sign in, choose an image model, then ask Pi to use `image_gen`. The conversation model can stay unchanged. |
+| Operate apps or Chrome | `/computer-use-check`, then `/computer-use` | Resolve missing prerequisites and enable the surfaces you need. A connected runtime exposes `mcp__cua_repl__js`; runtime approval governs app/origin access. |
+| Request a faster service tier | `/codex-fast`, then `/openai-tier` | Check both the desired tier and local activation. The last injection record is not confirmation of server processing or billing. |
+| Generate an image | `/login openai-codex`, then `/codex-imagen` | Sign in, choose an image model, and ask Pi to use `image_gen`. The result includes an image; saving is best-effort. |
 
-Computer Use defaults to both features on and can try to start its runtime when Pi starts. Turn both off if you do not use it. Image generation remains hidden without subscription login; Fast mode starts in Standard unless settings or `--fast` select another tier.
+Turn both Computer Use surfaces off if you do not use them. Choosing a service tier or image model does not switch the conversation model; tier activation still depends on that model's compatibility. Existing saved preferences override the initial states listed above.
 
-Loading this package through normal Pi extension discovery does not guarantee protected startup. For execution that must refuse to start without automatic-review controls, use the [automatic-review CLI or SDK](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/usage.md#run-with-protected-startup). Additional components must be loaded explicitly through that entry point.
+The component guides also cover `/approve-model`, `/approve retry`, `/openai-settings`, settings files, and failures. Follow them before granting persistent app permissions or using a paid service tier.
+
+## Protected startup is a separate choice
+
+Normal Pi extension discovery can continue after an extension fails to load. Installing the bundle is therefore **not** a guarantee that execution starts with approval controls ready.
+
+If that guarantee is required, use the [automatic-review CLI or SDK](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/usage.md#run-with-protected-startup). Load any additional components explicitly through that entry point; do not also load a second automatic-review extension. Approved commands still run with host permissions, not an OS sandbox.
 
 ## Build and load from source
 
@@ -69,16 +77,16 @@ npm run build -- --filter=@buyong/pi-codex
 node_modules/.bin/pi -ne -e ./packages/pi-codex
 ```
 
-The build first builds the components, then stages their publishable files and runtime dependencies inside the combined package. `-ne` disables automatic extension discovery; `-e` loads this package for the invocation without a permanent installation entry. Desktop prerequisites and image login still apply.
+The build first builds the components, then stages their publishable files and runtime dependencies inside the bundle. `-ne` disables automatic extension discovery and `-e` loads this package for one invocation without a permanent entry. Desktop prerequisites and subscription login still apply.
 
-Rebuild after changing a component. The combined package loads its staged copies, not the component source directories.
+Rebuild after changing a component: the bundle loads its staged copies, not the component source directories.
 
-## Package contents and publishing
+## Contents and release order
 
-The manifest pins all four extensions in `dependencies` and includes them through `bundleDependencies`. `pi.extensions` and `pi.skills` point directly to the bundled packages' original entry points and skill directory. Development dependencies, Pi host packages, and the private Codex runtime are excluded.
+The manifest pins the four extensions in `dependencies` and packages them through `bundleDependencies`. `pi.extensions` and `pi.skills` point to their original entry points and skill directory. Development dependencies, Pi hosts, and the private Codex runtime are excluded.
 
-Publish the individual pinned extension versions before publishing this package. To include an updated component, update its pin and the root lockfile, rebuild, and release the combined package. See the [publishing guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.md) for first registration, package-specific Trusted Publishing, and the interactive release flow.
+Publish the pinned individual versions first. To include an updated component, update its bundle dependency pin and the root lockfile, rebuild, and release the bundle. See the [publishing guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.md) for registration, package-specific Trusted Publishing, and recovery.
 
 ## License
 
-[Apache-2.0](https://github.com/buYoung/pi-codex-auto-review/blob/master/LICENSE), included as `LICENSE` in the npm archive. Included dependencies keep their own licenses and attribution notices.
+[Apache-2.0](https://github.com/buYoung/pi-codex-auto-review/blob/master/LICENSE), included as `LICENSE` in the npm archive. Included dependencies retain their own licenses and attribution notices.

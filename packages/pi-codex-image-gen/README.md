@@ -2,7 +2,7 @@
 
 **English** | [한국어](README.ko.md)
 
-Generate and edit images in Pi with the Codex-compatible `image_gen` tool and bundled `imagegen` skill. Image requests use Pi's `openai-codex` ChatGPT subscription login; your conversation provider and model stay unchanged.
+Create new images or edit reference images from a Pi conversation. The package provides the Codex-compatible `image_gen` tool and `imagegen` skill. It uses Pi's `openai-codex` ChatGPT subscription credentials for image requests without switching your conversation provider or model.
 
 ## Requirements
 
@@ -12,7 +12,7 @@ Generate and edit images in Pi with the Codex-compatible `image_gen` tool and bu
 
 An OpenAI API key alone does not provide the subscription credentials this extension uses. Prompts and reference images are sent to the image backend; use only data you are authorized to send.
 
-## Install, sign in, and generate an image
+## Quick start: create an image
 
 Install a published release, then start Pi:
 
@@ -28,19 +28,24 @@ Do not also enable this extension through `@buyong/pi-codex`. Inside Pi, sign in
 /login openai-codex
 ```
 
-Ask for a new image:
+The extension checks login before each user prompt. Without usable subscription login it hides the tool and skill. After login, an extension-hidden tool is restored before the next prompt; a tool you disabled yourself stays disabled. Keep your conversation model selected.
+
+Optionally run `/codex-imagen` to check or change the image model before generating. With no saved choice, it uses `gpt-image-2.5`. Then ask:
 
 ```text
 Use image_gen to create a watercolor illustration of a small cafe on a rainy street.
 ```
 
-The result includes the generated image. The extension also attempts to save it locally; see [output and storage](#output-and-storage).
+A successful result contains a PNG image. Saving a local copy is separate and best-effort; see [output and storage](#output-and-storage). No image means the request failed or returned no image data—inspect the tool error rather than assuming that a file was created.
 
-Without subscription login, the extension hides `image_gen` and its bundled skill from the model. A tool hidden by the extension is restored before the next user prompt after login. A tool you disabled yourself stays disabled. You do not need to switch the conversation model to `openai-codex`.
+## Edit a local or conversation image
 
-## Edit an image
+Choose the source before requesting an edit:
 
-Attach an image to the conversation, or provide its absolute local path. For example:
+- **Local file:** supply an absolute path to an image Pi can read.
+- **Conversation image:** attach it, or keep it in the current model-visible context. Images removed by context changes are not automatically recovered.
+
+For a local file:
 
 ```text
 Use image_gen to edit /absolute/path/to/product.png. Remove the background and keep the product unchanged with a transparent background.
@@ -55,13 +60,13 @@ Replace the example path with your file. Ask explicitly for transparency when ne
 | `referenced_image_paths` | Up to five absolute local paths; `~/` expands to the home directory |
 | `num_last_images_to_include` | Use the latest 1–5 images from the current model-visible conversation |
 
-Use only one reference mechanism per call. Omit both for a new image. Unknown argument fields, invalid types, out-of-range counts, and conflicting reference choices are rejected before a request is sent.
+The model chooses the reference arguments from your request. Use `referenced_image_paths` for local files or `num_last_images_to_include` for conversation images, not both. Omit both for a new image. Unknown fields, invalid types/counts, and conflicting reference choices are rejected before a request is sent.
 
 Local PNG/JPEG/WebP references retain their source bytes after decode validation. Other formats are converted to PNG if Pi can decode them. Recent conversation images are sent in chronological order as recorded. If fewer requested images remain in context, the call reports an error rather than selecting unrelated files.
 
 ## Select an image model
 
-Run `/codex-imagen` to select **`gpt-image-2.5`** (default) or **`gpt-image-2`**. Cancelling the picker keeps the current choice. Explicit arguments also work without a UI:
+Run `/codex-imagen` to select **`gpt-image-2.5`** (default) or **`gpt-image-2`**. This setting selects the image backend model, not the conversation model. Cancelling keeps the current choice. Without a UI, run one of these explicit alternatives:
 
 ```text
 /codex-imagen gpt-image-2.5
@@ -88,7 +93,7 @@ The tool returns the first image from the backend response as PNG image content 
 <agentDir>/generated_images/<sessionId>/<toolCallId>.png
 ```
 
-Session/tool-call names are sanitized for filenames. The result's `details.savedPath` is present when saving succeeds; a save failure does not discard the returned image. Keep a copy of a saved image if you need to edit it after it leaves conversation context.
+Session/tool-call names are sanitized for filenames. A save failure does not discard the returned image. For SDK/tool consumers, `details.savedPath` identifies a successful save; the text hint can be omitted for an unusually long path. Keep a local copy if you need to edit the result after it leaves conversation context.
 
 An error is returned when authentication cannot be resolved, a reference cannot be loaded, settings are invalid, the backend fails, or no image data is returned. The caller's cancellation signal is passed to image requests; cancellation does not establish whether a remote service already performed work.
 
