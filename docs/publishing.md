@@ -12,22 +12,22 @@ The root package is private. These six workspace packages can be released indepe
 
 | Package | Directory | Manifest version in this checkout |
 | --- | --- | --- |
-| `@buyong/redact` | `packages/redact` | `0.1.0` |
-| `@buyong/pi-codex-auto-review` | `packages/pi-codex-auto-review` | `0.3.0` |
-| `@buyong/pi-codex-computer-use` | `packages/pi-codex-computer-use` | `0.1.0` |
-| `@buyong/pi-codex-fast-mode` | `packages/pi-codex-fast-mode` | `0.1.0` |
-| `@buyong/pi-codex-image-gen` | `packages/pi-codex-image-gen` | `0.2.1` |
-| `@buyong/pi-codex` | `packages/pi-codex` | `0.1.0` |
+| `@buyong/redact` | `packages/redact` | `0.1.2` |
+| `@buyong/pi-codex-auto-review` | `packages/pi-codex-auto-review` | `0.3.2` |
+| `@buyong/pi-codex-computer-use` | `packages/pi-codex-computer-use` | `0.1.1` |
+| `@buyong/pi-codex-fast-mode` | `packages/pi-codex-fast-mode` | `0.1.1` |
+| `@buyong/pi-codex-image-gen` | `packages/pi-codex-image-gen` | `0.2.2` |
+| `@buyong/pi-codex` | `packages/pi-codex` | `0.1.2` |
 
 These are **local manifest versions, not npm publication status or proof of pushed tags**. The release command reads public registry metadata again on every run.
 
 Publish dependencies before their consumers:
 
-1. Publish `@buyong/redact` before automatic review. Automatic review pins `@buyong/redact@0.1.0` and does not bundle it.
-2. Publish individual extensions before the combined package. The combined package pins automatic review `0.3.0`, Computer Use `0.1.0`, Fast mode `0.1.0`, and image generation `0.2.1`.
+1. Publish `@buyong/redact` before automatic review. Automatic review pins `@buyong/redact@0.1.2` and does not bundle it.
+2. Publish individual extensions before the combined package. The combined package pins automatic review `0.3.2`, Computer Use `0.1.1`, Fast mode `0.1.1`, and image generation `0.2.2`.
 3. After updating a dependency, update its consumer's pinned version and the root `package-lock.json`, commit those changes, then release the consumer. The release command does **not** update consumer dependency pins for you.
 
-The combined archive bundles the four extensions and their runtime dependencies. Pi host packages and Codex's private runtime are not bundled. The existing package check requires its extension pins to match the workspace versions being packaged.
+The combined archive bundles the four extensions and their runtime dependencies. Pi host packages and Codex's private runtime are not bundled. Workspace runtime dependency pins must match the source versions being packaged. The release command checks this before version selection or Git changes, and CI checks it before building; neither silently updates the pins.
 
 Git tags use `<full scoped package name>@<version>`, for example `@buyong/pi-codex-auto-review@0.3.0`. The workflow uses npm dist-tag `latest` for stable versions and `next` for prereleases.
 
@@ -130,7 +130,7 @@ Pushing a package tag starts `.github/workflows/npm-package.yml`, displayed as *
 | --- | --- |
 | Validate | Finds the tagged workspace, checks tag/manifest version equality and that the commit is included in `origin/master`, then checks registration, version uniqueness, and published workspace runtime dependencies |
 | Build | Runs the selected Turborepo build on `ubuntu-22.04` with Node.js 24.14.0 and the committed npm lockfile |
-| Targeted tests | Runs `test:policy` for automatic review. For `@buyong/redact`, builds the workspace and runs `test:redaction`. This is not a full live-model or OS verification. |
+| Targeted tests | Runs `test:policy` for automatic review. For `@buyong/redact`, builds only the automatic-review evidence validator and its dependencies, then runs `test:redaction`; it does not build the unrelated combined package. This is not a full live-model or OS verification. |
 | Pack | Runs `npm pack --workspace`, including the package's `prepack` and archive checks |
 | Save | Uploads the verified `.tgz` as the `npm-package` artifact |
 | Publish | A separate job downloads that same archive and runs `npm publish` through OIDC with `latest` or `next` |
@@ -170,7 +170,7 @@ Set `PACKAGE_NAME` and `VERSION` to the package and version actually released. F
 
 ```sh
 PACKAGE_NAME=@buyong/pi-codex-auto-review
-VERSION=0.3.1
+VERSION=0.3.2
 npm view "$PACKAGE_NAME@$VERSION" version --registry=https://registry.npmjs.org/
 npm view "$PACKAGE_NAME" dist-tags --registry=https://registry.npmjs.org/
 pi install "npm:$PACKAGE_NAME@$VERSION"
@@ -178,7 +178,7 @@ pi list
 pi
 ```
 
-`0.3.1` is an example, not a claim that the version exists. The registry must return your selected version, the expected dist-tag must point to it, and `pi list` must show the installation source.
+`0.3.2` is an example, not a claim that the version exists. The registry must return your selected version, the expected dist-tag must point to it, and `pi list` must show the installation source.
 
 For automatic review, run `/approve` and `/approve-model`, check that the review model does not change the conversation model, and restart Pi to confirm saved choices. Full Access must not persist. See the [usage guide](usage.md) for the settings path and protected startup.
 

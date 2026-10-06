@@ -49,7 +49,7 @@ jobs:
           import { execFileSync } from 'node:child_process';
           import assert from 'node:assert/strict';
           import semver from 'semver';
-          import { listPublishablePackages } from './scripts/release-packages.mjs';
+          import { listPublishablePackages, validateWorkspaceDependencyVersions } from './scripts/release-packages.mjs';
           import { readPublishedVersions, verifyPublishedWorkspaceDependencies } from './scripts/release-registry.mjs';
           const isTagPush = process.env.RELEASE_EVENT === 'push';
           const tag = process.env.RELEASE_TAG;
@@ -60,6 +60,7 @@ jobs:
           const manifest = JSON.parse(readFileSync(`${workspace.path}/package.json`, 'utf8'));
           const {name, version} = manifest;
           assert.ok(semver.valid(version) && !semver.parse(version).build.length);
+          validateWorkspaceDependencyVersions(manifest, workspaces);
           if (isTagPush) {
             assert.equal(tag, `${name}@${version}`, '태그와 package.json 버전이 다릅니다.');
             execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'], {stdio: 'inherit'});
@@ -77,9 +78,9 @@ jobs:
         run: npm run build -- --filter="$PACKAGE_NAME"
       - if: steps.release.outputs.package == '@buyong/pi-codex-auto-review'
         run: npm run test:policy
-      # The test runner loads the evidence validator from the auto-review build.
+      # Build only the evidence validator and its dependencies, not the aggregate package.
       - if: steps.release.outputs.package == '@buyong/redact'
-        run: npm run build && npm run test:redaction
+        run: npm run build -- --filter=@buyong/pi-codex-auto-review && npm run test:redaction
       - run: mkdir -p tmp/npm
       - name: 압축 패키지 생성
         env:

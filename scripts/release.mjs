@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import { input, select } from "@inquirer/prompts";
 import release, { Config } from "release-it";
 import semver from "semver";
-import { listPublishablePackages } from "./release-packages.mjs";
+import {
+    listPublishablePackages,
+    validateWorkspaceDependencyVersions,
+} from "./release-packages.mjs";
 import {
     InquirerPrompt,
     ReleaseStopped,
@@ -202,6 +205,7 @@ try {
     const manifest = JSON.parse(
         readFileSync(join(selectedPackage.path, "package.json"), "utf8"),
     );
+    validateWorkspaceDependencyVersions(manifest, packages);
     const publishedVersions = await readPublishedVersions(manifest.name);
     if (!publishedVersions.size) {
         throw new Error(

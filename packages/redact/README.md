@@ -212,10 +212,10 @@ npm ci --ignore-scripts
 npm run build -- --filter=@buyong/redact
 ```
 
-The build emits ESM JavaScript and declarations under `packages/redact/dist`. Source-based applications can import that built `dist/index.js`; it is not necessary to load a Pi host. The repository's existing `test:redaction` command uses the automatic-review evidence runner, so build the full workspace before running it:
+The build emits ESM JavaScript and declarations under `packages/redact/dist`. Source-based applications can import that built `dist/index.js`; it is not necessary to load a Pi host. The repository's existing `test:redaction` command uses the automatic-review evidence runner. Build that package and its dependencies before running it; the unrelated combined package is not needed:
 
 ```sh
-npm run build
+npm run build -- --filter=@buyong/pi-codex-auto-review
 npm run test:redaction
 ```
 

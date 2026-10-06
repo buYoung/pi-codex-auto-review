@@ -12,22 +12,22 @@
 
 | 패키지 | 디렉터리 | 현재 체크아웃의 매니페스트 버전 |
 | --- | --- | --- |
-| `@buyong/redact` | `packages/redact` | `0.1.0` |
-| `@buyong/pi-codex-auto-review` | `packages/pi-codex-auto-review` | `0.3.0` |
-| `@buyong/pi-codex-computer-use` | `packages/pi-codex-computer-use` | `0.1.0` |
-| `@buyong/pi-codex-fast-mode` | `packages/pi-codex-fast-mode` | `0.1.0` |
-| `@buyong/pi-codex-image-gen` | `packages/pi-codex-image-gen` | `0.2.1` |
-| `@buyong/pi-codex` | `packages/pi-codex` | `0.1.0` |
+| `@buyong/redact` | `packages/redact` | `0.1.2` |
+| `@buyong/pi-codex-auto-review` | `packages/pi-codex-auto-review` | `0.3.2` |
+| `@buyong/pi-codex-computer-use` | `packages/pi-codex-computer-use` | `0.1.1` |
+| `@buyong/pi-codex-fast-mode` | `packages/pi-codex-fast-mode` | `0.1.1` |
+| `@buyong/pi-codex-image-gen` | `packages/pi-codex-image-gen` | `0.2.2` |
+| `@buyong/pi-codex` | `packages/pi-codex` | `0.1.2` |
 
 이는 **로컬 매니페스트 버전이며 npm 게시 상태나 태그 푸시의 근거가 아닙니다.** 릴리스 명령은 실행할 때마다 공개 레지스트리를 다시 확인합니다.
 
 의존 패키지를 사용하는 패키지보다 먼저 게시합니다.
 
-1. 자동 검토보다 `@buyong/redact`를 먼저 게시합니다. 자동 검토는 `@buyong/redact@0.1.0`에 고정하며 번들로 포함하지 않습니다.
-2. 통합 패키지보다 개별 확장을 먼저 게시합니다. 통합 패키지는 자동 검토 `0.3.0`, Computer Use `0.1.0`, Fast 모드 `0.1.0`, 이미지 생성 `0.2.1`에 고정합니다.
+1. 자동 검토보다 `@buyong/redact`를 먼저 게시합니다. 자동 검토는 `@buyong/redact@0.1.2`에 고정하며 번들로 포함하지 않습니다.
+2. 통합 패키지보다 개별 확장을 먼저 게시합니다. 통합 패키지는 자동 검토 `0.3.2`, Computer Use `0.1.1`, Fast 모드 `0.1.1`, 이미지 생성 `0.2.2`에 고정합니다.
 3. 의존 패키지를 갱신한 뒤 사용하는 패키지의 고정 버전과 루트 `package-lock.json`을 갱신하고 커밋한 다음 릴리스합니다. 릴리스 명령이 의존 버전을 **자동 갱신하지는 않습니다.**
 
-통합 압축 파일에는 확장 4개와 런타임 의존성을 묶습니다. Pi 호스트와 Codex 비공개 런타임은 포함하지 않습니다. 기존 패키지 검사는 통합 패키지의 확장 고정 버전이 포장하는 작업 공간 버전과 일치하는지 확인합니다.
+통합 압축 파일에는 확장 4개와 런타임 의존성을 묶습니다. Pi 호스트와 Codex 비공개 런타임은 포함하지 않습니다. 작업 공간 런타임 의존성의 고정 버전은 포장할 소스 버전과 일치해야 합니다. 릴리스 명령은 버전 선택·Git 변경 전에, CI는 빌드 전에 확인하며 고정 버전을 임의로 갱신하지 않습니다.
 
 Git 태그는 `<스코프 포함 패키지 이름>@<버전>`입니다. 예를 들어 `@buyong/pi-codex-auto-review@0.3.0`입니다. 워크플로는 정식 버전의 npm 배포 태그로 `latest`, 시험 버전에는 `next`를 사용합니다.
 
@@ -130,7 +130,7 @@ pnpm release
 | --- | --- |
 | 검증 | 태그의 작업 공간을 찾고 태그·매니페스트 버전과 `origin/master`에 포함된 커밋인지 확인합니다. 등록 여부, 버전 중복과 작업 공간 런타임 의존 버전의 게시도 확인합니다. |
 | 빌드 | `ubuntu-22.04`, Node.js 24.14.0과 커밋된 npm 잠금 파일로 선택한 Turborepo 빌드를 실행합니다. |
-| 관련 테스트 | 자동 검토는 `test:policy`를 실행합니다. `@buyong/redact`는 작업 공간을 빌드하고 `test:redaction`을 실행합니다. 전체 실모델·운영체제 검증은 아닙니다. |
+| 관련 테스트 | 자동 검토는 `test:policy`를 실행합니다. `@buyong/redact`는 자동 검토 증거 검증기와 그 의존성만 빌드한 뒤 `test:redaction`을 실행합니다. 무관한 통합 패키지는 빌드하지 않습니다. 전체 실모델·운영체제 검증은 아닙니다. |
 | 포장 | `npm pack --workspace`로 패키지의 `prepack`과 압축 검사를 실행합니다. |
 | 보관 | 검증한 `.tgz`를 `npm-package` 결과물로 업로드합니다. |
 | 게시 | 별도 작업이 같은 압축 파일을 내려받아 OIDC로 `npm publish`를 실행합니다. 배포 태그는 `latest` 또는 `next`입니다. |
@@ -170,7 +170,7 @@ git ls-remote origin refs/heads/master 'refs/tags/*@*'
 
 ```sh
 PACKAGE_NAME=@buyong/pi-codex-auto-review
-VERSION=0.3.1
+VERSION=0.3.2
 npm view "$PACKAGE_NAME@$VERSION" version --registry=https://registry.npmjs.org/
 npm view "$PACKAGE_NAME" dist-tags --registry=https://registry.npmjs.org/
 pi install "npm:$PACKAGE_NAME@$VERSION"
@@ -178,7 +178,7 @@ pi list
 pi
 ```
 
-`0.3.1`은 예시이며 존재한다는 뜻이 아닙니다. 레지스트리가 선택한 버전을 반환하고 예상 배포 태그가 그 버전을 가리켜야 합니다. `pi list`에는 설치 소스가 나와야 합니다.
+`0.3.2`는 예시이며 존재한다는 뜻이 아닙니다. 레지스트리가 선택한 버전을 반환하고 예상 배포 태그가 그 버전을 가리켜야 합니다. `pi list`에는 설치 소스가 나와야 합니다.
 
 자동 검토는 `/approve`·`/approve-model`을 실행해 검토 모델이 대화 모델을 바꾸지 않는지 확인하고, 재시작 후 저장한 선택을 확인합니다. Full Access는 유지되지 않아야 합니다. 설정 경로와 보호 시작은 [사용법](usage.ko.md)을 참고하세요.
 

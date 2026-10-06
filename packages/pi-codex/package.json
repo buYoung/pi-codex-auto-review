@@ -1,6 +1,6 @@
 {
     "name": "@buyong/pi-codex",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Pi용 Codex 통합 패키지: 자동 승인 검토, Computer Use, Fast 모드, 이미지 생성을 함께 설치합니다.",
     "license": "Apache-2.0",
     "keywords": [
@@ -39,10 +39,10 @@
         "postpack": "node ../../scripts/package-shared-files.mjs remove"
     },
     "dependencies": {
-        "@buyong/pi-codex-auto-review": "0.3.0",
-        "@buyong/pi-codex-computer-use": "0.1.0",
-        "@buyong/pi-codex-fast-mode": "0.1.0",
-        "@buyong/pi-codex-image-gen": "0.2.1"
+        "@buyong/pi-codex-auto-review": "0.3.2",
+        "@buyong/pi-codex-computer-use": "0.1.1",
+        "@buyong/pi-codex-fast-mode": "0.1.1",
+        "@buyong/pi-codex-image-gen": "0.2.2"
     },
     "bundleDependencies": [
         "@buyong/pi-codex-auto-review",

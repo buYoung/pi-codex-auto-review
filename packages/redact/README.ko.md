@@ -212,10 +212,10 @@ npm ci --ignore-scripts
 npm run build -- --filter=@buyong/redact
 ```
 
-`packages/redact/dist`에 ESM JavaScript와 선언 파일을 만듭니다. 소스 기반 애플리케이션은 빌드한 `dist/index.js`를 import할 수 있으며 Pi 호스트를 로드할 필요는 없습니다. 기존 `test:redaction` 명령은 자동 검토 증거 실행기를 사용하므로 전체 작업 공간을 먼저 빌드합니다.
+`packages/redact/dist`에 ESM JavaScript와 선언 파일을 만듭니다. 소스 기반 애플리케이션은 빌드한 `dist/index.js`를 import할 수 있으며 Pi 호스트를 로드할 필요는 없습니다. 기존 `test:redaction` 명령은 자동 검토 증거 실행기를 사용하므로 해당 패키지와 의존성을 먼저 빌드합니다. 무관한 통합 패키지는 필요하지 않습니다.
 
 ```sh
-npm run build
+npm run build -- --filter=@buyong/pi-codex-auto-review
 npm run test:redaction
 ```
 
