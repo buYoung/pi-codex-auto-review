@@ -1,120 +1,170 @@
-# Usage
+# Automatic review usage
 
 **English** | [한국어](usage.ko.md)
 
-This guide covers registering pi-codex-auto-review as a Pi extension and configuring the CLI, SDK, and policy files.
+Use this guide to install `@buyong/pi-codex-auto-review`, choose an approval method, run with protected startup, and configure policies. It describes the current checkout; a published npm release may not yet include every source change. Other workspace extensions have their own guides linked from the [README](../README.md#workspace-packages).
 
 ## Installing from npm
 
-Install the npm package with Node.js 22.19 or later and Pi 0.99.1 or 1.0.0. Version `0.2.0` distributes the rule engine as JavaScript, replacing the native executables included through `0.1.4`. The extension requires no Rust compiler or platform-specific rule binary; Pi's own native modules are separate.
-
-`0.1.4` includes English approval descriptions, `/scoped-models` integration, `/approve retry`, reapproval through ordinary user messages, and fixes for passing and restoring review context. The earlier `0.1.3` removed the sandbox and added the `/approve` and `/approve-model` settings commands.
+You need Node.js 22.19 or later, Pi 0.99.1 or 1.0.0, and access to a Pi model. The JavaScript rule engine requires no Rust compiler or platform-specific rule binary.
 
 ```sh
-pi install npm:@buyong/pi-codex-auto-review@0.2.2
+pi install npm:@buyong/pi-codex-auto-review
 pi list
-pi remove npm:@buyong/pi-codex-auto-review
+pi
 ```
 
-Add `--local` to register the package in the current project's `.pi/settings.json`. Project packages load after a trust decision for that project. Specifying a version pins the installation to that version.
+In Pi, configure model access with `/login` if needed. Run `/approve` to choose an approval method, then ask Pi to read and summarize a project file. Ordinary in-scope calls can run directly; calls requiring approval use your selected method.
 
-Pi does not install a physical copy of the host SDK for managed extensions. The extension locates the host SDK through Pi's public path API, so no additional SDK copy or symbolic link is needed.
+- Add `--local` to install in the current project's `.pi/settings.json`. Pi loads project packages only after the project trust decision.
+- Append `@<version>` to pin an npm release. An unversioned source installs the latest published release.
+- Pi supplies the host SDK to managed extensions. Do not add a second SDK copy or symbolic link to the managed package.
+- Remove an installation with `pi remove <source>`, using the source shown by `pi list`. Use `--local` when removing a project-scoped entry.
 
-The earlier `Directory metadata scope is too large to qualify safely` error and startup delays came from sandbox directory inspection. The current source removes that execution path and the `@anthropic-ai/sandbox-runtime` dependency.
+Normal extension registration connects the guarded local tools and the guarded MCP adapter. It replaces Pi's built-in MCP extension to avoid duplicate connections. **Registration is not a protected-startup guarantee:** Pi can report an extension loading failure and continue. Use the [CLI or SDK](#run-with-protected-startup) when approval controls must be ready before execution.
 
-As in Codex `workspace-write`, the model can read any file except the guard control files (`<agentDir>/guard`, the settings file, and `ruleFiles`). Writes outside the workspace and to project `.git`, `.agents`, `.codex`, `.aws`, and `.pi` metadata go through approval review instead of being blocked. The guard control files, the extension's own code, and trusted extension code stay absolutely protected.
+## Choose an approval method and review model
+
+Run `/approve` in a TUI session, or in RPC with a client that answers Pi UI requests:
+
+| Choice | What changes |
+| --- | --- |
+| **Approve for me** | Uses automatic model review for calls requiring approval; the default |
+| **Ask for approval** | Uses user review for those calls; ordinary policy-allowed calls still run directly |
+| **Full Access** | After confirmation, skips approval and all path, command, and network restrictions |
+
+The first two choices persist. **Full Access is never saved** and lasts until Pi exits or you choose another approval mode. It also bypasses otherwise absolute path and command denials. Cancelling the confirmation returns to the picker without enabling it. Policy enforcement, approval reuse, and MCP review described below assume Full Access is off.
+
+Run `/approve-model` to search available models in Pi's current `/scoped-models` scope. Selecting a reviewer does not change the main conversation model. **Use current Pi model** sets `reviewModel: null`.
+
+- Without a model scope, the picker shows all available models.
+- If every scoped model is unavailable, it does not expand to the full list.
+- A model removed from the scope while the picker is open is not saved.
+- Esc preserves the existing settings. Fixed UI text is in English.
+
+Selections save to `<agentDir>/guard/settings.json`, or to an explicit `settingsPath`. Menu changes apply after saving and invalidate pending reviews and exact-action grants from the previous policy. For manual policy-file edits, reload the extension with `/reload` or restart the guarded runtime.
 
 ## Building from source
 
-Source builds use TypeScript and require no Rust compiler or platform binary. Install development dependencies and build from the repository root. The official Pi SDK is installed from the committed npm lockfile; no `vendor` archive is needed. Follow the [publishing guide](publishing.md) to prepare an npm release package.
+Run from the repository root. The committed npm lockfile supplies the development SDK; no repackaged `vendor` SDK is needed.
 
 ```sh
 npm ci --ignore-scripts
-npm run build
+npm run build -- --filter=@buyong/pi-codex-auto-review
 node packages/pi-codex-auto-review/dist/cli.js --help
 ```
 
-## Registering as a Pi plugin
+Turborepo builds `@buyong/redact` before automatic review. Use `npm run build` without a filter to build all workspace packages.
 
-Register the built package directory, `packages/pi-codex-auto-review`, as a local package. Local paths load directly from their location without copying.
+To register the built automatic-review package permanently, run from the same repository root:
 
 ```sh
-pi install ./pi-codex-auto-review/packages/pi-codex-auto-review
+pi install ./packages/pi-codex-auto-review
 pi list
-pi remove ./pi-codex-auto-review/packages/pi-codex-auto-review
 ```
 
-- Registration connects local tools and official MCP tools to the approval path. Pi's default MCP extension is replaced to avoid duplicate connections.
-- Extension registration alone does not guarantee protected startup. Pi can ignore extension loading failures. When approval protection must be ready at startup, use the CLI entry point below or the SDK's `createGuardedRuntime()`.
-- Project instructions, settings, and MCP servers follow Pi's saved project trust decision and global `defaultProjectTrust`. Without a decision, project resources do not start. To explicitly trust the project for this run, use CLI `--trust-project` or SDK `isProjectTrusted: true`.
+Pi loads a local package directly from its path, without copying it. Rebuild after source changes, then reload or restart Pi. Do not also enable an npm installation of the same extension.
 
-## CLI
+## Run with protected startup
+
+The guarded CLI and `createGuardedRuntime()` check extension and controller readiness. They reject Pi versions other than **0.99.1 and 1.0.0** with `UNSUPPORTED_PI`, regardless of the broader manifest peer range. They also check readiness after mode reconnection and for direct user shell calls.
+
+These entry points disable automatic extension discovery. Load any additional extension explicitly and treat its code as trusted. Other extension tools do not automatically gain an approval gate; local shell/file tools and the guarded MCP adapter retain theirs.
+
+Project instructions, settings, and MCP servers follow Pi's saved trust decision and global `defaultProjectTrust`. Without saved or explicit trust, project resources do not start. `--trust-project` or SDK `isProjectTrusted: true` trusts the initial project for this run; later directory changes use each directory's own trust record.
+
+### CLI
+
+After the source build above, run from the repository root. Replace `/absolute/path/to/project` with your project directory:
 
 ```sh
-node packages/pi-codex-auto-review/dist/cli.js --cwd /작업/디렉터리
-node packages/pi-codex-auto-review/dist/cli.js --mode print "프로젝트를 분석해줘"
-node packages/pi-codex-auto-review/dist/cli.js --mode rpc
-node packages/pi-codex-auto-review/dist/cli.js --mode tui
+node packages/pi-codex-auto-review/dist/cli.js --cwd /absolute/path/to/project
 ```
 
-Specify a registered external provider with `--extension`, and select both `--provider` and `--model`. Run from a shell with `OLLAMA_API_KEY` exported.
+For a one-shot response instead of the terminal UI:
+
+```sh
+node packages/pi-codex-auto-review/dist/cli.js --mode print "Read the README and summarize how to run this project. Do not change files."
+```
+
+The CLI uses your configured Pi model and credentials. `print` returns text; `json` returns JSONL events; `rpc` runs the Pi RPC interface. Automatic review works without a UI, but a call that needs user approval is not executed when no approval UI is available.
+
+| Option | Behavior |
+| --- | --- |
+| `--mode tui\|print\|json\|rpc` | Selects the interface; defaults to `tui` |
+| `-p` | Shorthand for `--mode print` |
+| `--cwd path` | Initial project directory; defaults to the invocation directory |
+| `--agent-dir path` | Pi resource directory; defaults to `PI_CODING_AGENT_DIR`, then `~/.pi/agent` |
+| `--policy file` | Policy JSON file; must exist and validate. Relative paths resolve from the invocation directory. |
+| `--trust-project` | Trusts the initial project for this run |
+| `--extension path`, `-e path` | Repeatable trusted extension paths, resolved from the invocation directory. The containing code directory is protected from model writes. |
+| `--provider provider --model model` | Selects an exact registered provider/model pair. Specify both; an unavailable model blocks startup. |
+| `--` | Ends option parsing so the prompt can start with `-` |
+
+This wrapper accepts only its own options, not every option of the standard `pi` CLI. An ordinary npm installation also exposes the `pi-codex-auto-review` executable; a Pi-managed package installation does not guarantee that executable is on your shell's `PATH`.
+
+For an external provider, explicitly load its registration extension. The repository includes `pi-ollama-cloud` as a development dependency. With `OLLAMA_API_KEY` already exported in the invoking shell:
 
 ```sh
 node packages/pi-codex-auto-review/dist/cli.js \
   --extension node_modules/pi-ollama-cloud/index.ts \
   --provider ollama-cloud --model glm-5.3 \
-  --mode print "현재 프로젝트를 분석해줘"
+  --mode print "Read the README and summarize this project. Do not change files."
 ```
 
-| Option | Description |
-| --- | --- |
-| `--mode tui\|print\|json\|rpc` | Execution mode; defaults to TUI. Automatic review also works in print and JSON modes |
-| `--cwd path` | Initial working directory |
-| `--agent-dir path` | Pi resource directory. If omitted, uses `PI_CODING_AGENT_DIR`, then Pi's default resource directory |
-| `--policy file` | Absolute path to a user-managed policy JSON file. Invalid settings block startup |
-| `--trust-project` | Explicitly trusts the selected project for this run |
-| `--extension path`, `-e` | Repeatable. Paths are relative to the directory where the command runs. The code directory is trusted and protected from model writes |
-| `--provider provider --model model` | Must be specified together. Startup is rejected if no registered model matches. Do not put keys in command arguments |
+Use a model available to your account. This makes real provider calls and may consume usage. Do not pass credentials in command arguments.
 
-## SDK
+### SDK
 
-Use `createGuardedRuntime()` from `@buyong/pi-codex-auto-review/startup` when execution must refuse to start without approval controls. It checks extension and approval controller readiness and applies the same checks to mode reconnection and direct user shell calls.
+For an application outside this checkout, install the extension and matching Pi host packages in that application's directory:
+
+```sh
+npm install @buyong/pi-codex-auto-review \
+  @earendil-works/pi-coding-agent@0.99.1 \
+  @earendil-works/pi-ai@0.99.1 \
+  @earendil-works/pi-tui@0.99.1
+```
+
+Use the public `startup` export in an ESM application. The example selects your existing Pi resources and credentials, prints the final response, and disposes the runtime:
 
 ```ts
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { createGuardedRuntime } from '@buyong/pi-codex-auto-review/startup';
 
 const runtime = await createGuardedRuntime({
   cwd: process.cwd(),
-  agentDir: '/사용자가/선택한/pi/자원/디렉터리',
+  agentDir: process.env.PI_CODING_AGENT_DIR ?? join(homedir(), '.pi', 'agent'),
 });
 try {
-  await runtime.session.prompt('프로젝트를 분석해줘');
+  await runtime.session.prompt('Read the README and summarize this project. Do not change files.');
+  console.log(runtime.session.getLastAssistantText());
 } finally {
   await runtime.dispose();
 }
 ```
 
-| Option | Description |
+| Option | Behavior |
 | --- | --- |
-| `cwd`, `agentDir` | Initial directory and Pi resource directory |
-| `settings` or `settingsPath` | Execution policy in the same format as the policy file |
-| `isProjectTrusted` | Explicit project trust. If unspecified, follows Pi's trust decision and global `defaultProjectTrust`. Later directory changes follow each directory's saved trust decision |
-| `model` or `modelSelection` | A model object or `{provider, id}` selection. These cannot be used together |
-| `trustedExtensionPaths` | Trusted extension entry files, loaded through Pi's public loader. The entire containing directory is protected from model writes, including relative imports |
-| `profile` | Directly supplies an SDK profile, including `readOnlyPaths`. Required control and authentication path protection also applies |
-| `mcp: false`, `mcpToolPolicies` | Disables MCP connections, or configures `approvalMode` by `server/tool` key |
+| `cwd`, `agentDir` | Required initial project and Pi resource directories |
+| `settings` | Default policy values; values in the stored settings file override them |
+| `settingsPath` | Explicit policy file. Unlike the default path, a missing file blocks startup. |
+| `isProjectTrusted` | Optional trust choice for the initial project |
+| `model` or `modelSelection` | A model object or `{ provider, id }`; cannot be used together |
+| `trustedExtensionPaths` | Extension entry paths, resolved from the initial `cwd`. Protects the containing directories, including sibling imports. |
+| `profile` | Custom permission profile, including `readOnlyPaths`. Required guard control/rule-file and extension-code protection still applies. |
+| `mcp` | MCP extension options; `false` disables the guarded MCP adapter |
+| `mcpToolPolicies` | `approvalMode` overrides keyed by `server/tool` |
+| `modelRuntime`, `settingsManager`, `sessionManager` | Optional Pi services and session storage supplied by the embedding application |
+| `trustedExtensions`, `externalExtensions` | Explicit inline integrations; the caller owns trust in their code |
 
-The protected entry point disables automatic extension discovery. As with Codex dynamic and extension tools, tools registered by loaded extensions run without approval; shell, file, network, and MCP actions keep their review paths.
+The SDK starts without an approval UI. Automatic reviews can still approve calls; user-review requests need a suitable bound interface or are declined. If you supply a `settingsManager`, an explicit trust choice must agree with that manager.
 
 ## Policy file
 
-Specify a policy with `--policy` or SDK `settings` or `settingsPath`.
+Normal Pi installations read `<agentDir>/guard/settings.json`. The CLI's `--policy` and SDK's `settingsPath` select another file. Create an explicit file before startup. Missing keys use defaults; unknown keys and invalid values reject the file. SDK `settings` supplies defaults only: a stored file takes precedence, without deep-merging nested objects.
 
-A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve for me**, **Ask for approval**, or **Full Access** in `/approve`. As in Codex, **Full Access** asks for confirmation, runs every action without approval or path restrictions, and applies only until Pi exits or another mode is chosen; it is never saved. The screen uses the English descriptions from [Codex's official approval picker](https://learn.chatgpt.com/docs/security-administration) and wraps the selected description on narrow terminals. Command descriptions, selection screens, status text, and fixed approval dialog text are in English.
-
-`/approve-model` shows only available models in Pi's current `/scoped-models` scope. Without a configured scope, it shows all available models, as Pi does. If every scoped model is unavailable, it does not expand to the full list. A model removed from the scope while the picker is open is not saved; existing settings are preserved.
-
-**Use current Pi model** corresponds to `reviewModel: null` and uses the current main model for review instead of a secondary model. Selecting a secondary model does not change the main model. Esc cancels without saving. When `settingsPath` is specified, the menus also save to that file.
+This example keeps default approval behavior and adds two command rules:
 
 ```json
 {
@@ -122,93 +172,135 @@ A normal Pi installation uses `<agentDir>/guard/settings.json`. Choose **Approve
   "approvalPolicy": "on-request",
   "approvalsReviewer": "auto_review",
   "reviewModel": null,
-  "ruleFiles": [],
   "commandRules": [
     {"prefix": ["git", "status"], "decision": "allow"},
     {"prefix": ["git", "push"], "decision": "deny"}
-  ],
-  "allowedDomains": [],
-  "reviewTimeoutMs": 20000,
-  "approvalTimeoutMs": 60000,
-  "executionTimeoutSeconds": 120
+  ]
 }
 ```
 
-| Field | Default | Description |
+### Approval and scope settings
+
+All scope and denial rules below assume **Full Access is off**.
+
+| Field | Default | Behavior |
 | --- | --- | --- |
-| `mode` | `workspace-write` | `read-only` or `workspace-write` |
-| `approvalPolicy` | `on-request` | `"on-request"`, `"never"`, or `{"sandbox": true, "rules": false, "mcp_elicitations": true}`. The `sandbox` key names the general approval category for compatibility with existing files; it does not mean OS isolation. Omitted `mcp_elicitations` is not allowed. `never` and disabled categories block requests without review |
-| `approvalsReviewer` | `auto_review` | `"user"` selects user review |
-| `reviewModel` | `null` | A registered model to use instead of the current model (`{"provider": "ollama-cloud", "id": "glm-5.3"}`). Register the provider first |
-| `ruleFiles` | `[]` | Paths to the rule files described below |
-| `commandRules` | `[]` | Literal argument prefix rules (`allow`, `ask`, `deny`) |
-| `allowedDomains` | `[]` | Allowed domain patterns |
-| `trustedTools` | `[]` | Kept for compatibility; extension tools no longer need to be listed |
-| `reviewTimeoutMs`, `approvalTimeoutMs`, `executionTimeoutSeconds` | 20000, 60000, 120 | Reviewer and approval dialog timeouts are in milliseconds; shell timeout is in seconds |
-| `reviewPolicy`, `reviewMaxRounds`, `reviewMaxOutputTokens`, `reviewContextChars` | `null`, 4, 2048, 60000 | Replaces the reviewer's organization policy section. Risk assessment, source distinction, and outcome criteria remain intact |
-| `writableRoots` | `[]` | Additional writable roots |
-| `excludeSlashTmp`, `excludeTmpdir` | `false` | Excludes the default temporary paths (`/tmp`, `os.tmpdir()`) from allowed writes |
-| `projectDocMaxBytes`, `projectDocFallbackFilenames`, `projectRootMarkers` | 32768, `[]`, `null` | Combined project instruction limit, fallback filenames, and root markers (`null` means `.git`; `[]` disables parent traversal) |
-| `redaction` | four empty lists | Additions to the masking applied before review: `sensitiveFields`, `rules`, `exceptions`, `piiEntities`. See [Reviewer redaction](#reviewer-redaction) |
+| `mode` | `"workspace-write"` | Ordinary workspace/temporary writes are allowed. `"read-only"` sends writes through review; an approved write can still run. |
+| `approvalPolicy` | `"on-request"` | Allows review when needed. `"never"` blocks calls that need approval, but does not block policy-allowed calls. Category settings are described below. |
+| `approvalsReviewer` | `"auto_review"` | `"user"` requests user review |
+| `reviewModel` | `null` | Current model, or a registered `{ "provider": "...", "id": "..." }` pair |
+| `commandRules` | `[]` | Literal argument-prefix rules with `allow`, `ask`, or `deny` decisions |
+| `ruleFiles` | `[]` | Rule-file paths, resolved from the working directory |
+| `allowedDomains` | `[]` | Host patterns for interpreted network commands. `*.example.com` matches subdomains, not `example.com`. No OS network restriction is created. |
+| `writableRoots` | `[]` | Additional ordinary writable roots, resolved from the working directory |
+| `excludeSlashTmp` | `false` | Removes `/tmp` from the default writable roots |
+| `excludeTmpdir` | `false` | Removes `os.tmpdir()` from the default writable roots; both exclusions may be needed when paths overlap |
+| `trustedTools` | `[]` | Compatibility field; other extension tools no longer need to be listed |
+
+`approvalPolicy` can instead enable individual categories:
+
+```json
+{
+  "approvalPolicy": {
+    "sandbox": true,
+    "rules": false,
+    "mcp_elicitations": true
+  }
+}
+```
+
+`sandbox` is the compatibility name for general approval requests, **not OS isolation**. `rules` controls rule-requested approval and `mcp_elicitations` controls MCP approval requests. `sandbox` and `rules` are required in this object; omitted `mcp_elicitations` is disabled. A disabled category blocks the request without model or user review.
+
+### Review limits and project instructions
+
+| Field | Default | Behavior |
+| --- | --- | --- |
+| `reviewTimeoutMs` | `20000` | Automatic-review deadline in milliseconds |
+| `approvalTimeoutMs` | `60000` | Approval-dialog deadline in milliseconds |
+| `executionTimeoutSeconds` | `120` | Guarded shell fallback timeout in seconds; caller-supplied timeouts take precedence |
+| `reviewPolicy` | `null` | Optional replacement for the reviewer's organization policy section. Risk, source-trust, and outcome criteria remain. |
+| `reviewMaxRounds` | `4` | Reviewer model rounds, including investigation; integer from 1 to 16 |
+| `reviewMaxOutputTokens` | `2048` | Reviewer output limit; integer from 1 to 16384 |
+| `reviewContextChars` | `60000` | Review-context character budget; integer from 1 to 500000 |
+| `projectDocMaxBytes` | `32768` | Combined project-instruction byte budget; integer from 0 to 1000000 |
+| `projectDocFallbackFilenames` | `[]` | Instruction filenames tried after `AGENTS.override.md` and `AGENTS.md` |
+| `projectRootMarkers` | `null` | Uses `.git` as the root marker. A list replaces it; `[]` disables parent traversal. |
+| `redaction` | Four empty lists | Additions to mandatory reviewer masking; see [reviewer redaction](#reviewer-redaction) |
+
+The guard discovers global instructions in `agentDir` and trusted project instructions from the root to `cwd`. In each directory it chooses `AGENTS.override.md`, then `AGENTS.md`, then a configured fallback. Protected-file aliases are rejected; filenames mentioned in tool output do not become instruction sources. Refresh rereads the files.
 
 ## Rule files
 
-The TypeScript engine evaluates `.rules` files in `ruleFiles` using contracts ported from Codex revision `a956835d020762cb2b570053af06f643a11c0ecc`. Captured outputs from the former native engine are replayed in the [parity tests](../test/unit/execpolicy-parity.test.mjs).
+The TypeScript engine evaluates `.rules` contracts ported from Codex revision `a956835d020762cb2b570053af06f643a11c0ecc`. [Parity tests](https://github.com/buYoung/pi-codex-auto-review/blob/master/test/unit/execpolicy-parity.test.mjs) replay captured outputs from the former native engine; they do not prove equivalence for every Starlark program.
 
-Evaluation exposes only Starlark values and policy functions, with no host file or network functions or JavaScript `eval`. Input/output size, execution steps, collection size, nesting, and evaluation time are bounded. The asynchronous API uses a cancellable Node.js worker; the synchronous API uses a bounded Node.js process. Invalid or unsupported input and exhausted budgets reject the rules. Without rule files, startup needs neither an evaluation worker nor an external executable.
+For example, create a user-managed rule file containing:
 
-- Supports Starlark functions, conditionals, comprehensions, string interpolation, `prefix_rule`, `host_executable`, `network_rule`, and `match` and `not_match` validation.
-- Applies the strongest matching rule to compound commands.
-- As in Codex's network rule conversion, protocol labels are merged into host allow and deny lists rather than separate protocol permissions.
-- Shell syntax that cannot be interpreted requires review unless a trusted full-command rule allows it.
-- `curl` and `wget` require review when the destination is not an explicit HTTP URL or comes from a separate configuration file. Omitting the scheme or supplying the URL through a configuration file does not bypass general approval review.
-- Trusted `allow` rules can broaden permissions for matching commands; limit them to the commands that need them.
+```python
+prefix_rule(["git", "status"], decision="allow")
+prefix_rule(["git", "push"], decision="forbidden")
+```
 
-## Behavior details
+Add its path to `ruleFiles` in your policy and reload or restart. JSON `commandRules` uses `ask`/`deny`; `.rules` uses `prompt`/`forbidden` for those decisions.
 
-### Command review and approval
+- Supports Starlark functions, conditionals, comprehensions, string interpolation, `prefix_rule`, `host_executable`, `network_rule`, and `match`/`not_match` validation.
+- Exposes Starlark values and policy functions, not host file/network functions or JavaScript `eval`.
+- Bounds input/output, evaluation steps, collection size, nesting, and time. Invalid input, unsupported syntax, or exhausted limits rejects evaluation.
+- Uses a cancellable Node.js worker for asynchronous evaluation and a bounded Node.js child process for the synchronous API. No evaluator starts when no rule files are configured.
+- Uses the strongest matching decision for compound commands. Network protocol labels merge into host allow/deny lists, not separate protocol permissions.
+- Requires review for uninterpretable shell syntax unless a trusted full-command rule allows it.
+- Reviews `curl`/`wget` when the destination is not an explicit HTTP URL or comes from a separate configuration file.
 
-- Approved tools run through Pi's original SDK executor. The final shell command, working directory, environment, timeout, and cancellation signal are preserved.
-- File access outside the normal scope, explicit approval requests, review rules, and commands that cannot be interpreted are reviewed before execution.
-- `additional_permissions` describes the scope to review. Approved commands run with host permissions; the scope is not enforced as an OS access restriction. The extension does not intercept network destinations during execution or create a separate proxy.
-- TUI and RPC approval dialogs offer one-time, session, and saved-rule approval. Full-command permissions can be approved only once. Saved approvals bind to the exact tool, input, working directory, invocation path, policy, and permissions. Policy changes invalidate existing approvals.
-- Direct shell commands entered later by the user are evaluated independently even if repeated denials stopped the model's task.
+**Keep `allow` rules narrow.** They can authorize matching commands beyond ordinary scope, but cannot override absolute denials while Full Access is off.
 
-### Automatic reviewer
+## What happens during review
 
-- Uses the current model by default; `reviewModel` can select another registered model.
-- Preserves the sources and chronology of accumulated user instructions and instructions supplied by Pi. Tool results are execution evidence. The outer `user` message sent to the review API and user-role messages generated by extensions do not themselves grant authorization.
-- Investigation is limited to read-only file and directory tools.
-- Stops the actual Pi task after three consecutive denials or ten denials in the latest fifty reviews.
-- Errors and timeouts never become approvals. Invalid risk or authorization level responses are also treated as review failures.
-- `/approve` configures the approval method; `/approve-model` selects the secondary model. Changes apply immediately after saving and invalidate pending reviews and saved approvals from the previous policy.
-- After reading a denial reason, the user can authorize the exact operation, target, and content to send in an ordinary message. The next review receives the latest authorization and new facts; no special command is needed. If the user withdraws authorization or requests another target, review is based on the current instructions and actual operation.
-- An approved MCP tool or skill version is reused without another review. The fingerprint covers the MCP server configuration, the server name and version from `initialize`, and the tool definition, or every file in the skill directory that contains `SKILL.md`. Automatic approvals and **Save as an allow rule** are stored in `<agentDir>/guard/package-approvals.json`; **Allow for this session** lasts for the session; **Allow once** is not reused. A changed version or content is reviewed again. Calls that need extra paths or domains, escalation, a rule prompt, strict MCP review, or user input are always reviewed. Skill reuse applies only to a single `<script>` or `<interpreter> <script>` command, and skills that contain symbolic links are not cached.
-- `/approve retry` lets the user select one exact operation from up to ten recent automatic review denials. Selecting it after checking the target, input, and denial reason triggers one new review of the same operation in the same context. It does not automatically allow the operation or grant session approval. A previous `critical` assessment can be reevaluated, but an operation still assessed as `critical` or subject to an explicit absolute denial remains blocked. The authorization marker does not apply to changed inputs or stale context.
-- A custom `reviewPolicy` replaces only the original organization policy section. Strings such as `{{ extra_policy }}` inside the policy are preserved literally. Risk and authorization criteria are not replaced.
-- Actual model responses must use the structured `outcome` assessment. The existing `decision` interface of a `ReviewProvider` explicitly injected through the SDK remains for compatibility; actual Pi models cannot use that path.
-- Review input includes the current approval policy, path and domain scope, final execution arguments, linked tool calls and results, and the actual approval dialog's questions and answers. Shell environment evidence includes explicit non-secret values and the names of omitted variables; it is not described as the full process environment.
-- Final prepared calls, results, review assessments, and user confirmations are saved in Pi session custom records for extension reloads and active branch restoration. Audit logs still omit raw arguments. Large evidence is limited with omission markers. If user authorization and the full current review target exceed the budget, execution is not automatic.
-- A statement from an ordinary tool that “the user approved” is evidence. Only answers observed by the protected adapter through actual Pi `select`, `confirm`, and `input` APIs are recorded as user confirmations with their questions. Answers to questions marked as password or API key input are masked in the record.
+### Exact-action approvals and execution
+
+Approved local tools use Pi's original executor with the final command, working directory, environment, timeout, cancellation signal, and caller options preserved. `additional_permissions` describes the scope to review; it does not enforce that scope during execution.
+
+TUI/RPC approval dialogs offer **Allow once**, **Allow for this session**, and **Save as an allow rule**. Whole-command escalation approvals are one-use only. Other exact-action grants bind to the tool, input, working directory, invocation source, policy, and permissions. Policy or scope changes invalidate those grants.
+
+Eligible MCP tools and skill scripts can reuse a separate package approval:
+
+- MCP fingerprints include server configuration, initialization identity/version, and the tool definition.
+- Skill fingerprints include files in the directory containing `SKILL.md`. Only a single `<script>` or `<interpreter> <script>` command qualifies; symbolic-link-containing skills are not cached.
+- Automatic approvals and **Save as an allow rule** persist in `<agentDir>/guard/package-approvals.json`. **Allow for this session** is session-only; **Allow once** is not reused.
+- Changed content is reviewed again. Additional paths/domains, escalation, rule prompts, strict MCP review, and required user input always require a fresh decision.
+
+### Denials, errors, and retries
+
+The reviewer uses read-only file/directory investigation tools. It distinguishes user authorization and Pi instructions from tool evidence and extension-generated messages; a tool result saying “the user approved” is not authorization.
+
+Three consecutive denials, or ten denials in the latest fifty reviews, stop the actual model task. Provider failures, invalid output, timeouts, and cancellation do not become approvals. Direct shell commands subsequently entered by the user are evaluated independently.
+
+After a denial, you can send an ordinary message authorizing the exact operation, target, and content to send. The next review uses the latest instructions. To retry one recent denial explicitly, run `/approve retry`, inspect the displayed input and reason, and select it. The picker retains up to ten recent automatic denials.
+
+A retry triggers **one new review**, not an automatic allow or session grant. The marker applies only to the same action and live context. A previous `critical` assessment can be reconsidered, but a fresh `critical` assessment or an absolute policy denial still blocks execution.
+
+### Evidence and session records
+
+Review input includes current policy, path/domain scope, final execution arguments, linked calls and results, and observed approval-dialog questions and answers. Environment evidence includes explicit non-secret values and the names of omitted variables, not the complete process environment.
+
+The guard saves review evidence and assessments in Pi session custom records for reloads and active-branch restoration. Large evidence is bounded with omission markers. If required authorization and the complete current target do not fit the budget, execution is not automatic. Audit records are stored in `<agentDir>/guard/audit.jsonl` and omit raw tool arguments.
+
+Only confirmations observed through the protected Pi `select`, `confirm`, and `input` adapters count as recorded user confirmations. Password/API-key answers are masked. Actual Pi models must return the structured `outcome` assessment; the legacy `decision` response is supported only for explicitly injected SDK `ReviewProvider` implementations.
 
 ### Reviewer redaction
 
-Everything sent to the reviewer passes the [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/HEAD/packages/redact/README.md) engine first: context items, investigation output, saved user input, direct user shell authorization, and every field of the review request, including the exact action. No setting turns this off.
+Reviewer-bound context, investigation output, user authorization, and request data pass through [`@buyong/redact`](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/redact/README.md). This masking cannot be disabled.
 
-- Built-in rules mask provider tokens, `Authorization` and `Bearer` values, URL passwords, webhook paths, PEM private keys, and values assigned to sensitive names. The patterns masked by 0.3.0 remain covered: `SYNTHETIC_` markers, short `sk-` keys and `Bearer` values, `api_key`, `token`, `password`, and `secret` assignments, and the `authorization` field.
-- An action that contains a detected value is no longer refused. The reviewer receives a masked copy plus `redactedActionFields`, which lists the JSON path and rule id of each masked action field without its value. Approval, grants, digests, and execution use the original action. A masked span in a shell command does not by itself cause a denial or a user prompt; the reviewer policy states that masked text is unknown evidence.
-- Session, context, call, and item identifiers and digests keep their original values.
-- Masking happens before evidence budgets and excerpts are applied. A settings change applies to evidence added afterwards; stored items stay as they were stored.
-- Audit logs, `/approvals`, and notifications keep their existing masking.
+Built-in and compatibility rules mask provider tokens, authorization values, URL passwords, webhook paths, PEM private keys, sensitive assignments, and legacy `SYNTHETIC_` markers. Session/context/call/item identifiers and binding digests retain their original values.
 
-The `redaction` setting adds to the built-in rules:
+If an action contains a detected value, the reviewer receives a masked copy and `redactedActionFields` containing JSON paths and rule IDs, not values. Masking alone does not force denial or a user prompt. Approval binding and execution use the **original action**, so masking is not a mechanism for preventing the approved command from sending a secret.
 
-| Key | Entry | Effect |
+Masking occurs before evidence budgets and excerpts. New redaction settings apply to subsequently added evidence; stored evidence remains as recorded. Detection can miss unsupported formats or mask harmless values. Review logs before sharing them.
+
+| `redaction` key | Entry | Effect |
 | --- | --- | --- |
-| `sensitiveFields` | Field name | Masks the whole value of fields with this name, compared after keeping letters and digits and lowercasing |
-| `rules` | `{"id": "custom.<name>", "pattern": "<JavaScript RegExp>", "flags": "i"}` | Masks matches. A `(?<secret>…)` group limits masking to that group. `flags` may contain `i`, `m`, `s`, and `u` |
-| `exceptions` | `{"ruleId": "<rule id>", "value": "<exact value>"}` | Keeps one exact value visible for one rule |
-| `piiEntities` | PII entity name such as `EMAIL_ADDRESS` | Opts in to local PII detection. Off by default |
+| `sensitiveFields` | Field name | Masks the value of a matching field; names are compared after keeping letters/digits and lowercasing |
+| `rules` | `{ "id": "custom.name", "pattern": "...", "flags": "i" }` | Adds a JavaScript RegExp rule. A `(?<secret>…)` group masks only that group. Flags may contain `i`, `m`, `s`, and `u`. |
+| `exceptions` | `{ "ruleId": "...", "value": "..." }` | Keeps one exact value visible for one rule; another matching rule can still mask it |
+| `piiEntities` | Entity name, such as `EMAIL_ADDRESS` | Enables local personal-information detection; off by default |
 
 ```json
 {
@@ -221,35 +313,40 @@ The `redaction` setting adds to the built-in rules:
 }
 ```
 
-An invalid entry stops startup with `INVALID_SETTINGS`; the message names the key and index, never the pattern or value. Settings saved by this version contain `redaction`, and earlier releases reject such a file with `Unknown setting: redaction`. Remove the key before downgrading.
+Invalid entries cause `INVALID_SETTINGS`; redaction validation errors name the key/index without repeating the pattern or value. Versions without this setting reject files containing it with `Unknown setting: redaction`. Back up the policy and remove the key before downgrading to such a version.
 
-### Context files
+## MCP approvals
 
-- Automatically discovers global instructions in `agentDir` and project instructions from the project root to the current directory.
-- In each directory, chooses `AGENTS.override.md`, then `AGENTS.md`, then `projectDocFallbackFilenames`.
-- Rejects aliases pointing to protected files and does not treat filenames in tool output as instruction sources. Untrusted projects are excluded. Files are reread on refresh.
+The adapter uses servers registered with Pi, `<agentDir>/mcp.json`, and trusted projects' `.pi/mcp.json`. Mode reconnection closes old connections and creates new ones. Approval binds to the actual server/tool registration; a registration change during review or cancellation prevents execution.
 
-### MCP
+SDK `mcpToolPolicies` selects an approval mode for a `server/tool` key:
 
-- Uses servers registered in Pi, `agentDir/mcp.json`, and trusted projects' `.pi/mcp.json`. Mode reconnection closes existing connections and creates new ones.
-- Final execution approval binds to the server's actual tool registration. Changes to registration during review, or cancellation, prevent execution.
-- The normal path follows Codex's annotation precedence and approval modes regardless of reviewer type. Strict review requests, sensitive operations, and required user input need fresh approval; read-only annotations and previous approvals cannot skip it.
-- The model does not approve `codex_requires_user_input` on the user's behalf. Empty approval forms are handled, but ordinary forms with input fields and URL authentication requests are rejected by this adapter.
-- The same approval rules apply to the `node_repl/js` name. Additional approval requests bind to the original live call's tool, connection, and actual input. Requests naming another tool or connector instead are rejected.
+| Mode | Normal approval behavior |
+| --- | --- |
+| `auto` | Uses annotation precedence: destructive calls require review; otherwise read-only calls skip review, and missing destructive/open-world hints default to review |
+| `prompt` | Always reviews |
+| `writes` | Skips review only when `readOnlyHint` is `true` |
+| `approve` | Skips normal review |
 
-### Execution scope
+Strict review, sensitive operations, and required user input override these normal skip paths. `codex_requires_user_input` is not approved by the model on your behalf. The adapter handles empty approval forms but rejects ordinary forms with input fields and URL authentication requests.
 
-- Review input paths are normalized literally, without conversion to separate OS permission patterns.
-- The extension does not exhaustively scan directory trees or hard links at startup or before tool execution.
-- Direct tool paths and protected paths in interpretable commands are rejected before approval. Indirect access inside approved interpreters, hard-link aliases, and network changes during execution are not isolated.
+The same rules apply to `node_repl/js`. Additional approval requests must match the original live call's tool, connection, and input; they cannot name another tool or connector instead. Already-dispatched cancellation depends on the external server.
+
+## Execution limits
+
+- Paths are normalized literally; they are not converted into OS permission patterns.
+- Direct protected paths and protected paths in interpretable commands are denied before review, unless Full Access is enabled.
+- Startup and execution do not scan every directory tree or hard-link alias.
+- Indirect access inside approved interpreters and destination changes during execution are not isolated. There is no network proxy or OS sandbox.
+- Trusting an extension protects its containing code directory from model writes, not every dependency it might import elsewhere.
+
+See the [verification matrix](testing/auto-review-protection.md) for current checks and clearly separated historical sandbox results.
 
 ## Ollama Cloud verification in Docker
 
-### Preparation
+Run these commands from the repository root with Docker running. They verify the automatic-review package, not every workspace extension. No local Ollama server is installed.
 
-- Run from the repository root with the Docker engine running. No local Ollama server is installed.
-- The image pins Node 24.14.0, Pi 0.99.1, `pi-ollama-cloud` 0.12.2, and `fd` 10.3.0. It does not mount host directories or sockets or publish ports, and retains Docker's default security restrictions.
-- Only the initial image build requires network access. Verification containers run without a network.
+The image pins Node.js 24.14.0, Pi 0.99.1, `pi-ollama-cloud` 0.12.2, and `fd` 10.3.0. Containers run as a non-root user, drop capabilities, enable `no-new-privileges`, and use Docker's default seccomp/AppArmor behavior. They do not mount host directories/sockets or publish ports. These are **verification-container controls**, not protection added to normal Pi execution.
 
 ### Verification without keys
 
@@ -257,11 +354,11 @@ An invalid entry stops startup with `INVALID_SETTINGS`; the message names the ke
 npm run verify:docker -- --mode offline --platform linux/amd64
 ```
 
-For a separate ARM64 result on an ARM Docker host, run with `--platform linux/arm64`.
+Image building needs network access; the offline container uses `--network none`. For a separate ARM64 result, use `--platform linux/arm64`. Reports distinguish native from emulated execution.
 
 ### Live model verification
 
-Export `OLLAMA_API_KEY` in the shell that will run verification. Do not put the key in command arguments, image build arguments, or `auth.json`. Actual calls may consume account usage.
+Export `OLLAMA_API_KEY` in the invoking shell through your normal credential setup. Do not put it in command arguments, build arguments, or `auth.json`. Actual calls may consume account usage. Select a model available to your account:
 
 ```sh
 export OLLAMA_MODEL=glm-5.3
@@ -269,8 +366,12 @@ npm run verify:docker -- --mode live --platform linux/amd64
 npm run verify:docker -- --mode conformance --platform linux/amd64
 ```
 
-- `live` checks external-path writes by the actual main agent and reviewer.
-- `conformance` checks allowed operations, external-path approvals, protected-path blocks, policy denials, and provider selection approval in the distributed CLI.
-- Each case limits model calls, time, and output, and disables automatic provider retries. The observation extension records only call counts and selected models; it does not replace responses. Web tools and usage queries are disabled.
-- Missing keys, unsupported models, service errors, and isolation errors are not treated as success.
-- Supply the output's `imageDigest` through `--image` to reuse an existing image with matching source and architecture. After source changes, rebuild without `--image`.
+**Live and conformance containers use bridge networking**, unlike offline verification. The API key is passed only at runtime.
+
+- `live` checks actual main-agent/reviewer behavior for external-path writes.
+- `conformance` checks allowed operations, external-path approval, protected-path blocks, policy denials, and CLI provider selection.
+- Cases bound model calls, time, and output; disable provider retries, web tools, and usage queries; and observe calls without replacing responses.
+- Missing keys/models, provider errors, and failed environment checks are not passes.
+- Reuse a matching image with `--image` and the output's immutable `imageDigest`. Source or architecture mismatches reject reuse; rebuild after source changes.
+
+Reports are stored under `.reports/pi-guard/runs/<run ID>/<platform>/`. The script exports evidence and removes its owned container; inspect a reported cleanup failure rather than treating it as success.

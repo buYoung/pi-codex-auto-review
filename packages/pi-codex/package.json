@@ -60,6 +60,7 @@
     },
     "files": [
         "README.md",
+        "README.ko.md",
         "LICENSE"
     ],
     "sharedFiles": [

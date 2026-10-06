@@ -1,52 +1,84 @@
-# Pi Codex 통합 패키지
+# @buyong/pi-codex
 
-`@buyong/pi-codex` 하나로 자동 승인 검토, Computer Use·Browser Use, Fast 모드, 이미지 생성 확장과 `imagegen` 스킬을 함께 설치합니다. 각 기능은 기존 패키지의 구현과 설정을 그대로 사용합니다.
+**English** | [한국어](README.ko.md)
 
-## 설치
+Install four Codex-inspired Pi extensions together: automatic approval review, Computer Use and Browser Use, OpenAI Fast mode, and image generation with the `imagegen` skill. Each component keeps its original implementation, commands, and settings. The combined package adds no separate automation or approval engine.
 
-`0.1.0`은 첫 게시를 준비한 버전입니다. 다음 명령은 npm 게시 후 사용할 수 있습니다.
+## Requirements
+
+- Node.js 22.19 or later and Pi 0.99.1 or later, as declared in the manifest. This repository builds against Pi 0.99.1; individual components have narrower verification scopes.
+- A configured Pi conversation provider and model.
+- The additional requirements of each feature you use, listed below. Installing the combined package does not install Codex Desktop or supply account access.
+
+| Component | Commands or tools | Additional requirements and limits |
+| --- | --- | --- |
+| [Automatic review](https://github.com/buYoung/pi-codex-auto-review/blob/master/README.md) | `/approve`, `/approve-model`, `/approve retry` | Uses the current model or a selected reviewer. It is not an OS sandbox. Guarded CLI/SDK startup accepts only Pi 0.99.1 or 1.0.0. |
+| [Computer Use](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.md) | `/computer-use`, `/computer-use-check`, `mcp__cua_repl__js` | Requires an installed Codex Desktop runtime; Chrome Browser Use also needs its extension/native host. macOS has recorded live verification; Windows is implemented but unverified; Linux is unsupported. |
+| [Fast mode](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.md) | `/codex-fast`, `/openai-tier`, `/openai-settings` | Applies only to supported provider/model/authentication combinations. The default is Standard. A requested tier is not confirmation of server processing or billing. |
+| [Image generation](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.md) | `image_gen`, `/codex-imagen`, `imagegen` skill | Requires Pi's `/login openai-codex` subscription login. Without login, the extension hides its image tool and skill. |
+
+**Do not enable the same individual extensions alongside this package.** Duplicate installations can register tools, commands, and event handlers twice.
+
+## Install or switch from individual packages
+
+For a published npm release:
 
 ```sh
-pi install npm:@buyong/pi-codex@0.1.0
+pi install npm:@buyong/pi-codex
 pi list
 pi
 ```
 
-이미 개별 확장을 설치했다면 `pi list`에 표시된 설치 소스를 `pi remove <source>`로 제거하고 통합 패키지로 전환하세요. 두 설치를 함께 활성화하면 도구·명령·이벤트가 중복 등록될 수 있습니다. 프로젝트에 설치한 항목은 같은 범위에서 `pi remove --local <source>`로 제거합니다. 설정 파일의 위치는 기존 패키지와 같으므로 이전 설정을 계속 사용합니다.
+An unversioned source selects the latest published release. Append `@<version>` to pin one. A local manifest version does not establish npm availability; if the package has not been registered, use the source path below.
 
-## 포함 기능과 요구사항
+When switching from individual extensions:
 
-Node.js 22.19 이상과 Pi 0.99.1 이상이 필요합니다. 통합 설치가 각 기능의 실행 조건을 대신 충족하지는 않습니다.
+1. Run `pi list` and identify their installation sources.
+2. Remove overlapping entries with `pi remove <source>`. Use `pi remove --local <source>` for project-scoped entries.
+3. Install the combined package in the intended scope, then restart Pi.
 
-| 패키지 | 기능·명령 | 추가 조건·설명 |
+The component settings paths do not change, so existing settings are reused. Check both global and project entries to avoid leaving an overlapping installation active. Project installations use `pi install --local` and require project trust.
+
+## Make a first useful run
+
+Inside Pi:
+
+1. Configure your conversation model and credentials if needed.
+2. Run `/approve` and choose **Approve for me** or **Ask for approval**.
+3. Ask Pi to read the project README and summarize how to run it without changing files.
+
+For the other features, start at their own setup commands:
+
+| Goal | First action | What to check |
 | --- | --- | --- |
-| `@buyong/pi-codex-auto-review` | 실행 승인 검토, `/approve`, `/approve-model` | 승인된 도구는 Pi 실행기로 실행하며 OS 샌드박스를 구성하지 않습니다. |
-| `@buyong/pi-codex-computer-use` | Computer Use·Browser Use, `/computer-use`, `/computer-use-check` | Codex 데스크톱의 설치된 런타임이 필요합니다. Browser Use에는 Chrome과 관련 확장이 필요합니다. |
-| `@buyong/pi-codex-fast-mode` | Fast·Ultrafast, `/codex-fast` | 지원 모델·인증 조건에서만 적용하며 기존 기본값을 유지합니다. |
-| `@buyong/pi-codex-image-gen` | `image_gen`, `/codex-imagen`, `imagegen` 스킬 | Pi의 `/login openai-codex` 로그인이 필요하며 로그인 전에는 모델에게 도구와 스킬을 숨깁니다. |
+| Operate apps or Chrome | `/computer-use-check`, then `/computer-use` | Resolve missing requirements; enable only the features you need. Runtime approval governs app/origin access. |
+| Request a faster service tier | `/codex-fast`, then `/openai-tier` | Select a mode and confirm whether it is active for the current model. |
+| Generate an image | `/login openai-codex`, then `/codex-imagen` | Sign in, choose an image model, then ask Pi to use `image_gen`. The conversation model can stay unchanged. |
 
-Computer Use는 Linux를 지원하지 않으며 Windows 실기기 검증은 이루어지지 않았습니다. 세부 요구사항과 사용법은 [자동 승인 검토](https://github.com/buYoung/pi-codex-auto-review/blob/master/README.ko.md), [Computer Use](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-computer-use/README.ko.md), [Fast 모드](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-fast-mode/README.ko.md), [이미지 생성](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex-image-gen/README.ko.md) 안내를 참고하세요.
+Computer Use defaults to both features on and can try to start its runtime when Pi starts. Turn both off if you do not use it. Image generation remains hidden without subscription login; Fast mode starts in Standard unless settings or `--fast` select another tier.
 
-## 소스에서 실행
+Loading this package through normal Pi extension discovery does not guarantee protected startup. For execution that must refuse to start without automatic-review controls, use the [automatic-review CLI or SDK](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/usage.md#run-with-protected-startup). Additional components must be loaded explicitly through that entry point.
 
-저장소 루트에서 실행합니다.
+## Build and load from source
+
+Run from the repository root:
 
 ```sh
-npm install
+npm ci --ignore-scripts
 npm run build -- --filter=@buyong/pi-codex
 node_modules/.bin/pi -ne -e ./packages/pi-codex
 ```
 
-`-ne`는 자동 확장 탐색을 끄고 지정한 통합 패키지를 로드합니다. Computer Use 런타임 준비와 이미지 생성 로그인은 배포 패키지와 동일하게 필요합니다.
+The build first builds the components, then stages their publishable files and runtime dependencies inside the combined package. `-ne` disables automatic extension discovery; `-e` loads this package for the invocation without a permanent installation entry. Desktop prerequisites and image login still apply.
 
-## 의존성과 배포
+Rebuild after changing a component. The combined package loads its staged copies, not the component source directories.
 
-네 패키지를 `dependencies`에 검증할 버전으로 고정하고 `bundleDependencies`로 배포 압축 파일에 포함합니다. Pi의 `pi.extensions`와 `pi.skills`는 포함된 패키지의 원래 진입점과 스킬 경로를 직접 가리킵니다. 통합 패키지에는 별도의 기능 구현이나 확장 초기화 코드가 없습니다. 이 구성은 [Pi의 패키지 의존성 규칙](https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/docs/packages.md)을 따릅니다.
+## Package contents and publishing
 
-빌드는 의존 패키지를 먼저 빌드하고 npm 배포 파일 목록에 따라 실행 의존성과 문서를 내부에 준비합니다. 개발 의존성, Pi 호스트, Codex의 비공개 런타임은 포함하지 않습니다. 개별 패키지를 업데이트한 뒤에는 통합 패키지의 의존 버전도 갱신하고 다시 배포해야 합니다.
+The manifest pins all four extensions in `dependencies` and includes them through `bundleDependencies`. `pi.extensions` and `pi.skills` point directly to the bundled packages' original entry points and skill directory. Development dependencies, Pi host packages, and the private Codex runtime are excluded.
 
-저장소의 기존 릴리스 메뉴와 `npm-package.yml`에서 `@buyong/pi-codex`를 선택할 수 있습니다. 최초 npm 등록, 패키지별 Trusted Publisher 연결, 이후 GitHub Actions 릴리스는 [배포 안내](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.ko.md)를 따릅니다. 현재 릴리스 절차는 작업 공간 의존성의 npm 게시 여부를 확인하므로 개별 패키지를 먼저 게시합니다.
+Publish the individual pinned extension versions before publishing this package. To include an updated component, update its pin and the root lockfile, rebuild, and release the combined package. See the [publishing guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.md) for first registration, package-specific Trusted Publishing, and the interactive release flow.
 
-## 라이선스
+## License
 
-[Apache-2.0](LICENSE). 포함된 의존성의 라이선스와 출처 표시는 각 패키지에 유지합니다.
+[Apache-2.0](https://github.com/buYoung/pi-codex-auto-review/blob/master/LICENSE), included as `LICENSE` in the npm archive. Included dependencies keep their own licenses and attribution notices.

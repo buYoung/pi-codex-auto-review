@@ -1,146 +1,155 @@
-# npm 배포 안내
+# 작업 공간 패키지를 npm에 배포하기
 
 [English](publishing.md) | **한국어**
 
-`pnpm release`에서 패키지와 버전을 선택하고 커밋·태그·푸시를 확인하면 GitHub Actions가 해당 JavaScript 패키지를 빌드·검증하고 npm에 게시합니다. 로컬 명령은 npm 자격 증명을 사용하지 않습니다. `0.2.0`은 JavaScript만 배포하는 이 절차를 사용하며, 게시된 `0.1.4`에는 이전 네이티브 실행 파일이 남아 있습니다.
+`pnpm release`에서 **패키지 하나와 버전 하나**를 선택하고 릴리스 커밋·태그·푸시를 확인합니다. GitHub Actions가 해당 패키지를 빌드·검사하고 압축 파일을 보관한 뒤, 같은 파일을 Trusted Publishing으로 npm에 게시합니다. 로컬 릴리스 명령은 npm에 게시하지 않으며 npm 게시용 자격 증명을 요구하지 않습니다.
 
-Pi 확장 4개와 의존 라이브러리 `@buyong/redact`, 이 확장들을 함께 제공하는 통합 패키지 `@buyong/pi-codex`를 각각 선택해 독립적으로 릴리스합니다. Git 태그는 스코프를 포함한 `<패키지 이름>@<버전>`이며, npm의 배포 태그는 정식 버전에 `latest`, 시험 버전에 `next`를 사용합니다.
+저장소 관리자를 위한 안내입니다. 별도 설명이 없으면 모든 셸 명령은 저장소 루트에서 실행합니다. 게시한 npm 버전은 공개되며 덮어쓸 수 없습니다. 게시를 승인하기 전에 선택한 패키지·버전·압축 파일을 확인하세요.
 
-| 패키지 | 현재 파일 버전의 Git 태그 | npm 등록 상태 |
-|---|---|---|
-| `@buyong/pi-codex-auto-review` | `@buyong/pi-codex-auto-review@0.3.0` | `0.3.0` 게시됨 |
-| `@buyong/pi-codex-computer-use` | `@buyong/pi-codex-computer-use@0.1.0` | `0.1.0` 게시됨 |
-| `@buyong/pi-codex-fast-mode` | `@buyong/pi-codex-fast-mode@0.1.0` | `0.1.0` 게시됨 |
-| `@buyong/pi-codex-image-gen` | `@buyong/pi-codex-image-gen@0.2.1` | `0.2.1` 게시됨 |
-| `@buyong/redact` | `@buyong/redact@0.1.0` | `0.1.0` 게시됨 |
-| `@buyong/pi-codex` | `@buyong/pi-codex@0.1.0` | 미등록 |
+## 패키지와 릴리스 순서
 
-등록 상태는 2026-10-06에 공개 npm 레지스트리에서 확인했습니다. 표의 Git 태그는 이름 예시이며 생성·푸시 여부를 뜻하지 않습니다. 릴리스 명령은 실행할 때 등록 상태를 다시 확인합니다.
+루트 패키지는 비공개입니다. 아래 작업 공간 패키지 6개를 독립적으로 릴리스할 수 있습니다.
 
-## 처음 한 번 설정
+| 패키지 | 디렉터리 | 현재 체크아웃의 매니페스트 버전 |
+| --- | --- | --- |
+| `@buyong/redact` | `packages/redact` | `0.1.0` |
+| `@buyong/pi-codex-auto-review` | `packages/pi-codex-auto-review` | `0.3.0` |
+| `@buyong/pi-codex-computer-use` | `packages/pi-codex-computer-use` | `0.1.0` |
+| `@buyong/pi-codex-fast-mode` | `packages/pi-codex-fast-mode` | `0.1.0` |
+| `@buyong/pi-codex-image-gen` | `packages/pi-codex-image-gen` | `0.2.1` |
+| `@buyong/pi-codex` | `packages/pi-codex` | `0.1.0` |
 
-### 소스와 의존성
+이는 **로컬 매니페스트 버전이며 npm 게시 상태나 태그 푸시의 근거가 아닙니다.** 릴리스 명령은 실행할 때마다 공개 레지스트리를 다시 확인합니다.
 
-릴리스 설정, 스크립트, 패키지 수정 사항과 워크플로를 `master`에 커밋하고 원격 저장소에 반영합니다. 릴리스 브랜치는 `origin/master`를 추적해야 합니다. 수정된 파일이나 인덱스가 남아 있으면 릴리스 명령은 중단합니다.
+의존 패키지를 사용하는 패키지보다 먼저 게시합니다.
 
-Node.js 24.14.0과 pnpm 10을 사용할 수 있는 터미널에서 저장소 루트로 이동하고 의존성을 설치합니다.
+1. 자동 검토보다 `@buyong/redact`를 먼저 게시합니다. 자동 검토는 `@buyong/redact@0.1.0`에 고정하며 번들로 포함하지 않습니다.
+2. 통합 패키지보다 개별 확장을 먼저 게시합니다. 통합 패키지는 자동 검토 `0.3.0`, Computer Use `0.1.0`, Fast 모드 `0.1.0`, 이미지 생성 `0.2.1`에 고정합니다.
+3. 의존 패키지를 갱신한 뒤 사용하는 패키지의 고정 버전과 루트 `package-lock.json`을 갱신하고 커밋한 다음 릴리스합니다. 릴리스 명령이 의존 버전을 **자동 갱신하지는 않습니다.**
+
+통합 압축 파일에는 확장 4개와 런타임 의존성을 묶습니다. Pi 호스트와 Codex 비공개 런타임은 포함하지 않습니다. 기존 패키지 검사는 통합 패키지의 확장 고정 버전이 포장하는 작업 공간 버전과 일치하는지 확인합니다.
+
+Git 태그는 `<스코프 포함 패키지 이름>@<버전>`입니다. 예를 들어 `@buyong/pi-codex-auto-review@0.3.0`입니다. 워크플로는 정식 버전의 npm 배포 태그로 `latest`, 시험 버전에는 `next`를 사용합니다.
+
+## 체크아웃 준비
+
+`origin`의 `master`와 태그를 푸시할 권한, 릴리스 질문에 응답할 대화형 터미널이 필요합니다.
+
+- CI와 같은 Node.js **24.14.0**, npm **11.5.1 이상**, 문서의 `pnpm release` 진입점용 pnpm **10**을 사용합니다.
+- 루트 npm 잠금 파일로 설치합니다. npm 작업 공간 저장소이며 pnpm은 릴리스 스크립트만 실행합니다. `package-lock.json`을 pnpm 잠금 파일로 교체하지 마세요.
+- 릴리스 스크립트·설정·워크플로·패키지 변경을 커밋합니다.
+- `origin/master`를 추적하는 `master`에서 작업합니다. 사전 검사는 저장소 전체의 추적 파일·인덱스 변경을 거부합니다. 무관한 미추적 파일은 릴리스 커밋에 자동 포함하지 않습니다.
 
 ```sh
 npm ci --ignore-scripts
+git status --short
+git branch --show-current
+git rev-parse --symbolic-full-name '@{upstream}'
 ```
 
-저장소는 npm 작업 공간(workspaces) 기반 모노레포입니다. 게시하는 패키지는 `packages/<패키지>`에 두고 패키지 빌드는 Turborepo가 실행합니다. 테스트·스크립트·문서는 저장소 루트에 둡니다. 의존성 설치와 CI 빌드는 루트 `package-lock.json`을 사용합니다. `pnpm`은 릴리스 스크립트의 실행 진입점으로 사용하며, `pnpm-lock.yaml`로 설치 방식을 바꾸지 않습니다. `@buyong/pi-codex-auto-review`는 샌드박스 의존성을 묶지 않고 Pi 호스트를 peer dependency로 사용하며, 런타임 의존성은 `packages/redact`의 `@buyong/redact` 하나입니다. 통합 패키지 `@buyong/pi-codex`는 기존 확장 4개와 하위 실행 의존성을 묶고, Pi 호스트는 peer dependency로 유지합니다.
+마지막 두 명령에서 `master`와 `refs/remotes/origin/master`가 나와야 합니다. 일반 릴리스 전에 선택한 패키지와 필요한 작업 공간 의존 버전의 npm 등록을 확인하세요.
 
-### npm Trusted Publisher
+## 패키지마다 Trusted Publishing 설정
 
-이 저장소에서 게시하는 패키지마다 npm **Settings → Trusted publishing**에서 GitHub Actions 연결을 추가합니다. 예를 들어 `@buyong/pi-codex-auto-review`가 있으며, 모든 패키지가 같은 워크플로를 사용합니다. 통합 패키지 `@buyong/pi-codex`에도 별도로 연결해야 하며, 개별 확장의 연결이 자동으로 적용되지는 않습니다.
+npm에 등록된 패키지의 **Settings → Trusted publishing**에서 GitHub Actions 연결을 추가합니다.
 
-| 항목 | 입력 값 |
-|---|---|
+| 항목 | 값 |
+| --- | --- |
 | Organization or user | `buYoung` |
 | Repository | `pi-codex-auto-review` |
 | Workflow filename | `npm-package.yml` |
 | Environment name | 비워 둠 |
 | Allowed actions | 직접 게시하는 `npm publish` 허용 |
 
-워크플로 이름은 파일명만 입력합니다. `.github/workflows/` 경로를 붙이지 않습니다. 기본 `npm stage publish` 권한만 허용하면 이 워크플로의 직접 게시가 실패합니다.
+`.github/workflows/npm-package.yml` 전체 경로가 아니라 파일명만 입력합니다. 이 워크플로는 직접 게시하므로 `npm stage publish`만 허용하면 부족합니다.
 
-게시 작업에는 `id-token: write` 권한이 설정되어 있고 npm 11.5.1 이상인지 확인합니다. GitHub-hosted runner가 발급하는 OIDC 인증을 사용하므로 `NPM_TOKEN`을 GitHub Secret에 추가하지 않습니다. npm의 연결은 저장 시 검증되지 않으므로 실제 첫 게시에서 확인해야 합니다. [npm Trusted Publishing 공식 안내](https://docs.npmjs.com/trusted-publishers/)
+`@buyong/pi-codex`를 포함해 **패키지마다 별도로 연결**합니다. 의존 패키지의 연결은 사용하는 패키지의 게시를 허용하지 않습니다.
 
-### 새 패키지의 첫 게시
+게시 작업은 GitHub-hosted runner에서 `id-token: write` 권한으로 실행하며 npm 최소 버전을 검사합니다. npm이 OIDC로 인증하므로 `NPM_TOKEN` GitHub Secret은 필요하지 않습니다. 연결 저장만으로 검증되지는 않으며 첫 실제 게시에서 확인합니다. [npm Trusted Publishing 공식 문서](https://docs.npmjs.com/trusted-publishers/)를 참고하세요.
 
-npm 패키지의 Settings에서 Trusted Publisher를 연결하므로 이 저장소의 OIDC 워크플로를 사용하기 전에 패키지를 처음 한 번 등록해야 합니다. 먼저 npm 계정과 2단계 인증(2FA)을 준비하고 `@buyong` 스코프의 게시 권한을 확인합니다. 개인 스코프라면 npm 사용자 이름이 `buyong`이어야 하며, 조직 스코프라면 그 조직의 게시 권한이 필요합니다. [npm 공개 스코프 패키지 게시 안내](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+### 미등록 패키지의 최초 게시
 
-저장소 루트에서 아래 명령으로 미등록 패키지를 게시합니다. `@buyong/redact`를 먼저 등록해야 auto-review의 고정 의존 버전을 설치할 수 있습니다. 통합 패키지는 고정한 확장 버전을 모두 게시한 뒤 등록합니다. 이미 등록한 패키지의 명령은 다시 실행하지 않습니다.
+이 저장소의 태그 워크플로는 패키지가 먼저 등록되어 있어야 합니다. 선택한 패키지에 게시 버전이 없으면 `pnpm release`는 버전·커밋·태그를 변경하기 전에 중단하고 최초 게시 명령을 출력합니다.
+
+이 초기 등록 단계에는 2FA를 설정한 npm 계정과 `@buyong` 게시 권한이 필요합니다. 필요한 의존 버전을 먼저 게시하세요. 이미 npm에 있는 버전에는 이 단계를 **반복하지 마세요.**
+
+다음 예시는 통합 패키지를 선택합니다. `PACKAGE_NAME`을 등록할 패키지로 바꾸세요. `VERSION`은 해당 작업 공간의 매니페스트에서 읽습니다.
+
+```sh
+PACKAGE_NAME=@buyong/pi-codex
+VERSION=$(npm pkg get version --workspace "$PACKAGE_NAME" | node --input-type=module -e 'let text = ""; for await (const chunk of process.stdin) text += chunk; console.log(Object.values(JSON.parse(text))[0]);')
+npm view "$PACKAGE_NAME" versions --json --registry=https://registry.npmjs.org/
+```
+
+레지스트리 `404`는 미등록을 뜻합니다. 인증·네트워크·서비스 오류는 미등록의 근거가 아닙니다. 등록된 패키지는 일반 릴리스 흐름을 사용하세요.
+
+첫 공개 게시 전에 빌드하고 압축 파일을 검사합니다.
+
+```sh
+npm run build -- --filter="$PACKAGE_NAME"
+mkdir -p tmp/npm-release
+npm pack --workspace "$PACKAGE_NAME" --pack-destination tmp/npm-release
+```
+
+`prepack`이 압축 내용을 검사합니다. 생성된 파일 목록과 선택한 버전을 확인하세요. 그다음 인증하고 선택한 작업 공간을 게시합니다.
 
 ```sh
 npm login --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
-npm publish --workspace packages/redact --access public --registry=https://registry.npmjs.org/
-npm publish --workspace packages/pi-codex-computer-use --access public --registry=https://registry.npmjs.org/
-npm publish --workspace packages/pi-codex-fast-mode --access public --registry=https://registry.npmjs.org/
-npm publish --workspace packages/pi-codex-image-gen --access public --registry=https://registry.npmjs.org/
-npm publish --workspace packages/pi-codex --access public --registry=https://registry.npmjs.org/
+npm publish --workspace "$PACKAGE_NAME" --access public --registry=https://registry.npmjs.org/
+npm view "$PACKAGE_NAME@$VERSION" version --registry=https://registry.npmjs.org/
 ```
 
-각 패키지의 `prepack`이 빌드와 압축 파일 검사를 실행합니다. 게시 중 2FA 확인 요청에 응답하고, 다음 명령에서 `0.1.0`이 나오는지 확인합니다.
+2FA 요청에 응답합니다. 마지막 명령은 앞에서 선택한 매니페스트 버전을 반환해야 합니다. 해당 패키지의 Trusted Publisher를 연결하고 이후 게시는 `pnpm release`에서 새 버전으로 진행합니다. `npm publish --workspace`는 다시 포장하며 패키지 수명 주기 검사를 실행합니다. 이 초기 등록 경로는 CI의 검증한 결과물 게시와 다릅니다.
 
-```sh
-npm view @buyong/redact@0.1.0 version --registry=https://registry.npmjs.org/
-npm view @buyong/pi-codex-computer-use@0.1.0 version --registry=https://registry.npmjs.org/
-npm view @buyong/pi-codex-fast-mode@0.1.0 version --registry=https://registry.npmjs.org/
-npm view @buyong/pi-codex-image-gen@0.1.0 version --registry=https://registry.npmjs.org/
-npm view @buyong/pi-codex@0.1.0 version --registry=https://registry.npmjs.org/
-```
+## 등록된 패키지 릴리스
 
-게시한 뒤 **각 패키지의 Settings → Trusted publishing**에 위 표와 같은 값으로 연결을 추가합니다. 이미 등록된 auto-review에도 연결이 있는지 확인합니다. 그다음부터는 `pnpm release`에서 패키지를 선택해 게시하며, 최초 직접 게시한 버전보다 더 큰 버전을 선택합니다. 미등록 패키지를 릴리스 메뉴에서 선택하면 최초 게시 명령과 이 안내의 경로를 출력하고 버전·커밋·태그를 변경하기 전에 중단합니다.
-
-이전 이름 `pi-codex-auto-review`의 사용자에게 이름 변경을 안내할 때는 다음 명령을 사용합니다.
-
-```sh
-npm deprecate pi-codex-auto-review "Renamed to @buyong/pi-codex-auto-review"
-```
-
-### `@buyong/redact`와의 게시 순서
-
-`@buyong/pi-codex-auto-review`는 `dependencies`에 `@buyong/redact`의 정확한 버전을 고정합니다. 그 `@buyong/redact` 버전을 먼저 게시하세요. 아직 게시되지 않은 버전을 가리키는 auto-review 릴리스는 설치할 수 없습니다. `@buyong/redact`의 첫 버전은 위와 같이 직접 게시한 뒤 Trusted Publisher에 연결합니다.
-
-```sh
-npm login
-npm publish --workspace packages/redact --access public
-```
-
-새 엔진 버전이 필요한 변경이라면 `@buyong/redact`를 먼저 릴리스하고, `packages/pi-codex-auto-review/package.json`과 루트 `package-lock.json`의 고정 버전을 올린 다음 `@buyong/pi-codex-auto-review`를 릴리스합니다.
-
-### 통합 패키지의 게시 순서
-
-`@buyong/pi-codex`는 `@buyong/pi-codex-auto-review@0.3.0`, `@buyong/pi-codex-computer-use@0.1.0`, `@buyong/pi-codex-fast-mode@0.1.0`, `@buyong/pi-codex-image-gen@0.2.1`을 정확히 의존합니다. 이 버전들이 npm에 게시된 뒤 통합 패키지를 등록하고 위의 Trusted Publisher를 연결합니다.
-
-개별 확장을 갱신해 통합 패키지에 반영하려면 해당 확장을 먼저 릴리스한 뒤 통합 패키지의 고정 의존 버전과 루트 잠금 파일을 갱신합니다. 이후 `pnpm release`에서 `@buyong/pi-codex`를 선택해 통합 패키지를 릴리스합니다.
-
-## 버전 선택과 릴리스
-
-`master`의 변경 사항이 커밋된 상태에서 실행합니다.
+`master`에서 변경을 커밋한 뒤 인자 없이 실행합니다.
 
 ```sh
 pnpm release
 ```
 
-1. 릴리스할 패키지를 선택합니다. 루트의 `workspaces` 선언과 실제 `package.json`에서 `private`가 아닌 패키지를 찾으므로 오래된 `node_modules` 때문에 목록에서 누락되지 않습니다.
-2. npm 등록과 작업 공간 런타임 의존 패키지의 게시 여부를 확인합니다. 현재 버전과 구체적인 다음 버전을 보고 하나를 선택합니다. `0.1.1`에서 `0.1.2`를 출시할 때는 **patch**를 선택합니다. 해당 버전이 npm에 없고 로컬 릴리스 태그도 없으면 **현재 준비 버전 출시**도 선택할 수 있습니다. 이미 npm에 게시된 버전은 선택할 수 없습니다.
-3. 커밋 여부를 확인하고 릴리스 커밋을 만듭니다. 현재 버전을 그대로 출시할 때는 출시 기록을 남기는 빈 커밋을 만듭니다.
-4. `<패키지>@<버전>` 태그 생성 여부를 확인하고 주석 태그를 만듭니다.
-5. `master`와 해당 태그의 푸시 여부를 확인합니다. 승인하면 두 참조를 원자적으로 함께 푸시하고 Actions의 npm 게시를 시작합니다.
+1. **패키지를 선택합니다.** 루트 `workspaces` 선언의 실제 매니페스트를 읽고 비공개 패키지는 제외합니다. 오래된 `node_modules` 목록에 의존하지 않습니다.
+2. **버전을 선택합니다.** 등록 여부와 작업 공간 런타임 의존 버전의 게시를 확인합니다. 구체적인 증가 버전을 선택하거나 빌드 메타데이터 없는 더 높은 SemVer를 입력합니다. 게시된 버전은 제외합니다. 현재 버전이 미게시 상태이고 로컬 패키지 릴리스 태그가 없으면 **현재 준비 버전 … 출시 (첫 태그 생성)**도 선택할 수 있습니다.
+3. **커밋을 확인합니다.** release-it이 npm 버전 수명 주기 스크립트 없이 선택한 매니페스트 버전을 바꿉니다. 플러그인이 루트 잠금 파일을 갱신하고 스테이징합니다. 확인하면 릴리스 커밋을 만듭니다. 같은 버전의 출시는 빈 커밋으로 기록합니다.
+4. **태그를 확인합니다.** `<패키지>@<버전>` 주석 태그를 만듭니다.
+5. **푸시를 확인합니다.** `HEAD`를 `origin/master`에, 선택한 정확한 태그를 원자적으로 함께 푸시합니다. 아직 원격에 없는 다른 브랜치 커밋도 함께 전달합니다. 태그가 GitHub Actions 게시를 시작합니다.
 
-각 확인의 기본값은 승인입니다. `n`이나 `Ctrl+C`를 입력하면 해당 작업과 이후 흐름을 중단합니다. `--ci`, 버전 인자나 자동 응답으로 질문을 건너뛰는 방식은 지원하지 않습니다.
+**각 Git 질문에서 Enter는 승인입니다.** `n`이나 Ctrl+C는 해당 단계와 이후 단계를 중단합니다. 커밋 질문 전에 파일 변경과 스테이징이 끝났을 수 있습니다. 취소해도 완료한 작업은 보존합니다. [복구 안내](#중단과-실패-후-확인)를 참고하세요.
 
-버전 선택은 자동으로 `0.1.2` 등을 적용하지 않습니다. 선택한 패키지의 `package.json` 버전 변경은 release-it이 수행하며 npm 버전 수명 주기 스크립트는 실행하지 않습니다. 릴리스 플러그인이 루트 `package-lock.json`에도 같은 버전을 기록해 릴리스 커밋에 포함합니다. 로컬에서는 패키지를 다시 빌드하거나 npm에 게시하지 않습니다.
+진입점은 TTY를 요구하고 명령 인자를 거부합니다. `--ci`, 자동 응답, 버전 인자와 커밋·태그·푸시 단계 생략을 지원하지 않습니다. 로컬 릴리스는 패키지 재빌드·패키지 테스트 실행·npm 게시를 하지 않습니다. 아래 패키지 검사는 CI가 실행합니다.
 
-통합 패키지의 최초 등록 버전 `0.1.0`을 이미 게시했다면 다음 릴리스에서 `@buyong/pi-codex`를 선택하고 **patch**로 `0.1.1`을 선택합니다. 실제 npm 게시는 태그 푸시 후 GitHub Actions가 수행합니다.
+의존성을 갱신했다면 의존 순서대로 이 흐름을 반복합니다. 준비한 버전이 이미 게시됐다면 더 높은 버전을 선택하세요. 같은 npm 버전을 다시 게시하지 마세요.
 
-같은 npm 버전은 다시 게시할 수 없습니다. 현재 준비 버전이 이미 npm에 게시됐다면 더 큰 버전을 선택합니다. 시험 버전은 npm의 `next` 태그로, 정식 버전은 `latest` 태그로 게시합니다.
+## GitHub Actions의 검사와 게시
 
-## GitHub Actions가 수행하는 작업
+패키지 태그를 푸시하면 `.github/workflows/npm-package.yml`이 시작합니다. Actions에는 **npm 배포**로 표시됩니다.
 
-`<패키지>@<버전>` 태그의 푸시가 `.github/workflows/npm-package.yml`을 시작합니다.
+| 단계 | 검사와 결과 |
+| --- | --- |
+| 검증 | 태그의 작업 공간을 찾고 태그·매니페스트 버전과 `origin/master`에 포함된 커밋인지 확인합니다. 등록 여부, 버전 중복과 작업 공간 런타임 의존 버전의 게시도 확인합니다. |
+| 빌드 | `ubuntu-22.04`, Node.js 24.14.0과 커밋된 npm 잠금 파일로 선택한 Turborepo 빌드를 실행합니다. |
+| 관련 테스트 | 자동 검토는 `test:policy`를 실행합니다. `@buyong/redact`는 작업 공간을 빌드하고 `test:redaction`을 실행합니다. 전체 실모델·운영체제 검증은 아닙니다. |
+| 포장 | `npm pack --workspace`로 패키지의 `prepack`과 압축 검사를 실행합니다. |
+| 보관 | 검증한 `.tgz`를 `npm-package` 결과물로 업로드합니다. |
+| 게시 | 별도 작업이 같은 압축 파일을 내려받아 OIDC로 `npm publish`를 실행합니다. 배포 태그는 `latest` 또는 `next`입니다. |
 
-1. `ubuntu-22.04`에서 npm 잠금 파일로 공식 개발 의존성을 설치합니다.
-2. 태그가 가리키는 작업 공간 패키지를 찾고, 태그와 그 `package.json` 버전이 일치하는지, 태그 커밋이 `origin/master`에 포함되는지 확인합니다. 태그 게시에서는 패키지의 최초 등록, 버전 중복, 작업 공간 런타임 의존 패키지의 게시 여부도 다시 확인합니다. 그다음 Turborepo로 패키지를 빌드합니다. `@buyong/pi-codex-auto-review`는 원본 결과 대조를 포함한 정책 검사도 실행합니다. `@buyong/redact`는 가림 테스트를 실행합니다.
-3. `npm pack --workspace <패키지>`가 패키지의 `prepack`을 실행합니다. `@buyong/pi-codex-auto-review`의 `prepack`은 TypeScript를 컴파일하고, `files`에 적힌 README·LICENSE·NOTICE·문서를 저장소 루트에서 복사한 뒤 필수 파일과 JavaScript 규칙 작업 스레드를 검사합니다. 바이너리·`.node`·`.wasm`·묶인 의존성이 압축 파일에 있으면 거부합니다. 복사한 문서는 `postpack`이 지웁니다.
-   나머지 4개 패키지도 필수 JavaScript·선언·문서 파일과 허용 파일 목록을 검사합니다. image-gen은 이미지 생성 도구와 번들 스킬·라이선스·출처 고지까지 확인하며, redact는 가림 엔진과 개인정보 인식 데이터를 확인합니다.
-   통합 패키지는 의존 패키지를 먼저 빌드하고 원래 확장 진입점과 `imagegen` 스킬을 실행 의존성과 함께 준비합니다. 압축 검사에서는 고정 의존 버전과 필수 파일을 확인하고 Pi 호스트·네이티브 바이너리·Codex 비공개 런타임의 포함을 거부합니다.
-4. 검증한 `<패키지>-<버전>.tgz`를 `npm-package` 결과물에 보관합니다.
-5. 별도 게시 작업이 같은 결과물을 내려받아 OIDC로 npm에 게시합니다.
+패키지별 압축 검사는 다음과 같습니다.
 
-**Actions → npm 배포 → Run workflow**로 수동 실행하면 6개 패키지 중 선택한 패키지의 압축 패키지 준비만 수행하며 게시 작업은 생략합니다. 미등록 패키지도 압축 준비를 확인할 수 있습니다. 태그 게시에는 같은 워크플로의 태그 실행을 사용합니다.
+- **자동 검토:** TypeScript를 컴파일하고 저장소의 공용 README·라이선스·출처 고지·문서를 임시 복사합니다. 필수 모듈과 JavaScript 규칙 작업 스레드를 확인하며 네이티브 결과물과 묶인 의존성을 거부합니다. `postpack`은 복사한 파일을 제거합니다.
+- **Computer Use·Fast 모드·이미지 생성·redact:** 필수 JavaScript·선언·패키지 문서와 허용 파일 목록을 확인합니다. 이미지 생성은 번들 스킬과 출처 표시도, redact는 가림·개인정보 데이터 모듈도 확인합니다.
+- **통합 패키지:** 원래 확장 진입점, `imagegen` 스킬과 런타임 의존성을 빌드·준비합니다. 정확한 버전·필수 파일을 확인하고 Pi 호스트·네이티브 결과물·Codex 비공개 런타임의 포함을 거부합니다.
 
-하나의 JavaScript 압축 파일을 사용하며 규칙 엔진의 CPU·libc 의존성이 없습니다. 실제 Pi 사용 가능 여부·경로 처리·셸 지원은 호스트에 따라 다릅니다. 별도 운영체제 workflow는 Rust 설치 없이 Linux·Windows 실행 검사를 유지합니다. 실제 검증 범위는 [검증 안내](testing/auto-review-protection.ko.md)를 따릅니다.
+**Actions → npm 배포 → Run workflow**는 선택한 패키지의 압축 파일을 준비하지만 **게시하지 않습니다.** 미등록 패키지도 수동 경로로 검사할 수 있습니다. 등록·의존 버전 게시 검사는 태그 게시에 적용합니다.
+
+JavaScript 배포는 플랫폼별 규칙 바이너리 요구를 없앱니다. 모든 호스트 운영체제나 셸의 지원을 뜻하지는 않습니다. 별도 **자동 검토 운영체제 검증** 워크플로에는 Linux x64·Windows x64 실행 검사가 있습니다. 범위는 [검증 안내](testing/auto-review-protection.ko.md)를 참고하세요.
 
 ## 중단과 실패 후 확인
 
-로컬 명령은 종료 시 파일·인덱스 변경, 현재 HEAD, 로컬 태그 및 푸시 시도 상태를 출력합니다. 질문에서 거절하거나 취소해도 이미 변경한 버전·인덱스·커밋·태그는 보존합니다.
+릴리스 상태를 보고할 수 있는 단계부터 로컬 명령은 시작·현재 HEAD, 남은 파일·인덱스 변경, 선택한 파일 버전, 관련 로컬 태그와 푸시 시도를 출력합니다. 중단해도 이미 완료한 버전·인덱스·커밋·태그 변경은 되돌리지 않습니다.
 
-푸시 실패 시 release-it은 원격 태그 정리를 시도할 수 있습니다. 출력만으로 원격 상태를 단정하지 말고 아래 결과를 확인합니다.
+계속할 방법을 정하기 전에 로컬과 원격 상태를 확인합니다.
 
 ```sh
 git status --short
@@ -148,46 +157,49 @@ git log -1
 git ls-remote origin refs/heads/master 'refs/tags/*@*'
 ```
 
-태그 푸시 후 Actions가 실패하면 해당 실행의 로그를 확인하고 실패한 작업을 다시 실행합니다. 실제 npm 게시가 성공했는지 먼저 확인합니다. 이미 게시된 버전을 되풀이하지 않고 새 변경에는 새 버전을 사용합니다.
+- **커밋 전 중단:** 매니페스트와 루트 잠금 파일 변경을 확인합니다. 인덱스가 그대로라고 가정하지 마세요.
+- **커밋·태그 후 중단:** 해당 기록을 보존하고 확인합니다. `pnpm release` 재실행은 이어하기가 아니며, 기존 태그와 충돌하거나 다른 버전을 선택할 수 있습니다.
+- **푸시 실패:** 확인하기 전에는 원격 상태를 알 수 없습니다. release-it은 푸시 오류 후 원격 태그 정리를 시도할 수 있으므로 한 메시지만으로 최종 상태를 판단하지 마세요.
+- **Actions 실패:** 실패한 작업을 보고 npm을 먼저 확인합니다. 미게시 상태라면 원인을 해결한 뒤 해당 실패 작업을 다시 실행합니다. 게시가 성공했다면 같은 버전을 다시 게시하지 말고 새 변경에 새 버전을 사용합니다.
 
-## 게시 결과와 Pi 설치 확인
+푸시한 릴리스 태그를 자동 복구 목적으로 삭제하거나 다시 만들지 마세요.
 
-`0.2.2` 게시 후 다음 명령으로 확인합니다.
+## 게시와 설치 확인
+
+`PACKAGE_NAME`과 `VERSION`을 실제 릴리스한 패키지·버전으로 설정합니다. 다음은 자동 검토 릴리스 이후의 예시입니다.
 
 ```sh
-npm view @buyong/pi-codex-auto-review@0.2.2 version --registry=https://registry.npmjs.org/
-pi install npm:@buyong/pi-codex-auto-review@0.2.2
+PACKAGE_NAME=@buyong/pi-codex-auto-review
+VERSION=0.3.1
+npm view "$PACKAGE_NAME@$VERSION" version --registry=https://registry.npmjs.org/
+npm view "$PACKAGE_NAME" dist-tags --registry=https://registry.npmjs.org/
+pi install "npm:$PACKAGE_NAME@$VERSION"
 pi list
 pi
 ```
 
-다음 릴리스부터는 선택한 버전으로 명령을 바꿉니다. `0.1.2`는 샌드박스를 포함한 이전 구조이며, `0.1.3`은 샌드박스를 제거하고 승인 설정 명령을 추가한 버전입니다. `0.1.4`는 영문 승인 설명, 모델 범위 연동, 사용자 재승인과 검토 문맥 전달·복원을 보완합니다. `0.2.0`은 Rust 규칙 엔진을 JavaScript로 컴파일하는 TypeScript 구현으로 교체하고 개발용 SDK 재포장을 제거합니다. `0.2.2`부터는 `@buyong/pi-codex-auto-review` 이름으로 게시하며, 그 이전 버전은 `pi-codex-auto-review`에 남아 있습니다. 설치 후 `/approve`의 영문 설명과 `/approve-model`의 `/scoped-models` 범위 연동을 확인하고, 저장한 선택이 재시작 후 유지되는지 확인합니다. 설정 파일과 SDK 진입점은 [사용법](usage.ko.md)을 따릅니다.
+`0.3.1`은 예시이며 존재한다는 뜻이 아닙니다. 레지스트리가 선택한 버전을 반환하고 예상 배포 태그가 그 버전을 가리켜야 합니다. `pi list`에는 설치 소스가 나와야 합니다.
 
-통합 패키지 `0.1.1`의 게시 후에는 다음과 같이 확인합니다. 기존 개별 확장에서 전환할 때는 [통합 패키지의 설치 안내](https://github.com/buYoung/pi-codex-auto-review/tree/master/packages/pi-codex#readme)를 따릅니다.
+자동 검토는 `/approve`·`/approve-model`을 실행해 검토 모델이 대화 모델을 바꾸지 않는지 확인하고, 재시작 후 저장한 선택을 확인합니다. Full Access는 유지되지 않아야 합니다. 설정 경로와 보호 시작은 [사용법](usage.ko.md)을 참고하세요.
 
-```sh
-npm view @buyong/pi-codex@0.1.1 version --registry=https://registry.npmjs.org/
-npm view @buyong/pi-codex dist-tags --registry=https://registry.npmjs.org/
-pi install npm:@buyong/pi-codex@0.1.1
-pi list
-```
+통합 패키지는 겹치는 개별 설치 소스를 제거한 뒤 활성화합니다. 구성 요소의 요구 사항은 계속 적용됩니다. [통합 패키지 안내](https://github.com/buYoung/pi-codex-auto-review/blob/master/packages/pi-codex/README.ko.md)와 [README의 개별 안내](../README.ko.md#작업-공간-패키지)를 참고하세요. `@buyong/redact`는 Pi 확장이 아닌 라이브러리이므로 `pi install` 대신 공개 import를 확인합니다.
 
-## 로컬에서 압축 패키지만 준비
+## 게시하지 않고 압축 파일 준비
 
-게시용 압축 파일을 직접 확인해야 할 때 사용합니다. 개발 의존성을 먼저 설치하며 별도 플랫폼 결과물은 필요하지 않습니다.
+개발 의존성을 설치한 상태에서 패키지를 선택하고 실행합니다.
 
 ```sh
-npm run build
+PACKAGE_NAME=@buyong/pi-codex-auto-review
+npm run build -- --filter="$PACKAGE_NAME"
 mkdir -p tmp/npm-release
-npm pack --workspace packages/pi-codex-auto-review --pack-destination tmp/npm-release
-npm pack --workspace packages/pi-codex --pack-destination tmp/npm-release
+npm pack --workspace "$PACKAGE_NAME" --pack-destination tmp/npm-release
 ```
 
-`npm run build`는 `packages/pi-codex-auto-review/dist`에 JavaScript 모듈과 규칙 평가 진입점을 만듭니다. 게시 전 검사는 이 파일의 포함 여부를 확인하고 남아 있는 네이티브 결과물을 거부합니다. 정상 게시 준비에서 `--ignore-scripts`로 `prepack`을 생략하지 않습니다.
+압축 파일은 `tmp/npm-release`에 생깁니다. 다른 작업 공간을 검사하려면 `PACKAGE_NAME`을 바꿉니다. 릴리스 포장에 `--ignore-scripts`를 쓰면 필수 준비·검사를 건너뛰므로 사용하지 마세요. 공용 문서의 임시 복사본은 정상 포장 후 `postpack`이 제거합니다. 실패했다면 다시 시도하기 전에 작업 공간에 남은 복사본을 확인하세요.
 
-## 관련 근거
+## 관련 문서
 
 - [release-it 21.0.1](https://github.com/release-it/release-it/tree/21.0.1)
 - [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)
-- [GitHub-hosted runner 종류](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+- [공개 스코프 패키지 게시](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
 - [Pi 패키지 등록](https://github.com/earendil-works/pi/blob/v0.99.1/packages/coding-agent/docs/packages.md)

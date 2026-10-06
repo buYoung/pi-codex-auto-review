@@ -2,17 +2,21 @@
 
 [English](README.md) | **한국어**
 
-텍스트와 JSON이 로그나 언어 모델에 들어가기 전에 인증정보, 개인 키, 선택한 개인정보(PII)를 가립니다. 엔진은 특정 호스트에 묶이지 않습니다. 런타임 의존성과 전역 상태가 없고, 호출하는 쪽이 검증된 옵션으로 변경 불가능한 마스킹 인스턴스(redactor)를 만든 뒤 언제 호출할지 직접 정합니다.
+텍스트·JSON을 로그나 언어 모델에 전달하기 전에 인증 정보, 개인 키와 선택한 개인정보(PII)를 가립니다. ESM 라이브러리이며 런타임 의존성이나 프로세스 전역 설정이 없습니다. 변경 불가능한 가림 인스턴스(redactor)를 만들어 출력 경계에서 호출하고, 가린 결과를 다음 단계에 전달합니다.
+
+로그·모델 요청을 가로채거나 메모리의 원본을 지우지는 않으며 모든 비밀을 탐지한다고 보장하지 않습니다. 개인정보 탐지는 엔티티를 선택하기 전까지 꺼져 있습니다.
 
 이 엔진은 codemap-search의 가림 모듈(리비전 `86a772b`)을 TypeScript로 옮긴 것입니다. 원본의 규칙 id, 가림 계약, 설정 규칙을 그대로 따르며, 달라진 점은 [Rust 원본과 다른 점](#rust-원본과-다른-점)에 정리했습니다.
 
-## 설치
+## 설치하고 값 가리기
+
+Node.js 22.19 이상이 필요합니다. 애플리케이션 디렉터리에서 게시된 릴리스를 설치합니다.
 
 ```sh
 npm install @buyong/redact
 ```
 
-Node.js 22.19 이상이 필요하며 ESM 전용입니다.
+ESM 파일을 사용합니다. `.mjs`나 `"type": "module"` 패키지의 `.js`가 해당합니다. Pi 확장이 아닌 라이브러리이므로 `pi install`이 아니라 `npm install`을 사용하세요.
 
 ## 빠른 시작
 
@@ -25,22 +29,25 @@ const redactor = createRedactor({
     exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
 });
 
-redactor.redactText('password = "hunter2-value"');
-// 'password = "[REDACTED]"'
+console.log(redactor.redactText('password = "hunter2-value"'));
+// password = "[REDACTED]"
 
 const { value, maskedLocations } = redactor.redactJson({
     command: "curl -H 'Authorization: Bearer abcdefgh12345678' https://example.com",
 });
-// value.command는 토큰만 가리고 나머지를 유지합니다
-// maskedLocations: [{ path: ["command"], ruleId: "credential.authorization" }, ...]
+console.log(value.command);
+// curl -H 'Authorization: Bearer [REDACTED]' https://example.com
+// maskedLocations contains JSON paths and rule ids, never matched values.
 ```
+
+Node.js로 파일을 실행합니다. 로그·모델에는 원래 객체가 아니라 `value`를 보내세요. `maskedLocations`로 원문 값을 기록하지 않고 영향받은 필드를 확인할 수 있습니다.
 
 ## 가림 계약
 
 - 가려진 구간은 `[REDACTED]`가 됩니다. 표식보다 짧은 구간은 같은 길이의 `*`로 바뀌므로 출력이 길어지지 않습니다. 길이는 UTF-16 코드 단위(`String.prototype.length`)로 셉니다.
 - 구간은 줄마다 따로 가리므로 CR/LF 문자와 줄 번호가 그대로 남습니다.
 - 겹치거나 맞닿은 구간은 합친 뒤 가립니다.
-- 이미 가린 출력을 다시 가려도 바뀌지 않습니다.
+- 기본 가림은 이미 가린 출력을 유지합니다. 사용자 규칙은 가림 표식과 일치할 수도 있으므로 반복 가림은 설정한 규칙에 따라 달라집니다.
 - 탐지 결과와 가린 위치에는 범위나 JSON 경로, 규칙 id, 종류만 담깁니다. 원래 값은 메타데이터, 오류, 설정 문제 보고 어디에도 남지 않습니다.
 
 ## API
@@ -49,12 +56,12 @@ const { value, maskedLocations } = redactor.redactJson({
 | --- | --- |
 | `createRedactor(config?, host?)` | 설정을 검증하고 변경 불가능한 `Redactor`를 돌려줍니다. 문제가 하나라도 있으면 `RedactionConfigError`를 던집니다. |
 | `redactor.scan(text, { mode?, filePath? })` | 전체 텍스트에서 민감한 구간을 찾아 `TextScan`을 돌려줍니다. |
-| `scan.render(text)` / `scan.renderRange(text, start, end)` | 한 번의 전체 스캔으로 텍스트 전체나 원하는 범위를 렌더링합니다. |
+| `scan.render(text)` / `scan.renderRange(text, start, end)` | 한 번의 전체 스캔으로 같은 원문 전체나 범위를 렌더링합니다. 위치는 UTF-16 색인이며 변경한 텍스트에 스캔 결과를 적용하면 안 됩니다. |
 | `redactor.redactText(text, options?)` | `scan`과 `render`를 함께 실행합니다. |
 | `redactor.scanNamedValue(name, value)` / `redactor.redactNamedValue(name, value)` | 값을 가립니다. `name`이 민감한 필드면 값 전체를 가립니다. |
 | `redactor.redactJson(value, options?)` | 객체 키, 숫자, 불리언, `null`을 유지한 채 JSON 호환 값을 가립니다. `{ value, maskedLocations }`를 돌려줍니다. |
 | `redactor.isSensitiveField(name)` | 필드 이름이 민감한지 판단합니다. |
-| `normalizeRedactionConfig(input)` | 예외를 던지지 않고 사용자 설정을 검증합니다. 잘못된 키는 `[]`로 대체되고 `issues`에 나타납니다. |
+| `normalizeRedactionConfig(input)` | 예외 없이 `{ config, issues }`를 반환합니다. 잘못된 목록은 `[]`로 대체하므로 대체 값을 받아들이기 전에 `issues`를 확인하세요. |
 | `RedactionConfigError`, `formatIssue(issue)` | 오류 타입과 값을 포함하지 않는 문제 설명 문자열입니다. |
 | `hideValue(value)`, `maskRanges(text, ranges)`, `REDACTION_MARKER` | 저수준 가림 도구입니다. |
 | `isSupportedPiiEntity(name)`, `listSupportedPiiEntities()`, `piiRuleId(entity)` | PII 엔티티 조회입니다. |
@@ -75,7 +82,7 @@ const { value, maskedLocations } = redactor.redactJson({
 | `textContent` | `"full"` | `context-free`이면 `type`이 `"text"`인 객체의 `text`에 문맥 없는 규칙만 다시 적용합니다. |
 | `shouldPreserve(path)` | 없음 | `true`를 돌려준 경로의 값은 하위 구조까지 그대로 복사합니다. 구조 식별자에 씁니다. |
 
-민감한 키 아래의 문자열은 전체를 가립니다. 민감한 키 아래의 배열과 객체는 그 민감성을 물려받지 않습니다. `toJSON`이 있는 객체는 `JSON.stringify`처럼 먼저 직렬화합니다.
+민감한 키 아래의 문자열은 전체를 가립니다. 숫자·불리언·`null`은 유지합니다. 배열과 객체는 키의 민감성을 물려받지 않고 내부 문자열을 독립적으로 스캔합니다. `toJSON` 객체는 `JSON.stringify`처럼 먼저 직렬화합니다. `shouldPreserve`는 하위 구조의 가림을 의도적으로 건너뛰므로 보여도 되는 값에만 사용하세요.
 
 ## 규칙
 
@@ -120,7 +127,7 @@ const { value, maskedLocations } = redactor.redactJson({
 
 ```ts
 interface RedactionConfig {
-    sensitiveFields?: string[]; // 정규화 후 정확히 일치하는 이름
+    sensitiveFields?: string[]; // exact names after normalization
     rules?: { id: string; pattern: string; flags?: string }[];
     exceptions?: { ruleId: string; value: string }[];
     piiEntities?: string[];
@@ -129,7 +136,7 @@ interface RedactionConfig {
 
 - `rules[].id`는 `custom.` 뒤에 글자, 숫자, `.`, `_`, `-`가 오는 형식이며 중복될 수 없습니다.
 - `rules[].pattern`은 Rust 문법이 아니라 JavaScript `RegExp` 문법입니다. `(?<secret>…)` 그룹을 쓰면 그 그룹만 가립니다. `flags`에는 `i`, `m`, `s`, `u`를 한 번씩만 쓸 수 있고, 엔진이 `d`와 `g`를 붙입니다. `(?i:…)` 같은 인라인 수정자 그룹은 Node.js 22에서 쓸 수 없습니다. `\b`, `\w`, `\d`는 `u` 플래그와 유니코드 속성 이스케이프를 쓰지 않으면 ASCII만 다룹니다.
-- 빈 문자열과 일치하는 패턴은 거부합니다.
+- 빈 문자열과 일치하는 패턴은 거부합니다. 알 수 없는 최상위 키나 잘못된 항목이 있으면 `createRedactor()`는 `RedactionConfigError`를 던집니다. 정규화만 호출하면 문제를 보고하고 대체 목록을 반환합니다.
 - 패턴은 신뢰할 수 없는 텍스트에서 실행됩니다. 역추적이 폭발할 수 있는 중첩 반복은 피하세요.
 - `exceptions[]`는 규칙 id가 같고 원래 일치한 값 전체가 같을 때만 그 탐지를 뺍니다. 따옴표 값은 바깥 따옴표를 빼고, 이스케이프를 풀지 않은 채 비교합니다. 한 규칙의 예외가 겹치는 다른 규칙의 탐지를 빼 주지는 않습니다.
 - 문제 보고에는 키와 색인만 담습니다. 패턴, 예외 값, `RegExp` 파서 메시지는 절대 다시 보여 주지 않습니다. 알 수 없는 최상위 키는 그 이름으로 보고합니다.
@@ -174,6 +181,26 @@ const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "K
 - `normalizeRedactionConfig`는 `sensitiveFields` 항목을 적힌 그대로 두고, 일치를 볼 때 정규화합니다.
 - 저장소 설정과 전역 설정을 겹쳐 쓰는 계층 처리는 라이브러리에 포함하지 않습니다.
 
+## 소스 빌드와 검증
+
+저장소 루트에서 실행합니다.
+
+```sh
+npm ci --ignore-scripts
+npm run build -- --filter=@buyong/redact
+```
+
+`packages/redact/dist`에 ESM JavaScript와 선언 파일을 만듭니다. 소스 기반 애플리케이션은 빌드한 `dist/index.js`를 import할 수 있으며 Pi 호스트를 로드할 필요는 없습니다. 기존 `test:redaction` 명령은 자동 검토 증거 실행기를 사용하므로 전체 작업 공간을 먼저 빌드합니다.
+
+```sh
+npm run build
+npm run test:redaction
+```
+
+일반 빌드·JavaScript 테스트에는 Rust가 필요하지 않습니다. 선택적인 Rust 대조 검증에는 `packages/redact/scripts/rust-differential/`의 별도 도구 조건이 있으며 설치 단계가 아닙니다.
+
+독립 릴리스와 사용하는 패키지의 의존 버전 고정은 [배포 안내](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.ko.md)를 참고하세요.
+
 ## 라이선스
 
-Apache-2.0
+[Apache-2.0](LICENSE). Presidio에서 가져온 PII 데이터의 MIT 고지는 [NOTICE](NOTICE)에 유지합니다.

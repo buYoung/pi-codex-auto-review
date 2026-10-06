@@ -2,17 +2,21 @@
 
 **English** | [한국어](README.ko.md)
 
-Mask credentials, private keys, and opt-in PII in text and JSON before the data reaches logs or language models. The engine is host-independent: it has no runtime dependencies and no global state. Each caller creates an immutable redactor from validated options and decides when to call it.
+Mask credentials, private keys, and selected personal information (PII) before sending text or JSON to logs or language models. This ESM library has no runtime dependencies or process-global configuration. You create an immutable redactor, call it at your output boundary, and pass the masked result downstream.
+
+The library does not intercept logging or model requests, remove original data from memory, or guarantee detection of every secret. PII detection is off unless you select entities.
 
 The engine is a TypeScript port of the redaction module in codemap-search (revision `86a772b`). It keeps the source rule ids, the masking contract, and the configuration rules; the differences are listed under [Differences from the Rust source](#differences-from-the-rust-source).
 
-## Installation
+## Install and mask a value
+
+Requires Node.js 22.19 or later. In your application's directory, install a published release:
 
 ```sh
 npm install @buyong/redact
 ```
 
-Requires Node.js 22.19 or later. The package is ESM only.
+Use an ESM file (`.mjs`, or `.js` in a package with `"type": "module"`). This is a library, not a Pi extension; use `npm install`, not `pi install`.
 
 ## Quick start
 
@@ -25,22 +29,25 @@ const redactor = createRedactor({
     exceptions: [{ ruleId: "custom.acme", value: "ACME_EXAMPLE" }],
 });
 
-redactor.redactText('password = "hunter2-value"');
-// 'password = "[REDACTED]"'
+console.log(redactor.redactText('password = "hunter2-value"'));
+// password = "[REDACTED]"
 
 const { value, maskedLocations } = redactor.redactJson({
     command: "curl -H 'Authorization: Bearer abcdefgh12345678' https://example.com",
 });
-// value.command keeps everything except the token
-// maskedLocations: [{ path: ["command"], ruleId: "credential.authorization" }, ...]
+console.log(value.command);
+// curl -H 'Authorization: Bearer [REDACTED]' https://example.com
+// maskedLocations contains JSON paths and rule ids, never matched values.
 ```
+
+Run the file with Node.js. Send `value`, not the original object, to the logger or model. `maskedLocations` lets you identify affected fields without recording their raw values.
 
 ## Masking contract
 
 - A masked span becomes `[REDACTED]`. A span shorter than the marker becomes `*` repeated, so the output never grows. Lengths are counted in UTF-16 code units (`String.prototype.length`).
 - Each line of a span is masked separately, so CR/LF characters and line numbers stay in place.
 - Overlapping or touching spans merge before masking.
-- Masking already-masked output returns it unchanged.
+- Built-in masking preserves its already-masked output. Custom rules can match mask markers, so repeated masking depends on the rules you configure.
 - Detections and masked locations carry only a range or a JSON path, a rule id, and a kind. No raw value is stored in metadata, errors, or configuration issues.
 
 ## API
@@ -49,12 +56,12 @@ const { value, maskedLocations } = redactor.redactJson({
 | --- | --- |
 | `createRedactor(config?, host?)` | Validate the configuration and return an immutable `Redactor`. Throws `RedactionConfigError` on any issue. |
 | `redactor.scan(text, { mode?, filePath? })` | Detect sensitive spans in the full text and return a `TextScan`. |
-| `scan.render(text)` / `scan.renderRange(text, start, end)` | Render the whole text or any range of it from one full scan. |
+| `scan.render(text)` / `scan.renderRange(text, start, end)` | Render the same original text, or a range of it, from one full scan. Offsets are UTF-16 indices; do not apply a scan to changed text. |
 | `redactor.redactText(text, options?)` | `scan` plus `render`. |
 | `redactor.scanNamedValue(name, value)` / `redactor.redactNamedValue(name, value)` | Mask a value; when `name` is a sensitive field, the whole value is masked. |
 | `redactor.redactJson(value, options?)` | Mask a JSON-compatible value while keeping object keys, numbers, booleans, and `null`. Returns `{ value, maskedLocations }`. |
 | `redactor.isSensitiveField(name)` | Whether a field name is sensitive. |
-| `normalizeRedactionConfig(input)` | Validate user configuration without throwing. Invalid keys fall back to `[]` and appear in `issues`. |
+| `normalizeRedactionConfig(input)` | Return `{ config, issues }` without throwing. An invalid list is replaced by `[]`; inspect `issues` before accepting that fallback. |
 | `RedactionConfigError`, `formatIssue(issue)` | Error type and value-free issue text. |
 | `hideValue(value)`, `maskRanges(text, ranges)`, `REDACTION_MARKER` | Low-level masking helpers. |
 | `isSupportedPiiEntity(name)`, `listSupportedPiiEntities()`, `piiRuleId(entity)` | PII entity lookup. |
@@ -75,7 +82,7 @@ const { value, maskedLocations } = redactor.redactJson({
 | `textContent` | `"full"` | `context-free` re-applies only context-free rules to `text` in objects whose `type` is `"text"`. |
 | `shouldPreserve(path)` | none | Values at paths for which this returns `true` are copied unchanged, including subtrees. Use it for structural identifiers. |
 
-A string under a sensitive key is masked whole. Arrays and objects under a sensitive key do not inherit that sensitivity. Objects with `toJSON` are serialized first, like `JSON.stringify`.
+A string under a sensitive key is masked whole. Numbers, booleans, and `null` remain unchanged. Arrays and objects under a sensitive key do not inherit that sensitivity; their nested strings are scanned independently. Objects with `toJSON` are serialized first, like `JSON.stringify`. `shouldPreserve` deliberately bypasses masking for a subtree, so use it only for values that may remain visible.
 
 ## Rules
 
@@ -129,7 +136,7 @@ interface RedactionConfig {
 
 - `rules[].id` is `custom.` followed by letters, digits, `.`, `_`, or `-`, and must be unique.
 - `rules[].pattern` is JavaScript `RegExp` syntax, not Rust syntax. Name the group `(?<secret>…)` to mask only that group. `flags` may contain `i`, `m`, `s`, and `u`, each once; the engine adds `d` and `g`. Inline modifier groups such as `(?i:…)` are not available on Node.js 22. `\b`, `\w`, and `\d` are ASCII-only unless you use Unicode property escapes with the `u` flag.
-- A pattern that matches the empty string is rejected.
+- A pattern that matches the empty string is rejected. Unknown top-level keys and invalid entries make `createRedactor()` throw `RedactionConfigError`; normalization alone reports issues and returns fallback lists.
 - Patterns run on untrusted text. Avoid nested quantifiers that can backtrack catastrophically.
 - `exceptions[]` drops a detection only when its rule id matches and the entire original matched value is equal. Quoted values compare without the outer quotes and without decoding escapes. One rule's exception never exempts another rule's overlapping detection.
 - Issues report the key and the index only. They never repeat a pattern, an exception value, or a `RegExp` parser message. An unknown top-level key is reported by its name.
@@ -174,6 +181,26 @@ const redactor = createRedactor({ piiEntities: ["EMAIL_ADDRESS", "IBAN_CODE", "K
 - `normalizeRedactionConfig` keeps `sensitiveFields` entries as written and normalizes them when matching.
 - Configuration layering between repository and global files is not part of the library.
 
+## Build and verify from source
+
+Run from the repository root:
+
+```sh
+npm ci --ignore-scripts
+npm run build -- --filter=@buyong/redact
+```
+
+The build emits ESM JavaScript and declarations under `packages/redact/dist`. Source-based applications can import that built `dist/index.js`; it is not necessary to load a Pi host. The repository's existing `test:redaction` command uses the automatic-review evidence runner, so build the full workspace before running it:
+
+```sh
+npm run build
+npm run test:redaction
+```
+
+Normal builds and JavaScript tests do not require Rust. The optional Rust differential verification has separate toolchain requirements in `packages/redact/scripts/rust-differential/`; it is not an installation step.
+
+See the [publishing guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/publishing.md) for independent releases and consumer dependency pins.
+
 ## License
 
-Apache-2.0
+[Apache-2.0](LICENSE). Presidio-derived PII data retains its MIT notice in [NOTICE](NOTICE).

@@ -2,65 +2,63 @@
 
 **English** | [한국어](README.ko.md)
 
-Computer Use and Browser Use for pi, using the proprietary runtime already installed by Codex Desktop. This independent TypeScript extension launches Codex's unified `cua_repl` MCP server, forwards text and images, and presents its approval requests with Codex's option labels. Both features are **on by default**, with separate switches.
+Use Codex Desktop's installed Computer Use and Browser Use runtime from Pi. This independent TypeScript extension starts the unified `cua_repl` MCP server, forwards text and images, and presents runtime approval requests in Pi. **Both features default to on**, with separate switches.
 
-The package never bundles, downloads, copies, or redistributes OpenAI runtime files. It is not an OS sandbox and does not reproduce the automation engine.
+The package is a host bridge, not an automation engine or OS sandbox. It does not bundle, download, copy, or redistribute OpenAI's proprietary runtime.
 
 ## Requirements
 
 | Requirement | What you need |
 | --- | --- |
-| Node.js | `>=22.19.0` |
-| pi | Use `0.99.1` or later. Full live verification used `0.99.1`; `1.0.2` passed a status smoke check. Older versions within the manifest's peer range have not been verified. |
-| Codex account | A ChatGPT subscription that includes Codex, with Codex Desktop signed in. The package does not read credentials or verify account eligibility. |
-| Codex Desktop | Installed with the Computer Use runtime. Tested on macOS with `ChatGPT.app` (bundle ID `com.openai.codex`) `26.930.31730`. |
-| Computer Use | Native service installed by Codex Desktop; on macOS grant Accessibility and Screen Recording to `Codex Computer Use.app`. |
-| Browser Use | Google Chrome running, ChatGPT Chrome extension enabled, and Codex Desktop's Chrome plugin/native messaging host installed. |
+| Node.js | 22.19 or later |
+| Pi | 0.99.1 or later. Recorded live checks used 0.99.1; 1.0.2 has only a status smoke-check record. Older versions in the broader manifest peer range are unverified. |
+| Codex Desktop | Installed with its Computer Use runtime and signed in to an account with Codex access. The package cannot verify subscription eligibility or login. |
+| Computer Use | Desktop's native service. On macOS, grant Accessibility and Screen Recording to `Codex Computer Use.app`. |
+| Browser Use | Running Google Chrome, the enabled ChatGPT Chrome extension, and Desktop's Chrome/Browser plugin with native messaging host registration |
 
-macOS is verified. Windows discovery and checks are implemented but **not verified on a Windows machine**. Linux and other platforms are unsupported. Chrome is the only enabled browser backend; `iab`, `mcpapps`, and Edge are not supported by this package. Keep Codex Desktop running: behavior with the desktop app quit is unverified.
+Recorded live verification used macOS `ChatGPT.app` (bundle ID `com.openai.codex`) `26.930.31730`. Windows discovery/checks are implemented but **not verified on a Windows machine**. Linux and other platforms are unsupported. Keep Desktop running; desktop-quit operation is unverified.
 
-## Installation
+**Chrome is the only enabled browser backend.** `iab`, `mcpapps`, and Edge examples in Desktop's runtime documentation do not make those backends available in Pi.
 
-Version `0.1.0` is prepared for its first publication; these commands are for use **after it is published**:
+## Install and make a first check
+
+Install a published release:
 
 ```sh
-pi install npm:@buyong/pi-codex-computer-use@0.1.0
+pi install npm:@buyong/pi-codex-computer-use
 pi list
 pi
 ```
 
-From a source checkout, run the following from the repository root without adding a permanent package entry:
+Append `@<version>` to pin a release. For the current checkout or a package not yet published, use the source instructions below. Do not enable this individual extension alongside `@buyong/pi-codex`.
 
-```sh
-npm install
-npm run build -- --filter=@buyong/pi-codex-computer-use
-node_modules/.bin/pi -ne -e packages/pi-codex-computer-use/dist/index.js
-```
+Inside Pi:
 
-In pi, run `/computer-use-check` for prerequisite checks and a first-use setup guide, then `/computer-use` to select features. The report separates missing, unverified, and user-owned requirements, including Desktop installation/login, native service permissions, Chrome extension and native-host registration. The package checks Codex's installed runtime and locates its service without repairing Codex settings, plugin caches, or native-host registration.
-
-## Usage
+1. Run `/computer-use-check` and resolve missing prerequisites. `user-owned` items require your confirmation; `unverified` is not a pass.
+2. Run `/computer-use` and enable only the features you need.
+3. Ask for an inventory without app/browser operations:
 
 ```text
-/computer-use
+Use mcp__cua_repl__js to run await cua.getState(). Summarize the available apps and browsers without operating them.
 ```
 
-The command opens one native pi settings list with **Computer Use** and **Browser Use**. Use `↑` / `↓` to select a feature and `Enter` / `Space` to switch it between `on` and `off`. Changes save immediately, the runtime reconnects, and both the screen and selection stay in place. `Esc` closes it without undoing saved changes. There are no tabs or diagnostic panels in this view.
+A connected runtime exposes `mcp__cua_repl__js` and `mcp__cua_repl__js_reset` for the enabled surfaces. If discovery or startup fails, the footer reports an error and runtime tools remain hidden. A prerequisite check is not proof that a live automation task will succeed.
 
-RPC clients get a repeating settings picker because custom terminal components are TUI-only. Without UI, the bare command prints status. Explicit arguments remain available for scripts:
+## Change features and inspect status
 
-```text
-/computer-use-check
-/computer-use status
-/computer-use computer off
-/computer-use browser off
-/computer-use computer on
-/computer-use browser on
-```
+`/computer-use` opens a single TUI settings list. Use **↑/↓** to select Computer Use or Browser Use and **Enter/Space** to toggle it. Changes save immediately and restart the runtime. The list stays open with the selected row preserved; Esc closes it without undoing saved changes.
 
-`/computer-use check` remains a compatibility alias for the same diagnostic report and guide. The check does not install software, repair registration, change feature settings, read Codex credentials, or run an app/browser task. A macOS app-bundle fallback and cold native service launch are marked unverified rather than ready.
+| Command | Purpose |
+| --- | --- |
+| `/computer-use-check` | Prerequisite report and first-use setup guide |
+| `/computer-use status` | Current switches, settings path, runtime source, and server state |
+| `/computer-use computer on` / `off` | Change Computer Use |
+| `/computer-use browser on` / `off` | Change Browser Use |
+| `/computer-use check` | Compatibility alias for `/computer-use-check` |
 
-Settings live at `<agentDir>/codex-computer-use/settings.json`, where `agentDir` honors `PI_CODING_AGENT_DIR` and normally is `~/.pi/agent`.
+RPC uses a repeating two-feature picker with a Close choice. Without UI, the bare command prints status and explicit arguments remain available. Status/check text is written to stderr in print/JSON mode.
+
+Settings live at `<agentDir>/codex-computer-use/settings.json`. `agentDir` honors `PI_CODING_AGENT_DIR` and normally is `~/.pi/agent`.
 
 ```json
 {
@@ -69,28 +67,35 @@ Settings live at `<agentDir>/codex-computer-use/settings.json`, where `agentDir`
 }
 ```
 
-A missing file uses these defaults without writing it. An invalid file forces both features off for that session and reports the error. Toggle commands wait for the agent to become idle, persist the change, and restart the runtime. Restarting discards REPL variables and app/tab bindings. With both features off, no MCP process starts and the tools are hidden.
+A missing file uses defaults without creating it. An existing file must contain exactly these two boolean keys. Invalid or unreadable settings force both features off; toggle commands will not overwrite an invalid file. Fix it and run `/reload` or restart Pi.
 
-Ask the model to use `mcp__cua_repl__js`, for example:
+Switch changes wait for the agent to become idle. Restarting clears REPL variables and app/tab bindings. With both features off, no server starts and its tools are hidden. Manual settings edits need reload or restart.
 
-```text
-Use mcp__cua_repl__js to run await cua.getState(). Summarize the available apps and browsers without operating them.
+## Approvals and limits
+
+- The runtime owns remembered permissions. Where offered, Pi shows **Allow**, **Allow for this session**, **Always allow**, and **Cancel**; non-tool requests also offer **Deny**. These permissions allow operating the app/origin, not just reading it.
+- An ordinary empty-form `js` execution approval from `node_repl` follows Codex's user-reviewer auto-approval rule. Sensitive requests or requests needing user input are not covered by that rule. This bridge does not implement Guardian automatic review.
+- Requests needing user interaction are declined in print/JSON mode. RPC clients must answer Pi UI requests. Supported ordinary forms can use Pi input/select/confirm dialogs; browser sign-in/QR, email OTP, URL-mode requests, and unsupported forms are declined.
+- Cancellation sends MCP cancellation, but already-running JavaScript may continue until completion or the runtime's timeout. No immediate OS-level stop is guaranteed.
+- Cold service launch from the macOS app-bundle fallback, Windows execution, desktop-quit operation, permanent grants, downloads/uploads, full CDP, and WebMCP remain unverified.
+- Desktop updates can change private interfaces. Runtime telemetry outside Codex has not been established; check applicable OpenAI terms.
+
+Logs rotate at 5 MiB under `<agentDir>/codex-computer-use/mcp.log`. Key-based masking does not remove every page/app detail. Inspect and redact logs before sharing.
+
+See the [usage guide](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/computer-use/usage.md) for runtime discovery, task examples, approval behavior, troubleshooting, and the recorded verification scope. The npm archive also includes it at `docs/computer-use/usage.md`.
+
+## Build and load from source
+
+Run from the repository root:
+
+```sh
+npm ci --ignore-scripts
+npm run build -- --filter=@buyong/pi-codex-computer-use
+node_modules/.bin/pi -ne -e ./packages/pi-codex-computer-use/dist/index.js
 ```
 
-The server's original instructions remain intact. pi also supplies host guidance in the model-facing tool declaration and default system prompt: Chrome-only Browser Use, enabled surfaces, a single entry call after startup/reset, no legacy manual bootstrap, and correct output/binding handling. This prevents Desktop-only `iab`/`mcpapps` examples from being mistaken for available pi backends, including when a custom system prompt is used. No extra skill or automatic retry/reset is installed. `js` and `js_reset` are exposed; `turn_ended` and module-directory mutation are internal. Browser creation, accessibility reads, text/image output, interruption, and turn-end notifications have been exercised in live pi sessions. See the [usage guide](docs/computer-use/usage.md) for the verification scope and troubleshooting.
-
-## Approvals and limitations
-
-- Approval options are `Allow`, `Allow for this session`, `Always allow`, and `Cancel`, where the runtime offers the corresponding persistence modes. Non-tool requests also offer `Deny`. The runtime, not pi, owns remembered permissions. These permissions allow operating the selected app/origin, not just reading it.
-- In print/JSON mode, requests requiring user interaction are declined and the tool result explains the missing approval surface. RPC clients must answer pi's UI requests. Status/diagnostic text goes to stderr in modes without UI.
-- Ordinary empty-schema `js`/`node_repl` execution approvals follow Codex's user-reviewer auto-approval rule. Sensitive requests are not covered by this rule. Guardian routing is not implemented; some automated safety prechecks consequently cannot work.
-- Browser sign-in/QR, email OTP, URL-mode elicitation, and unsupported forms are declined. Downloads, uploads, full CDP access, and WebMCP have not been validated end to end.
-- Cancellation sends MCP cancellation, but a running JavaScript call may continue inside the runtime until it completes or reaches its own timeout. `turn_ended` can consequently be delayed. No immediate OS-level stop guarantee is provided.
-- Cold service launch from the app-bundle fallback, Windows execution, and desktop-quit operation have not been verified. Settings navigation and saving were verified in actual pi TUI (regular/dark and narrow fullscreen/light); approval flows were driven through pi RPC.
-- Codex's private runtime interfaces may change when Desktop updates. Runtime telemetry may transmit usage data; its behavior outside Codex has not been established. Check the applicable OpenAI terms before using this host bridge.
-
-Logs are stored at `<agentDir>/codex-computer-use/mcp.log` with rotation and key-based secret redaction. They can still contain page/app content; inspect and redact them before sharing.
+`-ne` disables automatic extension discovery and `-e` loads this extension for one invocation. Desktop setup is still required. After source changes, rebuild and reload/restart Pi.
 
 ## License
 
-The bridge code is Apache-2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). OpenAI's proprietary runtime is not part of the package and is not relicensed by it. [Source and implementation evidence](https://github.com/buYoung/pi-codex-auto-review/tree/master/docs/handoffs/computer-use).
+Bridge code: [Apache-2.0](https://github.com/buYoung/pi-codex-auto-review/blob/master/LICENSE), included as `LICENSE` in the archive, with attribution in [NOTICE](NOTICE). OpenAI's proprietary runtime is not included or relicensed. [Implementation and verification records](https://github.com/buYoung/pi-codex-auto-review/tree/master/docs/handoffs/computer-use) describe historical checks, not new results from installing the package.

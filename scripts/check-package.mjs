@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const repository = fileURLToPath(new URL("../", import.meta.url));
 const requiredFiles = {
-    "@buyong/pi-codex": ["README.md", "LICENSE"],
+    "@buyong/pi-codex": ["README.md", "README.ko.md", "LICENSE"],
     "@buyong/pi-codex-auto-review": [
         "dist/index.js",
         "dist/startup.js",
