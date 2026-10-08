@@ -56,7 +56,7 @@ Codex 공개 원본 `rust-v0.160.0`은 실제 사용자가 구체적인 위험�
 
 | 검증 | 결과 | 산출물 |
 | --- | --- | --- |
-| 수정 전 재현 | 메뉴 경로 실패, 일반 사용자 메시지 경로 통과 | `tmp/user-reapproval-before.log` |
+| 수정 전 재현 | 메뉴 경로 실패, 일반 사용자 메시지 경로 통과 | `experiments/pi-codex-auto-review/user-reapproval/user-reapproval-before.log` |
 | macOS ARM64 | 151개 통과, 감사 기록 313개 확인 | `.reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/final.json` |
 | Linux ARM64 Docker | 151개 통과 | `.reports/pi-guard/runs/2026-10-03T23-49-08-664Z-8982bc57-7819-4dac-ab5b-e1744bc3aeeb/linux-arm64/docker-offline.json` |
 | GLM 5.3 SDK·설치 CLI 실행 | 기존 5개 모두 통과 | `.reports/pi-guard/runs/2026-10-03T23-49-50-213Z-56aa5486-7b79-47fc-b060-00f82547b128/linux-arm64/docker-conformance.json` |

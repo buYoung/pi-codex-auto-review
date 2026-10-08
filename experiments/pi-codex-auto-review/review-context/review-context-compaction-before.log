@@ -1,0 +1,28 @@
+✖ [review-context] live compaction adds its summary as evidence without replacing genuine user restrictions (51.623ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 677.202833
+
+✖ failing tests:
+
+test at test/integration/review-context.test.mjs:158:1
+✖ [review-context] live compaction adds its summary as evidence without replacing genuine user restrictions (51.623ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(items.some(item=>item.trust==='evidence'&&JSON.stringify(item.content).includes(summary)))
+  
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/review-context.test.mjs:171:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

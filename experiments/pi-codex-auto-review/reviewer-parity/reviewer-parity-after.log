@@ -1,0 +1,33 @@
+✔ [reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible (0.782875ms)
+✔ [reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content (0.189166ms)
+✔ [joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects (78.395625ms)
+✔ [creation] reviewed shell creation describes the exact target and later writes need a new approval (33.559917ms)
+✔ [failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation (20.063791ms)
+✔ [evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify (5.537875ms)
+✔ [approval-settings] approve configures user or model review and the selected route reaches the original write tool (27.955708ms)
+✔ [approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared (33.16625ms)
+✔ [approval-settings] Escape and unavailable UI preserve settings without saving or executing anything (8.512125ms)
+✔ [approval-settings] reload restores both selections and the persisted model remains selected in the picker (20.547459ms)
+✔ [approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged (10.71925ms)
+✔ [approval-settings] settings changes cancel a pending old-model approval before its late allow can write (11.186125ms)
+✔ [approval-settings] the actual mode picker renders Codex descriptions and all command UI in English (6.737042ms)
+✔ [approval-settings] both model pickers honor the live scope and reject a selection removed while open (10.28075ms)
+✔ [approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects (39.2695ms)
+✔ [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant (14.034708ms)
+✔ [review] only ambiguous actions call a separate tool-free current-model request (5.200958ms)
+✔ [review] malformed, failed, tool-bearing or permission-widening model replies never authorize (3.276542ms)
+✔ [deadlines] configured milliseconds reach the final provider signal and expire at the boundary (1.574041ms)
+✔ [cancellation] caller cancellation reaches the final provider even when it ignores the signal (1.2635ms)
+✔ [review] pinned short/full assessments and policy retain risk thresholds and distinct failures (3.084375ms)
+✔ [review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking (0.567ms)
+✔ [review] registered model override, bounded read-only tools and final values reach the provider (0.52925ms)
+✔ [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority (0.363042ms)
+✔ [review] the production model cannot switch to the legacy approval protocol (1.69875ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 770.6265

@@ -1,0 +1,175 @@
+
+> pi-codex-auto-review@0.1.3 verify:guard
+> node scripts/verify-guard.mjs
+
+PASS [identity] canonical snapshots bind final input/cwd/source/session/policy/profile independently
+PASS [profiles] profiles are immutable and read-only cannot silently gain writes
+PASS [ipc] invalid protocol frames cannot be treated as worker success
+PASS [evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass
+PASS [evidence] concurrent synthetic platform and same-platform storage preserves immutable bytes
+PASS [public-api] supported installed Pi exposes complete tool contracts and protected startup seams
+PASS [identity] retry semantics survive a new invocation but bind session, policy and context
+PASS [profiles] old settings adapt while new routing and model settings reject malformed values
+PASS [dependency-security] the extension has no sandbox runtime or bundled production dependencies
+PASS [dependency-security] Pi brace expansion handles bounded adversarial input without a crash or event-loop stall
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/contracts.json
+PASS [paths] path-prefix escapes, symlink ancestors and nonexistent targets are resolved
+PASS [rules] deny outranks allow for every compound segment and stale identities
+PASS [shell] ordinary reads run directly and advanced syntax cannot borrow a prefix grant
+PASS [rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers
+PASS [paths] write-protected metadata remains readable and scoped elevation differs from absolute denial
+PASS [settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary
+PASS [shell] literal network destinations follow rules and dynamic commands require review
+PASS [settings] corrupt or weakening settings fail closed and read-only file writes require permission
+PASS [rules] Codex Starlark functions, comprehensions, f-strings and tuple examples reach actual matching
+PASS [rules] host executable constraints reject aliases and preserve exact-path precedence
+PASS [rules] all network_rule protocols and overlay ordering reach approval policy
+PASS [rules] malformed rules, cancelled evaluation and oversized requests fail closed
+PASS [context-files] nearest project root, override precedence and configured fallback follow Codex discovery
+PASS [context-files] absent markers, empty markers, untrusted projects and UTF-8 byte limits stay bounded
+PASS [context-files] permitted symlinks work while protected targets and hard-link aliases cannot enter prompts
+PASS [external-policy] Codex MCP annotation precedence and four approval modes
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/policy.json
+PASS [review] only ambiguous actions call a separate tool-free current-model request
+PASS [review] malformed, failed, tool-bearing or permission-widening model replies never authorize
+PASS [deadlines] configured milliseconds reach the final provider signal and expire at the boundary
+PASS [cancellation] caller cancellation reaches the final provider even when it ignores the signal
+PASS [review] pinned short/full assessments and policy retain risk thresholds and distinct failures
+PASS [review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking
+PASS [review] registered model override, bounded read-only tools and final values reach the provider
+PASS [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority
+PASS [review] the production model cannot switch to the legacy approval protocol
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/reviewer.json
+PASS [grants] disabled categories never call reviewers or dialogs and user routing skips the provider
+PASS [grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials
+PASS [cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn
+PASS [grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize
+PASS [queue] concurrent denials interrupt once and cancel a still-running review before it can authorize
+PASS [audit] structured review metadata is bounded and redacted without retaining requests
+PASS [grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source
+PASS [queue] concurrent UI requests serialize and queued cancellation/session replacement cannot cross-authorize
+PASS [queue] approval deadline preserves milliseconds at the actual dialog and denies on expiry
+PASS [persistence] persistent rules require explicit UI selection, atomic save and successful compensation
+PASS [audit] nonempty success/denial/failure population omits content and redacts synthetic markers
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/approvals.json
+PASS [execution] Pi tools perform write, edit and read using the normal SDK filesystem queue
+PASS [execution] shell cwd, caller environment, output and nonzero status reach Pi unchanged
+PASS [execution] the executor uses the supplied SDK delegate once and exposes the linked caller cancellation
+PASS [execution] starting a shell does not enumerate an unrelated unlistable directory
+PASS [cancellation] SDK caller cancellation and a seconds deadline prevent delayed shell writes
+PASS [cancellation] close settles a running SDK shell and rejects subsequent execution
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/execution.json
+PASS [tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects
+PASS [final-input] a later mutable hook is checked at the final consumer and cannot reuse harmless inputs
+PASS [user-bash] ! and !! return handled operations with native output and denial, never host fallback
+PASS [tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call
+PASS [tools] unknown executable commands are reviewed before Pi execution and trusted rules retain precedence
+PASS [tools] the original network command is reviewed once before Pi runs it without replaying earlier effects
+PASS [tools] network URL form config-file cannot bypass automatic or human review
+PASS [tools] network URL form schemeless cannot bypass automatic or human review
+PASS [tools] network URL form config-with-allowed-url cannot bypass automatic or human review
+PASS [tools] actual Pi follow-up review retains original user scope and untrusted tool evidence
+PASS [context-files] discovered instructions reach Pi and review with provenance and refresh on reload
+PASS [tools] read-only reviewer investigation reads owned evidence while mutation and protected paths are rejected
+PASS [user-bash] installed Pi session consumer records ! and !! with the guarded operations
+PASS [tools] TUI/RPC approvals cover one complete edit action and print/JSON deny absent UI
+PASS [tools] outside creation reviews the exact target and cannot approve a later sibling
+PASS [startup] public startup performs no execution qualification and still rejects discarded factories and unknown tools
+PASS [startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery
+PASS [startup] default permissions protect the complete explicitly selected agent credential directory
+PASS [options] caller metadata permissions remain effective while mandatory Pi control paths stay protected
+PASS [nested] actual built-in codemode calls reach guarded local tools and retain structured bash results
+PASS [options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer
+PASS [tools] the host file queue waits for a cancelled invocation to settle before admitting another mutation
+PASS [tools] three denied reviews interrupt the actual Pi turn before a fourth action
+PASS [final-input] authorization changed during a pending review cannot reach native execution
+PASS [tools] real Pi approve command changes the approval route without sending a retry prompt
+PASS [external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals
+PASS [external-tools] MCP denial, required human input and granular policy prevent effects
+PASS [external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes
+PASS [external-tools] user reviewer honors read hints and requires UI for destructive tools
+PASS [external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval
+PASS [external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval
+PASS [external-tools] a nested MCP request cannot downgrade the originating strict review requirement
+PASS [external-tools] changed registration and cancellation during review cannot execute a registered adapter
+PASS [external-tools] real MCP stdio server runs only an approved exact call and preserves structured results
+PASS [external-tools] explicit human-input flag uses a fresh human dialog without automatic inference
+PASS [external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload
+PASS [external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval
+PASS [external-tools] project MCP startup requires a recorded or explicit project trust decision
+PASS [approval-settings] approve configures user or model review and the selected route reaches the original write tool
+PASS [approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared
+PASS [approval-settings] Escape and unavailable UI preserve settings without saving or executing anything
+PASS [approval-settings] reload restores both selections and the persisted model remains selected in the picker
+PASS [approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged
+PASS [approval-settings] settings changes cancel a pending old-model approval before its late allow can write
+PASS [approval-settings] the actual mode picker renders Codex descriptions and all command UI in English
+PASS [approval-settings] both model pickers honor the live scope and reject a selection removed while open
+PASS [approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects
+PASS [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant
+PASS [approval-settings] the actual Pi retry command preserves its one-use marker through extension-generated input
+PASS [approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution
+PASS [approval-settings] a genuine later user prompt authorizes fresh Pi review after a critical denial without a retry command
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/integration.json
+PASS [workflow] model work succeeds while adversarial interpreter and protected file effects remain denied
+PASS [workflow] one-use UI approval covers edit helpers and cannot authorize another logical call
+PASS [workflow] SDK shell approval and invalid settings on reload cannot activate an unreviewed fallback
+PASS [workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request
+PASS [workflow] quoted review rationale is redacted without breaking approved execution or JSON audit
+PASS [workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime
+PASS [workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload
+PASS [workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload
+PASS [workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges
+PASS [workflow] literal metacharacters remain exact review evidence and owned filenames stay usable
+PASS [workflow] real CLI loads an explicit provider and selects the same model for execution and review
+PASS [workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses
+PASS [workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective
+PASS [package] npm tarball loads the default factory through public Pi APIs without bundled sandbox assets
+PASS [cleanup] nonempty owned audit population is scanned and native resources settle before disposal
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/e2e.json
+PASS [reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible
+PASS [reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content
+PASS [joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects
+PASS [creation] reviewed shell creation describes the exact target and later writes need a new approval
+PASS [failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation
+PASS [evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify
+PASS [scenario-harness] finite replay rejects extra and missing main-model or reviewer requests
+PASS [boundary-matrix] read: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] grep: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] find: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] ls: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] write: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] edit: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] temporary paths: default writable temporary roots permit the owned write
+PASS [boundary-matrix] temporary paths: excluded roots require review
+PASS [review-routing] low-policy-denial: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] high-insufficient-authorization: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] critical-even-with-authorization: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] high-authorized: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] provider-outage: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] malformed-assessment: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] injected-permission-fields: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] disabled sandbox approval rejects before provider and still allows ordinary work
+PASS [review-routing] disabled rules approval rejects before provider and still allows ordinary work
+PASS [review-routing] forbidden rule outranks an allow rule for direct shell execution
+PASS [review-routing] forbidden rule outranks an allow rule for wrapped shell execution
+PASS [review-routing] a timed-out review and its late allow reply cannot trigger execution or user fallback
+PASS [scoped-grants] read-only cwd sibling stays protected after an exact-file approval
+PASS [scoped-grants] read-only temporary sibling stays protected after an exact-file approval
+PASS [scoped-grants] symlink retargeted to sibling during review invalidates the pending shell write
+PASS [scoped-grants] symlink retargeted to protected during review invalidates the pending shell write
+PASS [review-cancellation] direct tool cancellation rejects a late approving review
+PASS [review-cancellation] codemode tool cancellation rejects a late approving review
+Evidence: .reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/conformance.json
+{
+  "state": "complete",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/final.json",
+  "currentPlatform": "darwin-arm64",
+  "currentStatus": "pass",
+  "auditProof": {
+    "status": "pass",
+    "artifact": ".reports/pi-guard/runs/2026-10-03T23-48-28-688Z-1baeec2e-2c22-4e29-840a-92f7fa664a22/darwin-arm64/owned-audits.jsonl",
+    "recordCount": 313
+  },
+  "blockedReasons": []
+}

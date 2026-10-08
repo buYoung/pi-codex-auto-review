@@ -1,0 +1,117 @@
+✔ [reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible (0.928459ms)
+✖ [reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content (0.411958ms)
+✔ [joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects (127.525375ms)
+✔ [creation] reviewed shell creation describes the exact target and later writes need a new approval (39.868542ms)
+✔ [failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation (26.929291ms)
+✔ [evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify (6.722791ms)
+✔ [approval-settings] approve configures user or model review and the selected route reaches the original write tool (83.441375ms)
+✔ [approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared (29.970958ms)
+✔ [approval-settings] Escape and unavailable UI preserve settings without saving or executing anything (5.444959ms)
+✔ [approval-settings] reload restores both selections and the persisted model remains selected in the picker (9.596ms)
+✔ [approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged (21.47225ms)
+✔ [approval-settings] settings changes cancel a pending old-model approval before its late allow can write (11.162042ms)
+✔ [approval-settings] the actual mode picker renders Codex descriptions and all command UI in English (10.1305ms)
+✔ [approval-settings] both model pickers honor the live scope and reject a selection removed while open (12.9855ms)
+✔ [approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects (58.117458ms)
+✖ [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant (8.021292ms)
+✔ [review] only ambiguous actions call a separate tool-free current-model request (10.971583ms)
+✔ [review] malformed, failed, tool-bearing or permission-widening model replies never authorize (8.340083ms)
+✔ [deadlines] configured milliseconds reach the final provider signal and expire at the boundary (7.700666ms)
+✔ [cancellation] caller cancellation reaches the final provider even when it ignores the signal (5.983958ms)
+✔ [review] pinned short/full assessments and policy retain risk thresholds and distinct failures (6.657458ms)
+✔ [review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking (1.81ms)
+✔ [review] registered model override, bounded read-only tools and final values reach the provider (0.602083ms)
+✖ [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority (0.620458ms)
+✖ [review] the production model cannot switch to the legacy approval protocol (9.912958ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 21
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1679.012125
+
+✖ failing tests:
+
+test at test/conformance/auto-review.test.mjs:27:1
+✖ [reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content (0.411958ms)
+  AssertionError [ERR_ASSERTION]: Template expansion must not rewrite tenant policy content
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/conformance/auto-review.test.mjs:30:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test/integration/approval-settings.test.mjs:214:1
+✖ [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant (8.021292ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /denied action/. Input:
+  
+  'Approval mode — Current: Approve for me'
+  
+      at f.context.ui.select (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/approval-settings.test.mjs:225:12)
+      at Object.handler (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/dist/approval-commands.js:124:36)
+      at async TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/approval-settings.test.mjs:228:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Approval mode — Current: Approve for me',
+    expected: /denied action/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test/unit/reviewer.test.mjs:97:1
+✖ [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority (0.620458ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'original',
+  +   'confirmation',
+      'result:risk',
+  -   'confirmation',
+      'extension'
+    ]
+  
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/unit/reviewer.test.mjs:103:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'original', 'confirmation', 'result:risk', 'extension' ],
+    expected: [ 'original', 'result:risk', 'confirmation', 'extension' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/unit/reviewer.test.mjs:115:1
+✖ [review] the production model cannot switch to the legacy approval protocol (9.912958ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'allow' !== 'deny'
+  
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/unit/reviewer.test.mjs:119:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'allow',
+    expected: 'deny',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

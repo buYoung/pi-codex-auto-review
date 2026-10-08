@@ -74,8 +74,8 @@ Pi용 설명은 원문의 실행 환경 설명을 사실에 맞게 교체하고,
 
 | 검증 | 결과 | 산출물 |
 | --- | --- | --- |
-| 수정 전 재현 | 새 검사 4개 실패로 차이 확인 | `tmp/reviewer-parity-before.log` |
-| 수정 후 집중 검사 | 25개 통과 | `tmp/reviewer-parity-after.log` |
+| 수정 전 재현 | 새 검사 4개 실패로 차이 확인 | `experiments/pi-codex-auto-review/reviewer-parity/reviewer-parity-before.log` |
+| 수정 후 집중 검사 | 25개 통과 | `experiments/pi-codex-auto-review/reviewer-parity/reviewer-parity-after.log` |
 | macOS ARM64 전체 검사 | 149개 통과, 감사 기록 301개 검사 | `.reports/pi-guard/runs/2026-10-03T23-35-54-688Z-ad94ae8d-2f6c-4940-a956-bda3b3a0ed5d/darwin-arm64/final.json` |
 | Linux ARM64 Docker 전체 검사 | 149개 통과 | `.reports/pi-guard/runs/2026-10-03T23-36-05-277Z-a882ad74-bf10-4a4d-a389-249c7cdc9b3a/linux-arm64/docker-offline.json` |
 | GLM 5.3 실제 SDK·설치 CLI | 5개 통과, 승인·거부 후 실제 파일 효과 확인 | `.reports/pi-guard/runs/2026-10-03T23-37-34-708Z-b68ccaaa-135a-4d32-b182-738bf209b90d/linux-arm64/docker-conformance.json` |

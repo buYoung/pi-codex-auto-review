@@ -1,0 +1,14 @@
+{
+  "sourceDigest": "53b927482747a5ce3b4a517f69b4b4ba49f6f39e47886819dbdf22293225bd76",
+  "contractDigest": "a21607fbe065593e3fdb78321d7b34cf299134e9854ad257953d538d46518165",
+  "mac": ".reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/final.json",
+  "docker": ".reports/pi-guard/runs/2026-10-04T06-17-54-533Z-e7c09f19-b1a9-4113-ba20-4da1b8b06d78/linux-arm64/docker-offline.json",
+  "testsPerPlatform": 444,
+  "referenceCases": 280,
+  "accepted": 201,
+  "rejected": 79,
+  "packageBytes": 201532,
+  "packageFiles": 133,
+  "nativeAssets": false,
+  "published": false
+}

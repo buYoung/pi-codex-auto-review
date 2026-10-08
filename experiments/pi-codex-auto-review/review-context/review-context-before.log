@@ -1,0 +1,46 @@
+✖ [review-context] the final provider sees late instructions, final tool results, nested provenance and the active permission profile (89.292125ms)
+✖ [review-context] final execution inputs and explicit UI approvals survive a real Pi reload (36.018417ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 693.518667
+
+✖ failing tests:
+
+test at test/integration/review-context.test.mjs:8:1
+✖ [review-context] the final provider sees late instructions, final tool results, nested provenance and the active permission profile (89.292125ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(data.context.items.some(item=>item.source==='developer'&&String(item.content).includes('FINAL_DEVELOPER_INSTRUCTION')))
+  
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/review-context.test.mjs:29:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test/integration/review-context.test.mjs:43:1
+✖ [review-context] final execution inputs and explicit UI approvals survive a real Pi reload (36.018417ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(items.some(item=>item.source==='tool-call'&&item.content.stage==='prepared'&&item.content.args.command.includes('PREFIX_EVIDENCE')))
+  
+      at TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/review-context.test.mjs:62:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

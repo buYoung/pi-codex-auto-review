@@ -1,0 +1,25 @@
+✖ [approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution (12.992916ms)
+✔ [approval-settings] a genuine later user prompt authorizes fresh Pi review after a critical denial without a retry command (39.785333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 634.071041
+
+✖ failing tests:
+
+test at test/integration/approval-settings.test.mjs:266:1
+✖ [approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution (12.992916ms)
+  Error [GuardError]: Critical-risk denials cannot be overridden
+      at ReviewLifecycle.authorizeRetry (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/dist/review/lifecycle.js:45:19)
+      at GuardController.authorizeRetry (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/dist/tools/controller.js:80:49)
+      at async retryDeniedAction (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/dist/approval-commands.js:121:19)
+      at async Object.handler (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/dist/approval-commands.js:145:17)
+      at async TestContext.<anonymous> (file:///Users/buyong/workspace/private-opensource/pi-codex-permission/test/integration/approval-settings.test.mjs:278:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    code: 'RETRY_FORBIDDEN'
+  }

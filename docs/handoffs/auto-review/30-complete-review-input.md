@@ -95,9 +95,9 @@ GLM SDK 검증과 별도 프로세스로 실행하는 설치 패키지 CLI를 �
 
 | 검사 | 결과 | 산출물 |
 | --- | --- | --- |
-| 수정 전 문맥 재현 | 최종 지침·재로드 시나리오 2개 실패 | `tmp/review-context-before.log` |
-| 초기 집중 검사 | 26개 통과 | `tmp/review-context-after.log` |
-| 축약 누락 재현 | 실제 Pi 축약 후 요약 미전달로 실패 | `tmp/review-context-compaction-before.log` |
+| 수정 전 문맥 재현 | 최종 지침·재로드 시나리오 2개 실패 | `experiments/pi-codex-auto-review/review-context/review-context-before.log` |
+| 초기 집중 검사 | 26개 통과 | `experiments/pi-codex-auto-review/review-context/review-context-after.log` |
+| 축약 누락 재현 | 실제 Pi 축약 후 요약 미전달로 실패 | `experiments/pi-codex-auto-review/review-context/review-context-compaction-before.log` |
 | 최종 macOS ARM64 | 161개 통과, 감사 기록 336개 검사 | `.reports/pi-guard/runs/2026-10-04T00-55-01-637Z-95fe7cc5-eefb-4487-83de-a0bc8ce11592/darwin-arm64/final.json` |
 | 최종 Linux ARM64 Docker | 161개 통과 | `.reports/pi-guard/runs/2026-10-04T00-55-39-567Z-cd352317-033c-41b1-bc15-15788e8de646/linux-arm64/docker-offline.json` |
 | GLM SDK·설치 CLI 실행 | 4개 SDK·1개 CLI 모두 통과 | `.reports/pi-guard/runs/2026-10-04T00-56-49-854Z-0972a068-3c7e-448d-b467-6df787a01b7f/linux-arm64/docker-conformance.json` |

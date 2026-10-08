@@ -1,0 +1,6 @@
+{
+  "serviceTier": "standard",
+  "keepField": "preserved",
+  "desiredActive": false,
+  "active": false
+}

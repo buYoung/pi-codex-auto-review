@@ -1,0 +1,84 @@
+
+> pi-codex-auto-review@0.1.4 verify:docker
+> node scripts/verify-docker.mjs --mode offline --platform linux/arm64
+
+Building linux/arm64; evidence .reports/pi-guard/runs/2026-10-04T06-17-22-608Z-2ed28bb9-9485-4bb3-a633-233c4802d5da/linux-arm64
+Running offline in linux/arm64; container 20e3a3bacf1d
+{
+  "schemaVersion": 2,
+  "status": "pass",
+  "sourceDigest": "53b927482747a5ce3b4a517f69b4b4ba49f6f39e47886819dbdf22293225bd76",
+  "contractDigest": "a21607fbe065593e3fdb78321d7b34cf299134e9854ad257953d538d46518165",
+  "mode": "offline",
+  "targetPlatform": "linux/arm64",
+  "dockerHostArchitecture": "aarch64",
+  "kernelArchitecture": "arm64",
+  "dockerSecurityOptions": [
+    "name=seccomp,profile=builtin",
+    "name=cgroupns"
+  ],
+  "usesArchitectureEmulation": false,
+  "imageDigest": "sha256:3580449da9e7f437184cb524a76c4cdbb2aec82343bda6edf2518d35372fdcae",
+  "containerId": "20e3a3bacf1d7761a68bfb9727323f9bb789b5c362f6702cb65f8a626a1f7e12",
+  "containerRemoved": true,
+  "containerResult": ".reports/pi-guard/runs/2026-10-04T06-17-54-533Z-e7c09f19-b1a9-4113-ba20-4da1b8b06d78/linux-arm64/docker-offline.json",
+  "packageIdentity": {
+    "sourceDigest": "53b927482747a5ce3b4a517f69b4b4ba49f6f39e47886819dbdf22293225bd76",
+    "contractDigest": "a21607fbe065593e3fdb78321d7b34cf299134e9854ad257953d538d46518165",
+    "packages": {
+      "@earendil-works/pi-coding-agent": "0.99.1",
+      "pi-ollama-cloud": "0.12.2"
+    },
+    "plugin": {
+      "name": "pi-codex-auto-review",
+      "version": "0.1.4",
+      "sha256": "f7e9251699a9ba4ec2f38505ba4369acfff33ece667a727c81784efc6e746243",
+      "integrity": "sha512-h+/zPcuGpRV7Bt0LVvkv5GFx9vPAo1ghulKbHB89BAFieQDRv0JFAsGB8lcneNR8GZmDEIZq9xjH5fbFKzsTog=="
+    },
+    "installation": "npm ci with locked provider; npm pack artifact extracted into an isolated SDK consumer with explicitly linked host peers"
+  },
+  "provider": {
+    "package": "pi-ollama-cloud",
+    "version": "0.12.2",
+    "id": "ollama-cloud",
+    "model": "catalog-only"
+  },
+  "executionCapabilities": {
+    "platform": "linux-arm64",
+    "processArchitecture": "arm64",
+    "reportedMachine": "aarch64",
+    "fd": "fd 10.3.0",
+    "osIsolation": false,
+    "preflight": {
+      "permittedEffect": true,
+      "cancellationPreventedEffect": true,
+      "platform": "linux-arm64",
+      "processReaping": {
+        "initProcess": "docker-init",
+        "orphanReaped": true
+      }
+    }
+  },
+  "command": "npm run verify:docker -- --mode offline --platform linux/arm64",
+  "envNames": [
+    "PI_OLLAMA_WEB_TOOLS"
+  ],
+  "outerContainer": {
+    "init": true,
+    "pidsLimit": 256,
+    "capabilities": "all dropped",
+    "noNewPrivileges": true,
+    "seccomp": "daemon default",
+    "systemPaths": "daemon default",
+    "apparmor": {
+      "enabledOnDaemon": false,
+      "requested": "daemon default",
+      "effectiveProfile": ""
+    },
+    "hostMounts": [],
+    "publishedPorts": []
+  },
+  "blockedReasons": [],
+  "recordedAt": "2026-10-04T06:18:09.258Z",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-04T06-17-22-608Z-2ed28bb9-9485-4bb3-a633-233c4802d5da/linux-arm64/docker-orchestration.json"
+}

@@ -1,0 +1,157 @@
+
+> pi-codex-auto-review@0.1.4 prepack
+> node scripts/clean-build.mjs && tsc && node scripts/check-package.mjs
+
+Package verified: JavaScript rule engine and worker; no platform binaries or bundled Pi dependencies
+
+> pi-codex-auto-review@0.1.4 prepare
+> husky
+
+error: could not lock config file .git/config: Operation not permitted
+pi-codex-auto-review-0.1.4.tgz
+npm notice
+npm notice 📦  pi-codex-auto-review@0.1.4
+npm notice Tarball Contents
+npm notice 10.9kB LICENSE
+npm notice 582B NOTICE
+npm notice 6.5kB README.ko.md
+npm notice 6.1kB README.md
+npm notice 328B dist/approval-commands.d.ts
+npm notice 10.5kB dist/approval-commands.js
+npm notice 10.8kB dist/approval-commands.js.map
+npm notice 368B dist/approval-settings.d.ts
+npm notice 1.6kB dist/approval-settings.js
+npm notice 1.6kB dist/approval-settings.js.map
+npm notice 2.7kB dist/approvals.d.ts
+npm notice 12.7kB dist/approvals.js
+npm notice 10.9kB dist/approvals.js.map
+npm notice 1.0kB dist/audit.d.ts
+npm notice 2.5kB dist/audit.js
+npm notice 2.5kB dist/audit.js.map
+npm notice 81B dist/cli.d.ts
+npm notice 3.9kB dist/cli.js
+npm notice 3.5kB dist/cli.js.map
+npm notice 498B dist/context-files.d.ts
+npm notice 4.9kB dist/context-files.js
+npm notice 5.2kB dist/context-files.js.map
+npm notice 9.6kB dist/contracts.d.ts
+npm notice 6.5kB dist/contracts.js
+npm notice 6.6kB dist/contracts.js.map
+npm notice 1.3kB dist/index.d.ts
+npm notice 8.2kB dist/index.js
+npm notice 7.3kB dist/index.js.map
+npm notice 138B dist/pi-host.d.ts
+npm notice 316B dist/pi-host.js
+npm notice 286B dist/pi-host.js.map
+npm notice 370B dist/policy/domains.d.ts
+npm notice 1.1kB dist/policy/domains.js
+npm notice 1.4kB dist/policy/domains.js.map
+npm notice 2.6kB dist/policy/index.d.ts
+npm notice 23.8kB dist/policy/index.js
+npm notice 23.2kB dist/policy/index.js.map
+npm notice 455B dist/policy/paths.d.ts
+npm notice 2.5kB dist/policy/paths.js
+npm notice 2.5kB dist/policy/paths.js.map
+npm notice 206B dist/policy/rule-engine.d.ts
+npm notice 10.6kB dist/policy/rule-engine.js
+npm notice 11.7kB dist/policy/rule-engine.js.map
+npm notice 1.1kB dist/policy/rule-types.d.ts
+npm notice 123B dist/policy/rule-types.js
+npm notice 166B dist/policy/rule-types.js.map
+npm notice 11B dist/policy/rules-sync.d.ts
+npm notice 568B dist/policy/rules-sync.js
+npm notice 767B dist/policy/rules-sync.js.map
+npm notice 11B dist/policy/rules-worker.d.ts
+npm notice 433B dist/policy/rules-worker.js
+npm notice 548B dist/policy/rules-worker.js.map
+npm notice 877B dist/policy/rules.d.ts
+npm notice 6.4kB dist/policy/rules.js
+npm notice 6.5kB dist/policy/rules.js.map
+npm notice 624B dist/policy/shell.d.ts
+npm notice 4.5kB dist/policy/shell.js
+npm notice 4.5kB dist/policy/shell.js.map
+npm notice 565B dist/policy/starlark/builtins.d.ts
+npm notice 30.8kB dist/policy/starlark/builtins.js
+npm notice 33.7kB dist/policy/starlark/builtins.js.map
+npm notice 481B dist/policy/starlark/evaluator.d.ts
+npm notice 22.7kB dist/policy/starlark/evaluator.js
+npm notice 21.9kB dist/policy/starlark/evaluator.js.map
+npm notice 502B dist/policy/starlark/lexer.d.ts
+npm notice 7.4kB dist/policy/starlark/lexer.js
+npm notice 7.3kB dist/policy/starlark/lexer.js.map
+npm notice 2.6kB dist/policy/starlark/parser.d.ts
+npm notice 16.9kB dist/policy/starlark/parser.js
+npm notice 17.7kB dist/policy/starlark/parser.js.map
+npm notice 266B dist/policy/starlark/validation.d.ts
+npm notice 7.1kB dist/policy/starlark/validation.js
+npm notice 6.6kB dist/policy/starlark/validation.js.map
+npm notice 1.8kB dist/policy/starlark/values.d.ts
+npm notice 12.9kB dist/policy/starlark/values.js
+npm notice 14.7kB dist/policy/starlark/values.js.map
+npm notice 667B dist/reports.d.ts
+npm notice 4.2kB dist/reports.js
+npm notice 3.6kB dist/reports.js.map
+npm notice 1.8kB dist/review/context.d.ts
+npm notice 12.9kB dist/review/context.js
+npm notice 12.1kB dist/review/context.js.map
+npm notice 1.5kB dist/review/investigation.d.ts
+npm notice 3.0kB dist/review/investigation.js
+npm notice 2.9kB dist/review/investigation.js.map
+npm notice 961B dist/review/lifecycle.d.ts
+npm notice 4.8kB dist/review/lifecycle.js
+npm notice 4.0kB dist/review/lifecycle.js.map
+npm notice 105B dist/review/policy.d.ts
+npm notice 5.2kB dist/review/policy.js
+npm notice 760B dist/review/policy.js.map
+npm notice 18.3kB dist/review/upstream-policy.d.ts
+npm notice 29.5kB dist/review/upstream-policy.js
+npm notice 443B dist/review/upstream-policy.js.map
+npm notice 429B dist/review/user-input.d.ts
+npm notice 2.5kB dist/review/user-input.js
+npm notice 2.2kB dist/review/user-input.js.map
+npm notice 2.2kB dist/reviewer.d.ts
+npm notice 14.3kB dist/reviewer.js
+npm notice 11.6kB dist/reviewer.js.map
+npm notice 412B dist/signals.d.ts
+npm notice 1.4kB dist/signals.js
+npm notice 1.6kB dist/signals.js.map
+npm notice 1.2kB dist/startup.d.ts
+npm notice 9.5kB dist/startup.js
+npm notice 7.3kB dist/startup.js.map
+npm notice 3.4kB dist/tools/controller.d.ts
+npm notice 30.9kB dist/tools/controller.js
+npm notice 24.5kB dist/tools/controller.js.map
+npm notice 188B dist/tools/environment.d.ts
+npm notice 793B dist/tools/environment.js
+npm notice 634B dist/tools/environment.js.map
+npm notice 726B dist/tools/executor.d.ts
+npm notice 3.7kB dist/tools/executor.js
+npm notice 3.4kB dist/tools/executor.js.map
+npm notice 1.6kB dist/tools/external.d.ts
+npm notice 1.6kB dist/tools/external.js
+npm notice 1.3kB dist/tools/external.js.map
+npm notice 1.2kB dist/tools/mcp.d.ts
+npm notice 14.8kB dist/tools/mcp.js
+npm notice 12.0kB dist/tools/mcp.js.map
+npm notice 107B dist/tools/mutation-queue.d.ts
+npm notice 575B dist/tools/mutation-queue.js
+npm notice 651B dist/tools/mutation-queue.js.map
+npm notice 8.1kB docs/publishing.ko.md
+npm notice 7.2kB docs/publishing.md
+npm notice 5.7kB docs/security/dependencies.ko.md
+npm notice 5.5kB docs/security/dependencies.md
+npm notice 25.9kB docs/testing/auto-review-protection.ko.md
+npm notice 25.3kB docs/testing/auto-review-protection.md
+npm notice 20.5kB docs/usage.ko.md
+npm notice 19.0kB docs/usage.md
+npm notice 3.8kB package.json
+npm notice Tarball Details
+npm notice name: pi-codex-auto-review
+npm notice version: 0.1.4
+npm notice filename: pi-codex-auto-review-0.1.4.tgz
+npm notice package size: 201.5 kB
+npm notice unpacked size: 837.4 kB
+npm notice shasum: aba3ad51a0a3fdc6282ace7b07767fcb36c29a11
+npm notice integrity: sha512-QE8GPRUp8HSfR[...]1Uf6diK14oa9w==
+npm notice total files: 133
+npm notice

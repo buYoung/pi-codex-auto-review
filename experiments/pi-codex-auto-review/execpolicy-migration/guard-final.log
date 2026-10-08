@@ -1,0 +1,468 @@
+
+> pi-codex-auto-review@0.1.4 verify:guard
+> node scripts/verify-guard.mjs
+
+PASS [identity] canonical snapshots bind final input/cwd/source/session/policy/profile independently
+PASS [profiles] profiles are immutable and read-only cannot silently gain writes
+PASS [ipc] invalid protocol frames cannot be treated as worker success
+PASS [evidence] incomplete, stale, blocked, skipped, duplicate or simulated-native proof cannot pass
+PASS [evidence] concurrent synthetic platform and same-platform storage preserves immutable bytes
+PASS [public-api] supported installed Pi exposes complete tool contracts and protected startup seams
+PASS [identity] retry semantics survive a new invocation but bind session, policy and context
+PASS [profiles] old settings adapt while new routing and model settings reject malformed values
+PASS [dependency-security] the extension has no sandbox runtime or bundled production dependencies
+PASS [dependency-security] Pi brace expansion handles bounded adversarial input without a crash or event-loop stall
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/contracts.json
+PASS [paths] path-prefix escapes, symlink ancestors and nonexistent targets are resolved
+PASS [rules] deny outranks allow for every compound segment and stale identities
+PASS [shell] ordinary reads run directly and advanced syntax cannot borrow a prefix grant
+PASS [rules] literal Codex prefix_rule grammar validates examples and strongest decision across wrappers
+PASS [paths] write-protected metadata remains readable and scoped elevation differs from absolute denial
+PASS [settings] default readable roots, temporary roots and Git worktree metadata match the declared boundary
+PASS [shell] literal network destinations follow rules and dynamic commands require review
+PASS [settings] corrupt or weakening settings fail closed and read-only file writes require permission
+PASS [rules] Codex Starlark functions, comprehensions, f-strings and tuple examples reach actual matching
+PASS [rules] host executable constraints reject aliases and preserve exact-path precedence
+PASS [rules] all network_rule protocols and overlay ordering reach approval policy
+PASS [rules] malformed rules, cancelled evaluation and oversized requests fail closed
+PASS [rules] original Codex result replay: expression-0
+PASS [rules] original Codex result replay: expression-1
+PASS [rules] original Codex result replay: expression-2
+PASS [rules] original Codex result replay: expression-3
+PASS [rules] original Codex result replay: expression-4
+PASS [rules] original Codex result replay: expression-5
+PASS [rules] original Codex result replay: expression-6
+PASS [rules] original Codex result replay: expression-7
+PASS [rules] original Codex result replay: expression-8
+PASS [rules] original Codex result replay: expression-9
+PASS [rules] original Codex result replay: expression-10
+PASS [rules] original Codex result replay: expression-11
+PASS [rules] original Codex result replay: expression-12
+PASS [rules] original Codex result replay: expression-13
+PASS [rules] original Codex result replay: expression-14
+PASS [rules] original Codex result replay: expression-15
+PASS [rules] original Codex result replay: expression-16
+PASS [rules] original Codex result replay: expression-17
+PASS [rules] original Codex result replay: expression-18
+PASS [rules] original Codex result replay: expression-19
+PASS [rules] original Codex result replay: expression-20
+PASS [rules] original Codex result replay: expression-21
+PASS [rules] original Codex result replay: expression-22
+PASS [rules] original Codex result replay: expression-23
+PASS [rules] original Codex result replay: expression-24
+PASS [rules] original Codex result replay: expression-25
+PASS [rules] original Codex result replay: expression-26
+PASS [rules] original Codex result replay: expression-27
+PASS [rules] original Codex result replay: expression-28
+PASS [rules] original Codex result replay: expression-29
+PASS [rules] original Codex result replay: expression-30
+PASS [rules] original Codex result replay: expression-31
+PASS [rules] original Codex result replay: expression-32
+PASS [rules] original Codex result replay: expression-33
+PASS [rules] original Codex result replay: expression-34
+PASS [rules] original Codex result replay: expression-35
+PASS [rules] original Codex result replay: expression-36
+PASS [rules] original Codex result replay: expression-37
+PASS [rules] original Codex result replay: expression-38
+PASS [rules] original Codex result replay: expression-39
+PASS [rules] original Codex result replay: expression-40
+PASS [rules] original Codex result replay: expression-41
+PASS [rules] original Codex result replay: expression-42
+PASS [rules] original Codex result replay: expression-43
+PASS [rules] original Codex result replay: expression-44
+PASS [rules] original Codex result replay: expression-45
+PASS [rules] original Codex result replay: expression-46
+PASS [rules] original Codex result replay: expression-47
+PASS [rules] original Codex result replay: expression-48
+PASS [rules] original Codex result replay: expression-49
+PASS [rules] original Codex result replay: expression-50
+PASS [rules] original Codex result replay: expression-51
+PASS [rules] original Codex result replay: expression-52
+PASS [rules] original Codex result replay: expression-53
+PASS [rules] original Codex result replay: expression-54
+PASS [rules] original Codex result replay: expression-55
+PASS [rules] original Codex result replay: expression-56
+PASS [rules] original Codex result replay: expression-57
+PASS [rules] original Codex result replay: expression-58
+PASS [rules] original Codex result replay: expression-59
+PASS [rules] original Codex result replay: expression-60
+PASS [rules] original Codex result replay: expression-61
+PASS [rules] original Codex result replay: expression-62
+PASS [rules] original Codex result replay: expression-63
+PASS [rules] original Codex result replay: expression-64
+PASS [rules] original Codex result replay: expression-65
+PASS [rules] original Codex result replay: expression-66
+PASS [rules] original Codex result replay: expression-67
+PASS [rules] original Codex result replay: expression-68
+PASS [rules] original Codex result replay: expression-69
+PASS [rules] original Codex result replay: expression-70
+PASS [rules] original Codex result replay: expression-71
+PASS [rules] original Codex result replay: expression-72
+PASS [rules] original Codex result replay: expression-73
+PASS [rules] original Codex result replay: expression-74
+PASS [rules] original Codex result replay: expression-75
+PASS [rules] original Codex result replay: expression-76
+PASS [rules] original Codex result replay: expression-77
+PASS [rules] original Codex result replay: expression-78
+PASS [rules] original Codex result replay: expression-79
+PASS [rules] original Codex result replay: expression-80
+PASS [rules] original Codex result replay: expression-81
+PASS [rules] original Codex result replay: expression-82
+PASS [rules] original Codex result replay: expression-83
+PASS [rules] original Codex result replay: expression-84
+PASS [rules] original Codex result replay: expression-85
+PASS [rules] original Codex result replay: expression-86
+PASS [rules] original Codex result replay: expression-87
+PASS [rules] original Codex result replay: expression-88
+PASS [rules] original Codex result replay: expression-89
+PASS [rules] original Codex result replay: expression-90
+PASS [rules] original Codex result replay: expression-91
+PASS [rules] original Codex result replay: expression-92
+PASS [rules] original Codex result replay: expression-93
+PASS [rules] original Codex result replay: expression-94
+PASS [rules] original Codex result replay: expression-95
+PASS [rules] original Codex result replay: expression-96
+PASS [rules] original Codex result replay: expression-97
+PASS [rules] original Codex result replay: expression-98
+PASS [rules] original Codex result replay: expression-99
+PASS [rules] original Codex result replay: expression-100
+PASS [rules] original Codex result replay: expression-101
+PASS [rules] original Codex result replay: expression-102
+PASS [rules] original Codex result replay: expression-103
+PASS [rules] original Codex result replay: expression-104
+PASS [rules] original Codex result replay: expression-105
+PASS [rules] original Codex result replay: expression-106
+PASS [rules] original Codex result replay: expression-107
+PASS [rules] original Codex result replay: expression-108
+PASS [rules] original Codex result replay: expression-109
+PASS [rules] original Codex result replay: expression-110
+PASS [rules] original Codex result replay: expression-111
+PASS [rules] original Codex result replay: expression-112
+PASS [rules] original Codex result replay: expression-113
+PASS [rules] original Codex result replay: expression-114
+PASS [rules] original Codex result replay: expression-115
+PASS [rules] original Codex result replay: expression-116
+PASS [rules] original Codex result replay: expression-117
+PASS [rules] original Codex result replay: expression-118
+PASS [rules] original Codex result replay: expression-119
+PASS [rules] original Codex result replay: expression-120
+PASS [rules] original Codex result replay: expression-121
+PASS [rules] original Codex result replay: expression-122
+PASS [rules] original Codex result replay: expression-123
+PASS [rules] original Codex result replay: expression-124
+PASS [rules] original Codex result replay: expression-125
+PASS [rules] original Codex result replay: expression-126
+PASS [rules] original Codex result replay: expression-127
+PASS [rules] original Codex result replay: expression-128
+PASS [rules] original Codex result replay: expression-129
+PASS [rules] original Codex result replay: expression-130
+PASS [rules] original Codex result replay: expression-131
+PASS [rules] original Codex result replay: expression-132
+PASS [rules] original Codex result replay: expression-133
+PASS [rules] original Codex result replay: expression-134
+PASS [rules] original Codex result replay: expression-135
+PASS [rules] original Codex result replay: expression-136
+PASS [rules] original Codex result replay: expression-137
+PASS [rules] original Codex result replay: expression-138
+PASS [rules] original Codex result replay: expression-139
+PASS [rules] original Codex result replay: expression-140
+PASS [rules] original Codex result replay: expression-141
+PASS [rules] original Codex result replay: program-0
+PASS [rules] original Codex result replay: program-1
+PASS [rules] original Codex result replay: program-2
+PASS [rules] original Codex result replay: program-3
+PASS [rules] original Codex result replay: program-4
+PASS [rules] original Codex result replay: program-5
+PASS [rules] original Codex result replay: program-6
+PASS [rules] original Codex result replay: program-7
+PASS [rules] original Codex result replay: program-8
+PASS [rules] original Codex result replay: program-9
+PASS [rules] original Codex result replay: program-10
+PASS [rules] original Codex result replay: program-11
+PASS [rules] original Codex result replay: program-12
+PASS [rules] original Codex result replay: program-13
+PASS [rules] original Codex result replay: program-14
+PASS [rules] original Codex result replay: program-15
+PASS [rules] original Codex result replay: program-16
+PASS [rules] original Codex result replay: program-17
+PASS [rules] original Codex result replay: program-18
+PASS [rules] original Codex result replay: program-19
+PASS [rules] original Codex result replay: program-20
+PASS [rules] original Codex result replay: program-21
+PASS [rules] original Codex result replay: program-22
+PASS [rules] original Codex result replay: program-23
+PASS [rules] original Codex result replay: program-24
+PASS [rules] original Codex result replay: program-25
+PASS [rules] original Codex result replay: program-26
+PASS [rules] original Codex result replay: program-27
+PASS [rules] original Codex result replay: program-28
+PASS [rules] original Codex result replay: program-29
+PASS [rules] original Codex result replay: program-30
+PASS [rules] original Codex result replay: program-31
+PASS [rules] original Codex result replay: program-32
+PASS [rules] original Codex result replay: program-33
+PASS [rules] original Codex result replay: program-34
+PASS [rules] original Codex result replay: program-35
+PASS [rules] original Codex result replay: program-36
+PASS [rules] original Codex result replay: program-37
+PASS [rules] original Codex result replay: program-38
+PASS [rules] original Codex result replay: program-39
+PASS [rules] original Codex result replay: program-40
+PASS [rules] original Codex result replay: program-41
+PASS [rules] original Codex result replay: program-42
+PASS [rules] original Codex result replay: program-43
+PASS [rules] original Codex result replay: program-44
+PASS [rules] original Codex result replay: program-45
+PASS [rules] original Codex result replay: program-46
+PASS [rules] original Codex result replay: program-47
+PASS [rules] original Codex result replay: program-48
+PASS [rules] original Codex result replay: program-49
+PASS [rules] original Codex result replay: program-50
+PASS [rules] original Codex result replay: program-51
+PASS [rules] original Codex result replay: program-52
+PASS [rules] original Codex result replay: program-53
+PASS [rules] original Codex result replay: program-54
+PASS [rules] original Codex result replay: program-55
+PASS [rules] original Codex result replay: program-56
+PASS [rules] original Codex result replay: program-57
+PASS [rules] original Codex result replay: program-58
+PASS [rules] original Codex result replay: program-59
+PASS [rules] original Codex result replay: program-60
+PASS [rules] original Codex result replay: program-61
+PASS [rules] original Codex result replay: program-62
+PASS [rules] original Codex result replay: program-63
+PASS [rules] original Codex result replay: program-64
+PASS [rules] original Codex result replay: program-65
+PASS [rules] original Codex result replay: program-66
+PASS [rules] original Codex result replay: program-67
+PASS [rules] original Codex result replay: program-68
+PASS [rules] original Codex result replay: program-69
+PASS [rules] original Codex result replay: program-70
+PASS [rules] original Codex result replay: program-71
+PASS [rules] original Codex result replay: program-72
+PASS [rules] original Codex result replay: program-73
+PASS [rules] original Codex result replay: program-74
+PASS [rules] original Codex result replay: program-75
+PASS [rules] original Codex result replay: program-76
+PASS [rules] original Codex result replay: program-77
+PASS [rules] original Codex result replay: program-78
+PASS [rules] original Codex result replay: program-79
+PASS [rules] original Codex result replay: program-80
+PASS [rules] original Codex result replay: program-81
+PASS [rules] original Codex result replay: network-http-allow
+PASS [rules] original Codex result replay: network-http-prompt
+PASS [rules] original Codex result replay: network-http-forbidden
+PASS [rules] original Codex result replay: network-http-deny
+PASS [rules] original Codex result replay: network-https-allow
+PASS [rules] original Codex result replay: network-https-prompt
+PASS [rules] original Codex result replay: network-https-forbidden
+PASS [rules] original Codex result replay: network-https-deny
+PASS [rules] original Codex result replay: network-https_connect-allow
+PASS [rules] original Codex result replay: network-https_connect-prompt
+PASS [rules] original Codex result replay: network-https_connect-forbidden
+PASS [rules] original Codex result replay: network-https_connect-deny
+PASS [rules] original Codex result replay: network-http-connect-allow
+PASS [rules] original Codex result replay: network-http-connect-prompt
+PASS [rules] original Codex result replay: network-http-connect-forbidden
+PASS [rules] original Codex result replay: network-http-connect-deny
+PASS [rules] original Codex result replay: network-socks5_tcp-allow
+PASS [rules] original Codex result replay: network-socks5_tcp-prompt
+PASS [rules] original Codex result replay: network-socks5_tcp-forbidden
+PASS [rules] original Codex result replay: network-socks5_tcp-deny
+PASS [rules] original Codex result replay: network-socks5_udp-allow
+PASS [rules] original Codex result replay: network-socks5_udp-prompt
+PASS [rules] original Codex result replay: network-socks5_udp-forbidden
+PASS [rules] original Codex result replay: network-socks5_udp-deny
+PASS [rules] original Codex result replay: network-smtp-allow
+PASS [rules] original Codex result replay: network-smtp-prompt
+PASS [rules] original Codex result replay: network-smtp-forbidden
+PASS [rules] original Codex result replay: network-smtp-deny
+PASS [rules] original Codex result replay: network-host-0
+PASS [rules] original Codex result replay: network-host-1
+PASS [rules] original Codex result replay: network-host-2
+PASS [rules] original Codex result replay: network-host-3
+PASS [rules] original Codex result replay: network-host-4
+PASS [rules] original Codex result replay: network-host-5
+PASS [rules] original Codex result replay: network-host-6
+PASS [rules] original Codex result replay: network-host-7
+PASS [rules] original Codex result replay: network-host-8
+PASS [rules] original Codex result replay: network-host-9
+PASS [rules] original Codex result replay: network-host-10
+PASS [rules] original Codex result replay: network-host-11
+PASS [rules] original Codex result replay: network-host-12
+PASS [rules] original Codex result replay: network-host-13
+PASS [rules] original Codex result replay: network-host-14
+PASS [rules] original Codex result replay: network-host-15
+PASS [rules] original Codex result replay: network-host-16
+PASS [rules] original Codex result replay: network-overlays
+PASS [rules] original Codex result replay: file-globals-isolated
+PASS [rules] original Codex result replay: empty
+PASS [rules] original Codex result replay: host-0
+PASS [rules] original Codex result replay: host-1
+PASS [rules] original Codex result replay: host-2
+PASS [rules] original Codex result replay: host-3
+PASS [rules] original Codex result replay: host-4
+PASS [rules] original Codex result replay: host-5
+PASS [rules] original Codex result replay: host-6
+PASS [rules] original Codex result replay: host-7
+PASS [rules] pending cancellation releases its listener and leaves the host responsive
+PASS [rules] bounded evaluation and host access rejection also cover the synchronous API
+PASS [rules] request validation keeps the original strict JSON boundary
+PASS [context-files] nearest project root, override precedence and configured fallback follow Codex discovery
+PASS [context-files] absent markers, empty markers, untrusted projects and UTF-8 byte limits stay bounded
+PASS [context-files] permitted symlinks work while protected targets and hard-link aliases cannot enter prompts
+PASS [external-policy] Codex MCP annotation precedence and four approval modes
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/policy.json
+PASS [review] only ambiguous actions call a separate tool-free current-model request
+PASS [review] malformed, failed, tool-bearing or permission-widening model replies never authorize
+PASS [deadlines] configured milliseconds reach the final provider signal and expire at the boundary
+PASS [cancellation] caller cancellation reaches the final provider even when it ignores the signal
+PASS [review] pinned short/full assessments and policy retain risk thresholds and distinct failures
+PASS [review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking
+PASS [review] registered model override, bounded read-only tools and final values reach the provider
+PASS [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority
+PASS [review] the production model cannot switch to the legacy approval protocol
+PASS [context-binding] changed context or permission contents cannot reach the reviewer under an old digest
+PASS [context-binding] bounded durable evidence retains provenance, truncation, prior assessments and branch-local user consent
+PASS [context-binding] dialog observation preserves UI receivers and cancellation and never retains password values or stale answers
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/reviewer.json
+PASS [grants] disabled categories never call reviewers or dialogs and user routing skips the provider
+PASS [grants] denial breaker uses three consecutive or ten of fifty reviews and retains at most ten recent denials
+PASS [cancellation] direct user actions preserve caller and session cancellation without resetting a stopped model turn
+PASS [grants] exact one-use retry reaches review again while changed inputs and consumed markers do not authorize
+PASS [queue] concurrent denials interrupt once and cancel a still-running review before it can authorize
+PASS [audit] structured review metadata is bounded and redacted without retaining requests
+PASS [grants] one-use is consumed once while session rules bind exact inputs/profile/revision/source
+PASS [queue] concurrent UI requests serialize and queued cancellation/session replacement cannot cross-authorize
+PASS [queue] approval deadline preserves milliseconds at the actual dialog and denies on expiry
+PASS [persistence] persistent rules require explicit UI selection, atomic save and successful compensation
+PASS [audit] nonempty success/denial/failure population omits content and redacts synthetic markers
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/approvals.json
+PASS [execution] Pi tools perform write, edit and read using the normal SDK filesystem queue
+PASS [execution] shell cwd, caller environment, output and nonzero status reach Pi unchanged
+PASS [execution] the executor uses the supplied SDK delegate once and exposes the linked caller cancellation
+PASS [execution] starting a shell does not enumerate an unrelated unlistable directory
+PASS [cancellation] SDK caller cancellation and a seconds deadline prevent delayed shell writes
+PASS [cancellation] close settles a running SDK shell and rejects subsequent execution
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/execution.json
+PASS [tools] public Pi routes preserve read/edit/write/grep/find/ls schemas, results and final native effects
+PASS [final-input] a later mutable hook is checked at the final consumer and cannot reuse harmless inputs
+PASS [user-bash] ! and !! return handled operations with native output and denial, never host fallback
+PASS [tools] structured automatic approval reaches native outside writes without UI and does not authorize the next call
+PASS [tools] unknown executable commands are reviewed before Pi execution and trusted rules retain precedence
+PASS [tools] the original network command is reviewed once before Pi runs it without replaying earlier effects
+PASS [tools] network URL form config-file cannot bypass automatic or human review
+PASS [tools] network URL form schemeless cannot bypass automatic or human review
+PASS [tools] network URL form config-with-allowed-url cannot bypass automatic or human review
+PASS [tools] actual Pi follow-up review retains original user scope and untrusted tool evidence
+PASS [context-files] discovered instructions reach Pi and review with provenance and refresh on reload
+PASS [tools] read-only reviewer investigation reads owned evidence while mutation and protected paths are rejected
+PASS [user-bash] installed Pi session consumer records ! and !! with the guarded operations
+PASS [tools] TUI/RPC approvals cover one complete edit action and print/JSON deny absent UI
+PASS [tools] outside creation reviews the exact target and cannot approve a later sibling
+PASS [startup] public startup performs no execution qualification and still rejects discarded factories and unknown tools
+PASS [startup] explicit installed cloud provider loads through public Pi TypeScript loader without automatic discovery
+PASS [startup] default permissions protect the complete explicitly selected agent credential directory
+PASS [options] caller metadata permissions remain effective while mandatory Pi control paths stay protected
+PASS [nested] actual built-in codemode calls reach guarded local tools and retain structured bash results
+PASS [options] supplied bash prefix, spawn cwd/env, seconds, signal and streaming reach the final consumer
+PASS [tools] the host file queue waits for a cancelled invocation to settle before admitting another mutation
+PASS [tools] three denied reviews interrupt the actual Pi turn before a fourth action
+PASS [final-input] authorization changed during a pending review cannot reach native execution
+PASS [tools] real Pi approve command changes the approval route without sending a retry prompt
+PASS [external-tools] strict MCP tools review exact final input despite read-only hints and repeat approvals
+PASS [external-tools] connected-account evidence is copied only from the explicit registered MCP metadata field
+PASS [external-tools] MCP denial, required human input and granular policy prevent effects
+PASS [external-tools] ordinary automatic MCP routing honors read-only hints and configured approval modes
+PASS [external-tools] user reviewer honors read hints and requires UI for destructive tools
+PASS [external-tools] MCP node_repl/js cannot nominate another tool or connector for nested approval
+PASS [external-tools] spoofed origin, user-input requests and forms cannot borrow an ordinary MCP approval
+PASS [external-tools] a nested MCP request cannot downgrade the originating strict review requirement
+PASS [external-tools] changed registration and cancellation during review cannot execute a registered adapter
+PASS [external-tools] real MCP stdio server runs only an approved exact call and preserves structured results
+PASS [external-tools] explicit human-input flag uses a fresh human dialog without automatic inference
+PASS [external-tools] ordinary MCP elicitation reviews registered arguments instead of a substituted payload
+PASS [external-tools] concurrent MCP calls with a reused caller ID cannot borrow another approval
+PASS [external-tools] project MCP startup requires a recorded or explicit project trust decision
+PASS [approval-settings] approve configures user or model review and the selected route reaches the original write tool
+PASS [approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared
+PASS [approval-settings] Escape and unavailable UI preserve settings without saving or executing anything
+PASS [approval-settings] reload restores both selections and the persisted model remains selected in the picker
+PASS [approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged
+PASS [approval-settings] settings changes cancel a pending old-model approval before its late allow can write
+PASS [approval-settings] the actual mode picker renders Codex descriptions and all command UI in English
+PASS [approval-settings] both model pickers honor the live scope and reject a selection removed while open
+PASS [approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects
+PASS [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant
+PASS [approval-settings] the actual Pi retry command preserves its one-use marker through extension-generated input
+PASS [approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution
+PASS [approval-settings] a genuine later user prompt authorizes fresh Pi review after a critical denial without a retry command
+PASS [review-context] the final provider sees late instructions, final tool results, nested provenance and the active permission profile
+PASS [review-context] final execution inputs and explicit UI approvals survive a real Pi reload
+PASS [review-context] the actual provider HTTP body retains exact input, authority provenance, environment and investigation boundaries
+PASS [review-context] real dialog answers and registered MCP account evidence reach review without trusting forged receipts
+PASS [review-context] a late forced prompt replaces inactive developer and project instructions at the reviewer
+PASS [review-context] live compaction adds its summary as evidence without replacing genuine user restrictions
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/integration.json
+PASS [workflow] model work succeeds while adversarial interpreter and protected file effects remain denied
+PASS [workflow] one-use UI approval covers edit helpers and cannot authorize another logical call
+PASS [workflow] SDK shell approval and invalid settings on reload cannot activate an unreviewed fallback
+PASS [workflow] malformed risk enums fail closed at the actual Pi write and reach the next model request
+PASS [workflow] quoted review rationale is redacted without breaking approved execution or JSON audit
+PASS [workflow] denial circuit stops the model but a later direct user shell has its own cancellation lifetime
+PASS [workflow] trusted project MCP configuration cannot be rewritten by model tools or interpreters before reload
+PASS [workflow] trusted extension entrypoint and sibling modules cannot be replaced before reload
+PASS [workflow] real MCP node_repl/js follows explicit prompt approval and never acquires Computer Use privileges
+PASS [workflow] literal metacharacters remain exact review evidence and owned filenames stay usable
+PASS [workflow] real CLI loads an explicit provider and selects the same model for execution and review
+PASS [workflow] live CLI observer counts actual HTTP main and reviewer calls without replacing provider responses
+PASS [workflow] trusted Pi skills prompts and themes reach the session while project trust and extension isolation remain effective
+PASS [package] npm tarball loads the default factory through public Pi APIs without bundled sandbox assets
+PASS [cleanup] nonempty owned audit population is scanned and native resources settle before disposal
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/e2e.json
+PASS [reference] pinned upstream policy bytes and mandatory assessment thresholds remain compatible
+PASS [reference] the rendered prompt preserves complete upstream policy sections and literal custom policy content
+PASS [joined] ordinary execution, automatic elevation, review denial and absolute denial retain distinct final effects
+PASS [creation] reviewed shell creation describes the exact target and later writes need a new approval
+PASS [failures] actual Pi distinguishes provider and schema failures from policy denial without native mutation
+PASS [evidence-join] stale, simulated, wrong-image and incomplete real-provider records cannot qualify
+PASS [scenario-harness] finite replay rejects extra and missing main-model or reviewer requests
+PASS [boundary-matrix] read: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] grep: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] find: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] ls: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] write: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] edit: workspace control succeeds and protected target never reaches review
+PASS [boundary-matrix] temporary paths: default writable temporary roots permit the owned write
+PASS [boundary-matrix] temporary paths: excluded roots require review
+PASS [review-routing] low-policy-denial: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] high-insufficient-authorization: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] critical-even-with-authorization: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] high-authorized: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] provider-outage: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] malformed-assessment: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] injected-permission-fields: assessment reaches the final Pi write and model-visible result
+PASS [review-routing] disabled sandbox approval rejects before provider and still allows ordinary work
+PASS [review-routing] disabled rules approval rejects before provider and still allows ordinary work
+PASS [review-routing] forbidden rule outranks an allow rule for direct shell execution
+PASS [review-routing] forbidden rule outranks an allow rule for wrapped shell execution
+PASS [review-routing] a timed-out review and its late allow reply cannot trigger execution or user fallback
+PASS [scoped-grants] read-only cwd sibling stays protected after an exact-file approval
+PASS [scoped-grants] read-only temporary sibling stays protected after an exact-file approval
+PASS [scoped-grants] symlink retargeted to sibling during review invalidates the pending shell write
+PASS [scoped-grants] symlink retargeted to protected during review invalidates the pending shell write
+PASS [review-cancellation] direct tool cancellation rejects a late approving review
+PASS [review-cancellation] codemode tool cancellation rejects a late approving review
+Evidence: .reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/conformance.json
+{
+  "state": "complete",
+  "artifactPath": ".reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/final.json",
+  "currentPlatform": "darwin-arm64",
+  "currentStatus": "pass",
+  "auditProof": {
+    "status": "pass",
+    "artifact": ".reports/pi-guard/runs/2026-10-04T06-14-18-096Z-7fb64486-53b8-4f75-b3e8-45deae7f99a0/darwin-arm64/owned-audits.jsonl",
+    "recordCount": 336
+  },
+  "blockedReasons": []
+}

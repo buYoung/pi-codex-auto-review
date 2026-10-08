@@ -1,0 +1,34 @@
+✔ [approval-settings] approve configures user or model review and the selected route reaches the original write tool (21.791ms)
+✔ [approval-settings] the searchable picker selects only the auxiliary reviewer and follows the main model when cleared (17.129708ms)
+✔ [approval-settings] Escape and unavailable UI preserve settings without saving or executing anything (4.63975ms)
+✔ [approval-settings] reload restores both selections and the persisted model remains selected in the picker (7.924875ms)
+✔ [approval-settings] concurrent choices preserve each other and a failed save leaves the runtime unchanged (9.961542ms)
+✔ [approval-settings] settings changes cancel a pending old-model approval before its late allow can write (6.356041ms)
+✔ [approval-settings] the actual mode picker renders Codex descriptions and all command UI in English (13.188125ms)
+✔ [approval-settings] both model pickers honor the live scope and reject a selection removed while open (4.818833ms)
+✔ [approval-settings] Pi session scope selection reaches the auxiliary reviewer and preserves allow and deny effects (37.524416ms)
+✔ [approval-settings] approve retry reconnects the exact denial to fresh review without a reusable grant (9.134625ms)
+✔ [approval-settings] the actual Pi retry command preserves its one-use marker through extension-generated input (13.472ms)
+✔ [approval-settings] a past critical denial can be reassessed but a fresh critical assessment still prevents execution (10.072542ms)
+✔ [approval-settings] a genuine later user prompt authorizes fresh Pi review after a critical denial without a retry command (12.867792ms)
+✔ [review-context] the final provider sees late instructions, final tool results, nested provenance and the active permission profile (96.364334ms)
+✔ [review-context] final execution inputs and explicit UI approvals survive a real Pi reload (29.335959ms)
+✔ [review-context] the actual provider HTTP body retains exact input, authority provenance, environment and investigation boundaries (81.196708ms)
+✔ [review-context] real dialog answers and registered MCP account evidence reach review without trusting forged receipts (16.264792ms)
+✔ [review] only ambiguous actions call a separate tool-free current-model request (5.27275ms)
+✔ [review] malformed, failed, tool-bearing or permission-widening model replies never authorize (3.080291ms)
+✔ [deadlines] configured milliseconds reach the final provider signal and expire at the boundary (1.902834ms)
+✔ [cancellation] caller cancellation reaches the final provider even when it ignores the signal (1.725125ms)
+✔ [review] pinned short/full assessments and policy retain risk thresholds and distinct failures (3.224666ms)
+✔ [review] retained authorization survives follow-ups, compaction and branch restoration without trusting tool text or thinking (0.63925ms)
+✔ [review] registered model override, bounded read-only tools and final values reach the provider (0.551042ms)
+✔ [review] authorization and visible evidence retain chronology and removed runtime instructions lose authority (0.389667ms)
+✔ [review] the production model cannot switch to the legacy approval protocol (1.80725ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 805.008459
