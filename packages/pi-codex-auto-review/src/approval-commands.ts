@@ -19,6 +19,7 @@ import type { ApprovalSettingsStore } from "./approval-settings.js";
 import { redact } from "./audit.js";
 import { canonicalJson, GuardError } from "./contracts.js";
 import { type GuardSettings, validateSettings } from "./policy/index.js";
+import { reviewOnlyModels } from "./review/models.js";
 import type { GuardController } from "./tools/controller.js";
 
 type ReviewModel = GuardSettings["reviewModel"];
@@ -97,21 +98,41 @@ class ApprovalModePicker extends Container {
     }
 }
 
-function availableReviewModels(context: ExtensionCommandContext) {
-    const available = context.modelRegistry.getAvailable();
+const modelIdentity = (model: { provider: string; id: string }) =>
+    canonicalJson({ provider: model.provider, id: model.id });
+
+function scopedReviewModels(
+    context: ExtensionCommandContext,
+    available: ReturnType<
+        ExtensionCommandContext["modelRegistry"]["getAvailable"]
+    >,
+) {
     const scoped = context.scopedModels ?? [];
     if (!scoped.length) return available;
-    const key = (model: { provider: string; id: string }) =>
-        canonicalJson({ provider: model.provider, id: model.id });
-    const byIdentity = new Map(available.map((model) => [key(model), model]));
+    const byIdentity = new Map(
+        available.map((model) => [modelIdentity(model), model]),
+    );
     const seen = new Set<string>();
     return scoped.flatMap(({ model }) => {
-        const identity = key(model),
+        const identity = modelIdentity(model),
             registered = byIdentity.get(identity);
         if (!registered || seen.has(identity)) return [];
         seen.add(identity);
         return [registered];
     });
+}
+
+// Review-only models bypass /scoped-models because Pi's /model never lists them.
+function availableReviewModels(context: ExtensionCommandContext) {
+    const available = context.modelRegistry.getAvailable();
+    const listed = scopedReviewModels(context, available);
+    const listedIdentities = new Set(listed.map(modelIdentity));
+    return [
+        ...listed,
+        ...reviewOnlyModels(available).filter(
+            (model) => !listedIdentities.has(modelIdentity(model)),
+        ),
+    ];
 }
 
 class ApprovalModelPicker extends Container implements Focusable {
@@ -370,7 +391,8 @@ export function registerApprovalCommands(
         },
     });
     pi.registerCommand("approve-model", {
-        description: "Choose an approval review model from /scoped-models.",
+        description:
+            "Choose an approval review model from /scoped-models or Codex Auto Review.",
         handler: async (args, context) => {
             requireUI(context);
             await context.waitForIdle();

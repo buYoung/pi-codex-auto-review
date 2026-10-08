@@ -35,10 +35,11 @@ TUI 세션이나 Pi UI 요청에 응답하는 RPC 클라이언트에서 `/approv
 
 앞의 두 선택은 저장합니다. **Full Access는 저장하지 않으며**, Pi를 종료하거나 다른 승인 방식을 선택할 때까지 적용합니다. 평소 절대 거부하는 경로·명령 제한도 우회합니다. 확인을 취소하면 활성화하지 않고 선택창으로 돌아갑니다. 아래의 정책 적용·승인 재사용·MCP 검토 설명은 Full Access가 꺼진 상태를 전제로 합니다.
 
-`/approve-model`은 Pi의 현재 `/scoped-models` 범위에서 사용 가능한 모델을 검색합니다. 검토 모델을 선택해도 주 대화 모델은 바뀌지 않습니다. **Use current Pi model**은 `reviewModel: null`을 설정합니다.
+`/approve-model`은 Pi의 현재 `/scoped-models` 범위에서 사용 가능한 모델과 Codex의 승인 검토 모델 `codex-auto-review`를 검색합니다. 검토 모델을 선택해도 주 대화 모델은 바뀌지 않습니다. **Use current Pi model**은 `reviewModel: null`을 설정합니다.
 
 - 모델 범위가 없으면 사용 가능한 전체 모델을 표시합니다.
 - 범위 안의 모델이 모두 사용할 수 없어도 전체 목록으로 확대하지 않습니다.
+- `codex-auto-review`는 `openai`와 `openai-codex` 중 인증이 있고 `gpt-5.6-luna`가 목록에 있는 공급자마다 **Codex Auto Review (openai free)**, **Codex Auto Review (openai-codex)**로 표시합니다. 연결 주소와 한도는 그 공급자의 `gpt-5.6-luna` 값을 씁니다. Pi의 `/model`에는 없으므로 모델 범위와 관계없이 표시합니다.
 - 선택창이 열린 동안 범위에서 빠진 모델은 저장하지 않습니다.
 - Esc로 취소하면 기존 설정을 유지합니다. 고정 UI 문구는 영어입니다.
 

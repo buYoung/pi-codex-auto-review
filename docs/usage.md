@@ -35,10 +35,11 @@ Run `/approve` in a TUI session, or in RPC with a client that answers Pi UI requ
 
 The first two choices persist. **Full Access is never saved** and lasts until Pi exits or you choose another approval mode. It also bypasses otherwise absolute path and command denials. Cancelling the confirmation returns to the picker without enabling it. Policy enforcement, approval reuse, and MCP review described below assume Full Access is off.
 
-Run `/approve-model` to search available models in Pi's current `/scoped-models` scope. Selecting a reviewer does not change the main conversation model. **Use current Pi model** sets `reviewModel: null`.
+Run `/approve-model` to search available models in Pi's current `/scoped-models` scope, plus Codex's approval review model `codex-auto-review`. Selecting a reviewer does not change the main conversation model. **Use current Pi model** sets `reviewModel: null`.
 
 - Without a model scope, the picker shows all available models.
 - If every scoped model is unavailable, it does not expand to the full list.
+- `codex-auto-review` appears as **Codex Auto Review (openai free)** and **Codex Auto Review (openai-codex)** for each of those providers that has credentials and lists `gpt-5.6-luna`. It reuses that model's endpoint and limits. Pi's `/model` does not list it, so it appears regardless of the model scope.
 - A model removed from the scope while the picker is open is not saved.
 - Esc preserves the existing settings. Fixed UI text is in English.
 

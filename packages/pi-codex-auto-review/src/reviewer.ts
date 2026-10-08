@@ -20,6 +20,7 @@ import {
     INVESTIGATION_TOOLS,
     type ReviewInvestigation,
 } from "./review/investigation.js";
+import { findReviewModel, reviewReasoning } from "./review/models.js";
 import { reviewPolicy } from "./review/policy.js";
 import {
     isRequestStructure,
@@ -60,7 +61,7 @@ export class PiReviewProvider implements ReviewProvider {
     constructor(
         private readonly context: Pick<
             ExtensionContext,
-            "model" | "modelRegistry"
+            "model" | "modelRegistry" | "thinkingLevel"
         >,
         private readonly settings: GuardSettings = DEFAULT_SETTINGS,
         private readonly investigation?: ReviewInvestigation,
@@ -71,7 +72,11 @@ export class PiReviewProvider implements ReviewProvider {
     ): Promise<unknown> {
         const override = this.settings.reviewModel;
         const model = override
-            ? this.context.modelRegistry.find(override.provider, override.id)
+            ? findReviewModel(
+                  this.context.modelRegistry,
+                  override.provider,
+                  override.id,
+              )
             : this.context.model;
         if (!model)
             throw new GuardError(
@@ -83,6 +88,10 @@ export class PiReviewProvider implements ReviewProvider {
         const maxTokens = Math.min(
             this.settings.reviewMaxOutputTokens,
             model.maxTokens ?? this.settings.reviewMaxOutputTokens,
+        );
+        const reasoning = reviewReasoning(
+            model,
+            override ? undefined : this.context.thinkingLevel,
         );
         const context: ProviderContext = {
             systemPrompt: request.systemPrompt,
@@ -120,7 +129,8 @@ export class PiReviewProvider implements ReviewProvider {
                                           (Date.now() - startedAt),
                                   ),
                         maxTokens,
-                        temperature: 0,
+                        // Codex sends no temperature; the Codex backend rejects it.
+                        reasoning,
                     })
                     .result(),
                 options.signal,
