@@ -8,8 +8,22 @@ const MODEL_ID = "gpt-6.1-sol";
 const MAX_OUTPUT_TOKENS = 512;
 const PROVIDER_REFRESH_TIMEOUT_MS = 30000;
 const REQUEST_TIMEOUT_MS = 30000;
-const PROMPT = "Reply with READY only. Do not use tools.";
+const BENCHMARK_LINE_COUNT = 24;
+const BENCHMARK_LINE = "The quick brown fox jumps over the lazy dog.";
+const MIN_TEXT_OUTPUT_TOKENS = 64;
+const MIN_STREAMING_DURATION_MS = 100;
+const MAX_FIRST_CHUNK_FRACTION = 0.1;
+const PROMPT = [
+    `Write exactly ${BENCHMARK_LINE_COUNT} lines.`,
+    `Every line must contain exactly this sentence: ${BENCHMARK_LINE}`,
+    "Do not number the lines. Do not add headings, explanations, blank lines, or tools.",
+].join(" ");
 const PROVIDERS = ["openai", "openai-codex"];
+const SPEED_TIERS = {
+    standard: "default",
+    fast: "priority",
+    ultrafast: "ultrafast",
+};
 const secretValues = new Set();
 
 function parseOptions() {
@@ -17,6 +31,7 @@ function parseOptions() {
         options: {
             live: { type: "boolean", default: false },
             provider: { type: "string", default: "openai" },
+            speed: { type: "string", default: "ultrafast" },
             "agent-dir": { type: "string" },
             help: { type: "boolean", default: false },
         },
@@ -24,12 +39,14 @@ function parseOptions() {
     if (values.help) {
         console.log(
             [
-                "6.1 Sol Ultrafast PoC",
-                "사용법: node scripts/poc-ultrafast-sol.mjs [--provider openai|openai-codex] [--live] [--agent-dir PATH]",
+                "6.1 Sol 속도 등급 PoC",
+                "사용법: node scripts/poc-ultrafast-sol.mjs [--provider openai|openai-codex] [--speed standard|fast|ultrafast] [--live] [--agent-dir PATH]",
                 "기본 실행: 실제 Pi 확장·공급자와 모의 HTTP 응답으로 로컬 검증",
-                "--live: 선택한 Pi 공급자의 기존 설정·인증으로 실제 요청 1회; 계정 사용량 발생",
+                "--live: 선택한 Pi 공급자의 기존 설정·인증으로 24줄 출력 요청 1회; 계정 사용량 발생",
+                "성공 기준: 요청 등급의 전송과 정상 응답; 응답 등급 차이는 결과에 기록",
                 "--agent-dir: Pi 설정 디렉터리 (기본: PI_CODING_AGENT_DIR 또는 Pi 기본 경로)",
                 `--provider: ${PROVIDERS.join(", ")} (기본: openai)`,
+                `--speed: ${Object.keys(SPEED_TIERS).join(", ")} (기본: ultrafast)`,
             ].join("\n"),
         );
         return undefined;
@@ -38,11 +55,16 @@ function parseOptions() {
         PROVIDERS.includes(values.provider),
         "지원되는 Pi 공급자는 openai와 openai-codex입니다.",
     );
+    assert.ok(
+        Object.hasOwn(SPEED_TIERS, values.speed),
+        "지원되는 속도 등급은 standard, fast, ultrafast입니다.",
+    );
     if (values["agent-dir"] !== undefined)
         assert.ok(values["agent-dir"].trim(), "Pi 설정 경로가 비어 있습니다.");
     return {
         isLive: values.live,
         provider: values.provider,
+        speed: values.speed,
         configuredAgentDir: values["agent-dir"]
             ? resolve(values["agent-dir"])
             : undefined,
@@ -107,25 +129,31 @@ function resolveRequestURL(model) {
 }
 
 /** Feed the real OpenAI SSE parser without making a network request. */
-function simulatedResponse(body, requestIndex) {
+function simulatedResponse(body, requestIndex, provider) {
+    const lines = Array(BENCHMARK_LINE_COUNT).fill(BENCHMARK_LINE);
+    const text = lines.join("\n");
+    const outputTokens = BENCHMARK_LINE_COUNT * 12;
     const item = {
         id: `msg_sol_poc_${requestIndex}`,
         type: "message",
         role: "assistant",
         status: "completed",
-        content: [{ type: "output_text", text: "READY", annotations: [] }],
+        content: [{ type: "output_text", text, annotations: [] }],
     };
     const response = {
         id: `resp_sol_poc_${requestIndex}`,
         object: "response",
         model: MODEL_ID,
         status: "completed",
-        service_tier: body.service_tier ?? "default",
+        service_tier:
+            provider === "openai-codex"
+                ? "default"
+                : (body.service_tier ?? "default"),
         output: [item],
         usage: {
             input_tokens: 8,
-            output_tokens: 1,
-            total_tokens: 9,
+            output_tokens: outputTokens,
+            total_tokens: 8 + outputTokens,
             input_tokens_details: { cached_tokens: 0 },
             output_tokens_details: { reasoning_tokens: 0 },
         },
@@ -140,13 +168,13 @@ function simulatedResponse(body, requestIndex) {
             output_index: 0,
             item: { ...item, status: "in_progress", content: [] },
         },
-        {
+        ...lines.map((line, index) => ({
             type: "response.output_text.delta",
             item_id: item.id,
             output_index: 0,
             content_index: 0,
-            delta: "READY",
-        },
+            delta: index === 0 ? line : `\n${line}`,
+        })),
         { type: "response.output_item.done", output_index: 0, item },
         { type: "response.completed", response },
     ];
@@ -161,7 +189,86 @@ function simulatedResponse(body, requestIndex) {
     );
 }
 
-async function run({ isLive, provider, configuredAgentDir }) {
+function measurePerformance({
+    startedAtMs,
+    finishedAtMs,
+    firstTextDeltaAtMs,
+    lastTextDeltaAtMs,
+    textDeltaCount,
+    firstTextDeltaCharacterCount,
+    textCharacterCount,
+    usage,
+}) {
+    const elapsedMs = finishedAtMs - startedAtMs;
+    const outputTokens =
+        Number.isInteger(usage?.output_tokens) && usage.output_tokens >= 0
+            ? usage.output_tokens
+            : null;
+    const reportedReasoningTokens =
+        usage?.output_tokens_details?.reasoning_tokens;
+    const reasoningTokens =
+        Number.isInteger(reportedReasoningTokens) &&
+        reportedReasoningTokens >= 0
+            ? reportedReasoningTokens
+            : null;
+    const textOutputTokens =
+        outputTokens !== null &&
+        reasoningTokens !== null &&
+        reasoningTokens <= outputTokens
+            ? outputTokens - reasoningTokens
+            : null;
+    const streamingDurationMs =
+        firstTextDeltaAtMs !== undefined &&
+        lastTextDeltaAtMs > firstTextDeltaAtMs
+            ? lastTextDeltaAtMs - firstTextDeltaAtMs
+            : null;
+    let tpsUnavailableReason = null;
+    if (textOutputTokens === null)
+        tpsUnavailableReason = "텍스트 출력 토큰 수를 계산할 수 없습니다.";
+    else if (textOutputTokens < MIN_TEXT_OUTPUT_TOKENS)
+        tpsUnavailableReason = `텍스트 출력 토큰이 너무 적습니다(최소 ${MIN_TEXT_OUTPUT_TOKENS}개).`;
+    else if (textDeltaCount < 2 || streamingDurationMs === null)
+        tpsUnavailableReason =
+            "텍스트 출력이 여러 조각으로 스트리밍되지 않았습니다.";
+    else if (
+        textCharacterCount <= 0 ||
+        firstTextDeltaCharacterCount / textCharacterCount >
+            MAX_FIRST_CHUNK_FRACTION
+    )
+        tpsUnavailableReason =
+            "첫 출력 조각에 전체 텍스트의 10%보다 많은 내용이 포함돼 생성 구간을 추정할 수 없습니다.";
+    else if (streamingDurationMs < MIN_STREAMING_DURATION_MS)
+        tpsUnavailableReason = `출력 스트리밍 관측 구간이 너무 짧습니다(최소 ${MIN_STREAMING_DURATION_MS}ms).`;
+    return {
+        elapsedMs: Math.round(elapsedMs),
+        timeToFirstTokenMs:
+            firstTextDeltaAtMs !== undefined
+                ? Math.round(firstTextDeltaAtMs - startedAtMs)
+                : null,
+        streamingDurationMs:
+            streamingDurationMs !== null
+                ? Math.round(streamingDurationMs)
+                : null,
+        outputTokens,
+        reasoningTokens,
+        textOutputTokens,
+        textDeltaCount,
+        tps:
+            tpsUnavailableReason === null
+                ? Math.round(
+                      ((textOutputTokens - 1) * 1000 * 100) /
+                          streamingDurationMs,
+                  ) / 100
+                : null,
+        tpsUnavailableReason,
+        endToEndTps:
+            outputTokens !== null && elapsedMs > 0
+                ? Math.round((outputTokens * 1000 * 100) / elapsedMs) / 100
+                : null,
+    };
+}
+
+async function run({ isLive, provider, speed, configuredAgentDir }) {
     const root = await mkdtemp(join(tmpdir(), "pi-ultrafast-sol-poc-"));
     const agentDir = join(root, "agent");
     const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
@@ -242,6 +349,11 @@ async function run({ isLive, provider, configuredAgentDir }) {
         const hookPayloads = [];
         let expectedTier;
         let requestError;
+        let firstTextDeltaAtMs;
+        let lastTextDeltaAtMs;
+        let textDeltaCount = 0;
+        let firstTextDeltaCharacterCount = 0;
+        let textCharacterCount = 0;
         const observeExtension = (extension) => {
             extension.on("before_provider_request", (event) => {
                 hookPayloads.push({
@@ -250,6 +362,19 @@ async function run({ isLive, provider, configuredAgentDir }) {
                 });
             });
             extension.on("provider_stream_event", (event) => {
+                if (
+                    event.data?.type === "response.output_text.delta" &&
+                    typeof event.data.delta === "string" &&
+                    event.data.delta.length > 0
+                ) {
+                    const receivedAtMs = performance.now();
+                    if (firstTextDeltaAtMs === undefined)
+                        firstTextDeltaCharacterCount = event.data.delta.length;
+                    firstTextDeltaAtMs ??= receivedAtMs;
+                    lastTextDeltaAtMs = receivedAtMs;
+                    textDeltaCount++;
+                    textCharacterCount += event.data.delta.length;
+                }
                 if (event.data?.type === "response.completed")
                     completedResponses.push(event.data.response);
             });
@@ -313,17 +438,25 @@ async function run({ isLive, provider, configuredAgentDir }) {
                     requests.length < (isLive ? 1 : 3),
                     "PoC 요청 횟수를 초과했습니다.",
                 );
+                if (isBackend && !request.headers.has("x-codex-routing-hint")) {
+                    const routingHint =
+                        body.service_tier && body.service_tier !== "default"
+                            ? `model=${body.model};tier=${body.service_tier}`
+                            : `model=${body.model}`;
+                    request.headers.set("x-codex-routing-hint", routingHint);
+                }
                 const trace = {
                     url: request.url,
                     model: body.model,
                     sentTier: body.service_tier ?? null,
                     maxOutputTokens: body.max_output_tokens ?? null,
                     contentEncoding,
+                    routingHint: request.headers.get("x-codex-routing-hint"),
                 };
                 requests.push(trace);
                 const response = isLive
                     ? await fetch(request, { redirect: "error" })
-                    : simulatedResponse(body, requests.length);
+                    : simulatedResponse(body, requests.length, provider);
                 trace.httpStatus = response.status;
                 trace.requestId = response.headers.get("x-request-id");
                 return response;
@@ -357,7 +490,8 @@ async function run({ isLive, provider, configuredAgentDir }) {
             noPromptTemplates: true,
             noThemes: true,
             noContextFiles: true,
-            systemPrompt: "Reply with READY only.",
+            systemPrompt:
+                "Follow the requested output format exactly. Do not use tools or add explanations.",
             extensionFactories: [fastModeExtension, observeExtension],
         });
         await resourceLoader.reload();
@@ -385,12 +519,17 @@ async function run({ isLive, provider, configuredAgentDir }) {
             assert.equal(requests.length, count, "명령이 모델을 호출했습니다.");
             const saved = JSON.parse(await readFile(settingsPath, "utf8"));
             assert.equal(saved.serviceTier, tier);
-            assert.equal(saved.active, tier === "ultrafast");
+            assert.equal(saved.active, tier !== "standard");
         };
         const results = [];
         const checkRequest = async (selection, tier) => {
             expectedTier = tier;
             requestError = undefined;
+            firstTextDeltaAtMs = undefined;
+            lastTextDeltaAtMs = undefined;
+            textDeltaCount = 0;
+            firstTextDeltaCharacterCount = 0;
+            textCharacterCount = 0;
             const count = requests.length;
             const startedAtMs = performance.now();
             const timer = setTimeout(
@@ -402,18 +541,38 @@ async function run({ isLive, provider, configuredAgentDir }) {
             } finally {
                 clearTimeout(timer);
             }
+            const finishedAtMs = performance.now();
             assert.deepEqual(extensionErrors, []);
             const assistant = session.messages.at(-1);
             const response = completedResponses[count];
+            const returnedTier = response?.service_tier ?? null;
+            const isMatchingTier =
+                returnedTier === null
+                    ? null
+                    : returnedTier === (tier ?? "default") ||
+                      (tier === "priority" && returnedTier === "fast");
+            const performanceMetrics = measurePerformance({
+                startedAtMs,
+                finishedAtMs,
+                firstTextDeltaAtMs,
+                lastTextDeltaAtMs,
+                textDeltaCount,
+                firstTextDeltaCharacterCount,
+                textCharacterCount,
+                usage: response?.usage,
+            });
             const diagnostic = JSON.stringify(
                 {
                     provider,
+                    speed,
                     authentication: isUsingOAuth ? "oauth" : "api_key",
                     observedRequests: requests.length - count,
                     ...requests[count],
-                    returnedTier: response?.service_tier ?? null,
+                    returnedTier,
+                    isMatchingTier,
                     serverModel: response?.model ?? null,
                     responseId: response?.id ?? null,
+                    ...performanceMetrics,
                 },
                 null,
                 2,
@@ -446,45 +605,54 @@ async function run({ isLive, provider, configuredAgentDir }) {
                     response.model?.startsWith(`${MODEL_ID}-`),
                 "서버가 다른 모델을 반환했습니다.",
             );
-            if (response.service_tier !== (tier ?? "default"))
-                throw new Error(
-                    `응답 등급 불일치: 요청=${tier ?? "default"}, 응답=${response.service_tier ?? "없음"}. 요청한 등급의 처리를 확인하지 못했습니다.\n${diagnostic}`,
-                );
             const text = assistant.content
                 .filter((block) => block.type === "text")
                 .map((block) => block.text)
                 .join("")
                 .trim();
-            assert.equal(text, "READY");
+            assert.ok(text, "모델이 텍스트를 반환하지 않았습니다.");
             results.push({
                 selection,
                 ...requests[count],
-                returnedTier: response.service_tier,
+                returnedTier,
+                isMatchingTier,
                 serverModel: response.model,
                 responseId: response.id,
-                elapsedMs: Math.round(performance.now() - startedAtMs),
+                ...performanceMetrics,
                 usage: response.usage,
                 text,
             });
         };
 
         if (!isLive) await checkRequest("initial-standard", undefined);
-        await checkCommand("/codex-fast ultrafast on", "ultrafast");
-        await checkRequest("ultrafast", "ultrafast");
-        await checkCommand("/codex-fast ultrafast off", "standard");
+        await checkCommand(
+            speed === "standard"
+                ? "/codex-fast off"
+                : `/codex-fast ${speed} on`,
+            speed,
+        );
+        await checkRequest(speed, SPEED_TIERS[speed]);
+        await checkCommand("/codex-fast off", "standard");
         if (!isLive) await checkRequest("explicit-standard", "default");
         return {
             success: true,
             provider,
+            speed,
             model: MODEL_ID,
+            benchmarkLineCount: BENCHMARK_LINE_COUNT,
             piAgentDir: isLive ? piAgentDir : null,
             authentication: isUsingOAuth ? "oauth" : "api_key",
             isSimulated: !isLive,
-            serverTierVerified: isLive,
+            requestTierVerified: true,
+            // Codex does not validate the response tier as the processing tier.
+            serverTierVerified:
+                isLive &&
+                !isBackend &&
+                results.every((result) => result.isMatchingTier === true),
             results,
             note: isLive
-                ? "서버 응답 등급을 확인했습니다. 속도 비교·실제 청구 금액은 검증하지 않았습니다."
-                : "로컬 확장·전송 본문·응답 파싱을 확인했습니다. 응답은 모의 데이터이며 실제 서버 지원은 검증하지 않았습니다.",
+                ? "요청 등급의 전송과 정상 응답을 확인하고 응답 등급·생성 TPS 추정값·전체 요청 처리율을 기록했습니다. 응답 등급 차이는 오류로 취급하지 않습니다. Codex backend의 실제 처리 등급·속도 보장·청구 금액은 검증하지 않았습니다."
+                : "로컬 확장·전송 본문·응답 파싱을 확인했습니다. 응답·토큰 수·TPS는 모의 데이터이며 실제 서버 지원·성능은 검증하지 않았습니다.",
         };
     } finally {
         session?.dispose();

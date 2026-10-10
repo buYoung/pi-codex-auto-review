@@ -3,9 +3,11 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 export type ServiceTier = "standard" | "fast" | "ultrafast";
+export type ModelServiceTiers = Readonly<Record<string, ServiceTier | null>>;
 
 export interface FastConfig {
     serviceTier: ServiceTier;
+    modelServiceTiers: ModelServiceTiers;
     hasExplicitStandard: boolean;
     persistState: boolean;
     notifyOnModelSwitch: boolean;
@@ -32,6 +34,7 @@ export const DEFAULT_SUPPORTED_MODELS: readonly string[] = Object.freeze([
 
 export const DEFAULT_CONFIG: Readonly<FastConfig> = Object.freeze({
     serviceTier: "standard",
+    modelServiceTiers: Object.freeze({}),
     hasExplicitStandard: false,
     persistState: true,
     notifyOnModelSwitch: true,
@@ -50,6 +53,18 @@ function validateLayer(value: unknown): Record<string, unknown> {
     if (!isRecord(value)) throw new Error("Settings must be a JSON object.");
     if (value.serviceTier !== undefined && !isServiceTier(value.serviceTier))
         throw new Error("serviceTier must be standard, fast, or ultrafast.");
+    if (
+        value.modelServiceTiers !== undefined &&
+        (!isRecord(value.modelServiceTiers) ||
+            !Object.entries(value.modelServiceTiers).every(
+                ([model, tier]) =>
+                    /^\S+\/\S+$/.test(model) &&
+                    (tier === null || isServiceTier(tier)),
+            ))
+    )
+        throw new Error(
+            "modelServiceTiers must map provider/id strings to standard, fast, ultrafast, or null (use global speed).",
+        );
     for (const key of [
         "desiredActive",
         "active",
@@ -101,6 +116,11 @@ export function resolveConfig(layers: readonly unknown[]): FastConfig {
             config.serviceTier = tier;
             config.hasExplicitStandard = tier === "standard";
         }
+        if (isRecord(layer.modelServiceTiers))
+            config.modelServiceTiers = {
+                ...config.modelServiceTiers,
+                ...(layer.modelServiceTiers as ModelServiceTiers),
+            };
         if (typeof layer.persistState === "boolean")
             config.persistState = layer.persistState;
         if (typeof layer.notifyOnModelSwitch === "boolean")
@@ -167,7 +187,28 @@ export class FastSettingsStore {
         active: boolean;
     }): Promise<void> {
         const current = (await readSettings(this.path)) ?? {};
-        const next = { ...current, ...state };
+        await this.write({ ...current, ...state });
+    }
+
+    async persistModelTier(
+        model: string,
+        tier: ServiceTier | null,
+    ): Promise<void> {
+        const current = (await readSettings(this.path)) ?? {};
+        const modelServiceTiers = {
+            ...(isRecord(current.modelServiceTiers)
+                ? current.modelServiceTiers
+                : {}),
+        };
+        if (tier === null && this.path === this.globalPath)
+            delete modelServiceTiers[model];
+        else modelServiceTiers[model] = tier;
+        const next = { ...current, modelServiceTiers };
+        validateLayer(next);
+        await this.write(next);
+    }
+
+    private async write(next: Record<string, unknown>): Promise<void> {
         await mkdir(dirname(this.path), { recursive: true, mode: 0o700 });
         const temporary = `${this.path}.${randomUUID()}.tmp`;
         try {

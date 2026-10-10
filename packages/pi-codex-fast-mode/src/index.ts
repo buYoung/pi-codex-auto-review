@@ -9,15 +9,18 @@ import {
     DEFAULT_CONFIG,
     type FastConfig,
     FastSettingsStore,
+    isServiceTier,
     type ServiceTier,
 } from "./config.js";
 import { FastController } from "./fast-controller.js";
-import { showFastSettings } from "./fast-ui.js";
+import { type ModelSpeedSetting, showFastSettings } from "./fast-ui.js";
 
 const SERVICE_TIER = "priority";
 const COMMAND_NAME = "codex-fast";
 const STATUS_KEY = "codex-fast-mode";
 const SETTINGS_DIRECTORY = "codex-fast-mode";
+const COMMAND_USAGE =
+    "Usage: /codex-fast [status|on|off], /codex-fast speed <standard|fast|ultrafast>, /codex-fast <fast|ultrafast> <on|off>, or /codex-fast model <provider/id> <standard|fast|ultrafast|inherit>";
 
 export function defaultSettingsPath(): string {
     return join(getAgentDir(), SETTINGS_DIRECTORY, "settings.json");
@@ -52,16 +55,24 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         ctx.ui.setStatus(STATUS_KEY, fastController.statusSegment(ctx, cfg));
     };
     const describeState = (ctx: ExtensionContext) => {
+        const tier = fastController.getEffectiveTier(ctx);
         const model = ctx.model
             ? `${ctx.model.provider}/${ctx.model.id}`
             : "No model selected";
         const application =
-            fastController.desiredTier === "standard"
-                ? "Standard mode"
+            tier === "standard"
+                ? "Standard requests"
                 : fastController.active
-                  ? "Active"
+                  ? "Request enabled"
                   : "Unsupported by this model; preference retained";
-        return `OpenAI service tier: ${fastController.desiredTier} · ${application} · ${model}`;
+        const source =
+            ctx.model &&
+            fastController.getModelTier(
+                `${ctx.model.provider}/${ctx.model.id}`,
+            ) !== undefined
+                ? "model override"
+                : "global speed";
+        return `OpenAI requested service tier: ${tier} · ${application} · ${model} · ${source}`;
     };
     const showStatus = (ctx: ExtensionContext) => {
         fastController.applyDesiredState(ctx, cfg);
@@ -70,6 +81,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
             ctx,
             [
                 describeState(ctx),
+                `Global speed: ${fastController.desiredTier}`,
                 `Settings: ${store?.settingsPath ?? defaultSettingsPath()}`,
                 cfg.persistState
                     ? "Mode changes are saved to the settings file."
@@ -89,14 +101,6 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         ctx: ExtensionCommandContext,
     ): Promise<void> => {
         await ctx.waitForIdle();
-        if (tier === "ultrafast" && !fastController.supportsUltrafast(ctx)) {
-            report(
-                ctx,
-                "Ultrafast requires gpt-6-astra or gpt-6.1-sol with configured Pi provider authentication: openai/openai-responses through a supported OpenAI API /v1 endpoint, or openai-codex/openai-codex-responses through https://chatgpt.com/backend-api with OAuth. Server availability depends on your account.",
-                "warning",
-            );
-            return;
-        }
         const previous = fastController.snapshot();
         if (tier === "ultrafast") fastController.setDesired(tier, ctx, cfg);
         else fastController.setActive(tier === "fast", ctx, cfg);
@@ -110,7 +114,54 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         updateStatus(ctx);
         report(
             ctx,
-            `${describeState(ctx)}${cfg.persistState ? "" : " · This session only"}`,
+            `Global speed: ${tier}\n${describeState(ctx)}${cfg.persistState ? "" : " · This session only"}`,
+        );
+    };
+    const changeModelTier = async (
+        modelKey: string,
+        tier: ServiceTier | null,
+        ctx: ExtensionCommandContext,
+    ): Promise<void> => {
+        await ctx.waitForIdle();
+        if (!/^\S+\/\S+$/.test(modelKey))
+            throw new Error("Expected a provider/model ID.");
+        if (tier !== null) {
+            const separator = modelKey.indexOf("/");
+            const model = ctx.modelRegistry.find(
+                modelKey.slice(0, separator),
+                modelKey.slice(separator + 1),
+            );
+            if (!model) throw new Error(`Model not found: ${modelKey}`);
+            const modelContext = { model, modelRegistry: ctx.modelRegistry };
+            const canRequestFast = fastController.supportsFast(
+                modelContext,
+                cfg,
+            );
+            const canRequestUltrafast =
+                fastController.supportsUltrafast(modelContext);
+            if (
+                (!canRequestFast && !canRequestUltrafast) ||
+                (tier === "fast" && !canRequestFast) ||
+                (tier === "ultrafast" && !canRequestUltrafast)
+            )
+                throw new Error(
+                    `Speed ${tier} is unavailable for ${modelKey} with the current provider configuration.`,
+                );
+        }
+        const previous = fastController.snapshot();
+        fastController.setModelTier(modelKey, tier, ctx, cfg);
+        try {
+            if (cfg.persistState && store)
+                await store.persistModelTier(modelKey, tier);
+        } catch (error) {
+            fastController.restore(previous);
+            updateStatus(ctx);
+            throw error;
+        }
+        updateStatus(ctx);
+        report(
+            ctx,
+            `Model speed: ${modelKey} · ${tier ?? "use global"}${cfg.persistState ? "" : " · This session only"}\n${describeState(ctx)}`,
         );
     };
     const runCommand = async (
@@ -140,33 +191,76 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
     };
     const openFastSettings = async (ctx: ExtensionCommandContext) => {
         if (!ctx.hasUI) {
-            report(
-                ctx,
-                `${describeState(ctx)}\nUsage: /${COMMAND_NAME} [status|on|off] or /${COMMAND_NAME} <fast|ultrafast> <on|off>`,
-            );
+            report(ctx, `${describeState(ctx)}\n${COMMAND_USAGE}`);
             return;
         }
         await ctx.waitForIdle();
-        await showFastSettings(
-            ctx,
-            () => fastController.desiredTier,
-            (tier) => changeTier(tier, ctx),
+        const availableModels = new Map(
+            ctx.modelRegistry
+                .getAvailable()
+                .map((model) => [`${model.provider}/${model.id}`, model]),
         );
+        const scopedModels = ctx.scopedModels ?? [];
+        const models = scopedModels.length
+            ? new Map(
+                  scopedModels.flatMap(({ model }) => {
+                      const key = `${model.provider}/${model.id}`;
+                      const registered = availableModels.get(key);
+                      return registered ? [[key, registered] as const] : [];
+                  }),
+              )
+            : availableModels;
+        const currentModel = ctx.model
+            ? `${ctx.model.provider}/${ctx.model.id}`
+            : undefined;
+        const modelSettings: ModelSpeedSetting[] = [];
+        for (const [key, model] of models) {
+            const modelContext = { model, modelRegistry: ctx.modelRegistry };
+            const availableTiers: ServiceTier[] = ["standard"];
+            if (fastController.supportsFast(modelContext, cfg))
+                availableTiers.push("fast");
+            if (fastController.supportsUltrafast(modelContext))
+                availableTiers.push("ultrafast");
+            if (availableTiers.length > 1)
+                modelSettings.push({
+                    model: key,
+                    isCurrentModel: key === currentModel,
+                    availableTiers,
+                });
+        }
+        modelSettings.sort(
+            (a, b) =>
+                Number(b.isCurrentModel) - Number(a.isCurrentModel) ||
+                (scopedModels.length ? 0 : a.model.localeCompare(b.model)),
+        );
+        await showFastSettings(ctx, {
+            models: modelSettings,
+            getGlobalTier: () => fastController.desiredTier,
+            getModelTier: (model) => fastController.getModelTier(model),
+            setGlobalTier: (tier) => changeTier(tier, ctx),
+            setModelTier: (model, tier) => changeModelTier(model, tier, ctx),
+        });
     };
 
     pi.registerFlag("fast", {
-        description: "Start the session with Fast enabled on supported models.",
+        description:
+            "Start with global Fast speed; model-specific speeds take precedence.",
         type: "boolean",
         default: false,
     });
     pi.registerCommand(COMMAND_NAME, {
-        description: "Configure Fast and Ultrafast, or show detailed status.",
+        description:
+            "Configure model and global Standard, Fast, and Ultrafast speeds.",
         getArgumentCompletions: (prefix) =>
             completions(
                 [
                     "status",
                     "on",
                     "off",
+                    "speed standard",
+                    "speed fast",
+                    "speed ultrafast",
+                    "model ",
                     "fast on",
                     "fast off",
                     "ultrafast on",
@@ -183,7 +277,24 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
                     await changeTier(value === "on" ? "fast" : "standard", ctx);
                     return;
                 }
-                const [mode, state, extra] = value.split(/\s+/);
+                const [mode, state, extra, trailing] = value.split(/\s+/);
+                if (!extra && mode === "speed" && isServiceTier(state)) {
+                    await changeTier(state, ctx);
+                    return;
+                }
+                if (
+                    !trailing &&
+                    mode === "model" &&
+                    state &&
+                    (isServiceTier(extra) || extra === "inherit")
+                ) {
+                    await changeModelTier(
+                        state,
+                        extra === "inherit" ? null : extra,
+                        ctx,
+                    );
+                    return;
+                }
                 if (
                     !extra &&
                     (mode === "fast" || mode === "ultrafast") &&
@@ -192,11 +303,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
                     await changeMode(mode, state === "on", ctx);
                     return;
                 }
-                report(
-                    ctx,
-                    `Usage: /${COMMAND_NAME} [status|on|off] or /${COMMAND_NAME} <fast|ultrafast> <on|off>`,
-                    "error",
-                );
+                report(ctx, COMMAND_USAGE, "error");
             }),
     });
 
@@ -225,17 +332,8 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
     pi.on("model_select", async (_event, ctx) => {
         const hasChanged = fastController.applyDesiredState(ctx, cfg);
         updateStatus(ctx);
-        if (!hasChanged) return;
-        if (cfg.notifyOnModelSwitch) report(ctx, describeState(ctx));
-        try {
-            await persist();
-        } catch (error) {
-            report(
-                ctx,
-                `Could not save Fast state: ${describeError(error)}`,
-                "error",
-            );
-        }
+        if (hasChanged && cfg.notifyOnModelSwitch)
+            report(ctx, describeState(ctx));
     });
     pi.on("before_provider_request", (event, ctx) =>
         fastController.injectProviderPayload(event, ctx, cfg),

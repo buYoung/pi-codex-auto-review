@@ -2,13 +2,13 @@
 
 [English](README.md) | **한국어**
 
-대화 모델·엔드포인트를 유지하고 Pi에서 OpenAI 서비스 등급을 요청합니다. Standard·Fast·Ultrafast를 선택할 수 있으며 로컬 호환 조건을 통과할 때만 해당 `service_tier`를 추가합니다. 저장한 선택이나 시작 옵션이 없으면 Standard는 요청을 바꾸지 않습니다.
+대화 모델·엔드포인트를 유지하고 Pi에서 OpenAI 서비스 등급을 요청합니다. 모델별로 Standard·Fast·Ultrafast를 선택하고, 별도 선택이 없는 모델에는 전체 속도를 적용합니다. **모델별 설정이 전체 속도보다 우선합니다.** 로컬 호환 조건을 통과할 때만 해당 `service_tier`를 추가하며, 명시적 선택이 없는 초기 Standard는 요청을 바꾸지 않습니다.
 
-**선택한 등급은 요청이며 실제 처리 속도·과금의 확인이 아닙니다.** 유료 등급을 사용하기 전에 서버 응답과 적용 요금을 확인하세요. OpenAI의 [Fast](https://developers.openai.com/api/docs/guides/fast-mode)·[Ultrafast](https://developers.openai.com/api/docs/guides/ultrafast-mode) 안내를 참고하세요.
+선택한 등급은 요청에 적용합니다. 서버 응답 등급은 요청과 다를 수 있으며, Codex backend에서는 Fast·Ultrafast 요청에도 `default`가 관측됐습니다. 응답의 `default`만으로 선택을 해제하거나 실패로 판단하지 않습니다. 실제 처리 속도·과금은 별도로 확인합니다. OpenAI의 [Fast](https://developers.openai.com/api/docs/guides/fast-mode)·[Ultrafast](https://developers.openai.com/api/docs/guides/ultrafast-mode) 안내를 참고하세요.
 
 ## 요구 사항
 
-Node.js 22.19 이상, Pi 0.99.1 이상과 설정된 모델 접근이 필요합니다. Fast는 [로컬 허용 목록](#지원-모델과-요청-값)의 사용 가능한 모델을 선택합니다. Ultrafast에는 API·인증·엔드포인트 조건도 있습니다. 목록이 계정 접근이나 백엔드 지원을 제공하는 것은 아닙니다.
+Node.js 22.19 이상, Pi 1.0.0 이상과 설정된 모델 접근이 필요합니다. 이 저장소에서는 Pi 1.1.0으로 검증합니다. Fast는 [로컬 허용 목록](#지원-모델과-요청-값)의 사용 가능한 모델을 선택합니다. Ultrafast에는 API·인증·엔드포인트 조건도 있습니다. 목록이 계정 접근이나 백엔드 지원을 제공하는 것은 아닙니다.
 
 ## 빠른 시작
 
@@ -23,37 +23,50 @@ pi
 `@buyong/pi-codex`를 통해 같은 확장을 함께 활성화하지 마세요. Pi에서 다음 순서로 진행합니다.
 
 1. [로컬 Fast 허용 목록](#지원-모델과-요청-값)의 모델을 선택합니다.
-2. `/codex-fast`에서 Fast를 켭니다.
-3. `/codex-fast status`로 선택한 등급이 현재 모델에서 적용되는지 확인합니다.
+2. `/codex-fast`에서 모델 아래의 `Speed`를 Fast로 고르고 Enter로 저장합니다.
+3. `/codex-fast status`로 선택한 등급의 요청이 현재 모델에서 활성화됐는지 확인합니다.
 4. 짧은 프롬프트로 모델 요청을 만듭니다. 예를 들어 다음과 같이 요청합니다.
 
 ```text
 Reply with READY only. Do not use tools.
 ```
 
-`/codex-fast status`를 다시 확인합니다. 활성 선택은 하단에 `gpt-6.1-sol fast`처럼 표시하고 일치하는 요청은 마지막 주입에 `priority`를 기록합니다. **활성은 확장의 로컬 조건을 통과했다는 뜻입니다.** 기록은 훅이 준비한 요청 필드이며 공급자가 받거나 해당 등급을 사용했다는 근거가 아닙니다. 가속을 끄려면 `/codex-fast off`를 실행하세요.
+`/codex-fast status`를 다시 확인합니다. `OpenAI requested service tier`는 선택한 요청 등급이고, `Request enabled`는 확장의 로컬 조건을 통과했다는 뜻입니다. 활성 선택은 하단에 `gpt-6.1-sol fast`처럼 표시하고 일치하는 요청은 마지막 주입에 `priority`를 기록합니다. 이 기록은 훅이 준비한 요청 필드이며 실제 서버 처리 등급의 확인은 아닙니다. 이 모델의 가속을 끄려면 모델별 속도를 Standard로 저장하세요.
 
 ## 등급 선택
 
-`/codex-fast`는 **Fast**·**Ultrafast** 항목을 엽니다. **↑/↓**로 선택하고 **Tab/Enter**로 바꿉니다. 저장을 끄지 않았다면 변경은 즉시 적용·저장합니다. 화면은 유지하고 Esc로 닫습니다. 하나를 켜면 다른 모드는 꺼지고, 둘 다 끄면 Standard입니다.
+`/codex-fast`는 `/scoped-models`에 선택된 모델 중 사용 가능하고 속도 조절이 가능한 모델을 먼저 표시하고, 아래에 **Global speed**를 둡니다. 선택 범위를 설정하지 않았다면 Pi와 동일하게 사용 가능한 전체 모델을 기준으로 합니다. 현재 모델이 목록에 있으면 맨 위에 표시하고, 나머지는 선택 목록의 순서를 유지합니다. 범위 밖의 모델은 현재 모델이어도 추가하지 않습니다. 각 모델 아래의 `Speed`에서 **Standard·Fast·Ultrafast 중 하나**를 선택합니다. 별도 설정이 없으면 모델명 옆에 `global`을 표시하며 전체 속도를 따릅니다.
+
+`/scoped-models`에서 선택을 바꾼 뒤 `/codex-fast`를 다시 열면 변경된 목록이 반영됩니다. 목록에서 숨겨진 모델의 속도 설정은 그대로 보존합니다.
+
+- **↑/↓**: 모델 또는 전체 속도 항목 선택. 긴 목록은 선택에 따라 스크롤합니다.
+- **←/→ 또는 Tab/Shift+Tab**: 속도 선택. 대괄호는 저장된 값, `›…‹`는 현재 선택 위치입니다.
+- **Enter**: 선택한 속도 적용·저장. 화면은 열린 상태를 유지합니다.
+- **R**: 선택한 모델의 별도 설정을 해제하고 전체 속도를 상속합니다.
+- **Esc**: 닫기. Enter로 저장하지 않은 선택은 적용하지 않습니다.
+
+해당 모델에서 요청할 수 없는 속도는 흐리게 `×`로 표시하고 선택에서 제외합니다. 좁은 터미널에서는 저장된 속도와 선택 중인 속도를 간단히 표시합니다.
 
 | 명령 | 동작 |
 | --- | --- |
-| `/codex-fast on` | Fast 선택 |
-| `/codex-fast off` | Standard 선택. 두 가속 모드를 모두 끕니다. |
-| `/codex-fast fast on` / `/codex-fast fast off` | Fast 변경. 이미 꺼진 모드를 끄면 다른 모드를 유지합니다. |
-| `/codex-fast ultrafast on` / `/codex-fast ultrafast off` | Ultrafast 변경. 지원 조건이 없으면 기존 선택을 유지합니다. |
+| `/codex-fast speed standard` / `fast` / `ultrafast` | 전체 속도 선택. 모델별 설정은 유지합니다. |
+| `/codex-fast model <provider/id> standard` / `fast` / `ultrafast` | 해당 모델의 속도 선택. 지원되지 않는 선택은 기존 설정을 유지합니다. |
+| `/codex-fast model <provider/id> inherit` | 해당 모델을 전체 속도 상속으로 되돌립니다. |
+| `/codex-fast on` | 전체 속도를 Fast로 선택 |
+| `/codex-fast off` | 전체 속도를 Standard로 선택. 모델별 설정은 유지합니다. |
+| `/codex-fast fast on` / `/codex-fast fast off` | 전체 Fast 변경. 이미 꺼진 모드를 끄면 다른 전체 속도를 유지합니다. |
+| `/codex-fast ultrafast on` / `/codex-fast ultrafast off` | 전체 Ultrafast 변경. 지원되지 않는 모델에서는 요청 등급을 추가하지 않습니다. |
 | `/codex-fast status` | 선택한 등급, 적용 상태, 모델, 설정 경로, 저장 여부와 마지막 주입을 표시합니다. 선택은 바꾸지 않습니다. |
 
-명시적 인자는 UI 없이도 사용할 수 있습니다. RPC는 같은 Fast·Ultrafast 반복 선택창을 사용합니다. 모드 변경은 현재 에이전트 작업이 멈출 때까지 기다립니다. `status`는 설정을 저장하거나 모델을 호출하지 않습니다. Pi 시작 명령에 `--fast`를 추가하면 초기화할 때 저장된 등급보다 Fast를 우선합니다.
+명시적 인자는 UI 없이도 사용할 수 있습니다. `<provider/id>`는 `openai-codex/gpt-6.1-sol`처럼 실제 공급자·모델 ID로 바꿉니다. RPC에서는 모델 또는 전체 속도를 고른 뒤 속도 선택창을 엽니다. 모델 선택창에는 전체 속도를 다시 상속하는 항목도 있습니다. 모드 변경은 현재 에이전트 작업이 멈출 때까지 기다립니다. `status`는 설정을 저장하거나 모델을 호출하지 않습니다. Pi 시작 명령의 `--fast`는 저장된 전체 속도를 Fast로 덮어쓰며, 모델별 설정이 계속 우선합니다.
 
-미지원 모델에서도 Fast 선택을 유지하지만 등급을 추가하지 않습니다. 지원 모델로 돌아가면 활성화합니다. 기존 Ultrafast 선택도 미지원 모델에서 유지하며 다른 등급을 대신 주입하지 않습니다. 명령으로 Ultrafast를 고를 때는 현재 모델·인증 조건을 먼저 통과해야 합니다.
+모델을 바꾸면 해당 모델의 설정 또는 전체 속도를 다시 계산합니다. 선택한 가속 등급을 지원하지 않는 모델에서는 설정을 유지하고 등급을 추가하지 않습니다. 모델별 명령으로 속도를 고를 때는 대상 모델의 호환 조건을 먼저 확인합니다.
 
 ## 이전 명령에서 전환
 
-이 체크아웃은 `/codex-fast`만 등록합니다. `/openai-tier`·`/openai-settings`는 별칭을 남기지 않고 제거했습니다. 진단에는 `/codex-fast status`, Fast·Ultrafast에는 위의 모드별 명령, Standard에는 `/codex-fast off`를 사용하세요. 기존 `/codex-fast on`·`off` 축약형은 계속 지원합니다.
+이 체크아웃은 `/codex-fast`만 등록합니다. `/openai-tier`·`/openai-settings`는 별칭을 남기지 않고 제거했습니다. 진단에는 `/codex-fast status`, 모델별 설정에는 `model` 명령, 전체 설정에는 `speed` 명령을 사용하세요. 기존 `/codex-fast on`·`off`와 모드별 축약형은 전체 속도를 변경하며 계속 지원합니다.
 
-이전 명령을 호출하는 스크립트는 갱신해야 합니다. 기존 불리언을 포함한 설정 키·우선순위·저장 경로는 바뀌지 않습니다. 게시된 릴리스는 체크아웃과 다를 수 있으므로 이 변경이 포함된 릴리스나 아래 소스 빌드를 사용하세요.
+이전 명령을 호출하는 스크립트는 갱신해야 합니다. 기존 불리언·설정 경로는 유지하고 모델별 설정이 전체 속도보다 우선합니다. 게시된 릴리스는 체크아웃과 다를 수 있으므로 이 변경이 포함된 릴리스나 아래 소스 빌드를 사용하세요.
 
 ## 설정과 저장
 
@@ -67,6 +80,10 @@ Reply with READY only. Do not use tools.
 ```json
 {
   "serviceTier": "standard",
+  "modelServiceTiers": {
+    "openai-codex/gpt-6.1-sol": "ultrafast",
+    "openai-codex/gpt-6-astra": "fast"
+  },
   "persistState": true,
   "notifyOnModelSwitch": true
 }
@@ -74,13 +91,16 @@ Reply with READY only. Do not use tools.
 
 | 설정 | 기본값 | 동작 |
 | --- | --- | --- |
-| `serviceTier` | `"standard"` | `standard`·`fast`·`ultrafast`. Standard를 명시적으로 저장하면 선택이 없는 상태와 다릅니다. 요청 값 표를 참고하세요. |
+| `serviceTier` | `"standard"` | 모델별 설정이 없는 모델에 적용할 전체 속도. `standard`·`fast`·`ultrafast`. Standard를 명시적으로 저장하면 선택이 없는 상태와 다릅니다. |
+| `modelServiceTiers` | `{}` | 정확한 `provider/id`별 속도. `standard`·`fast`·`ultrafast`는 전체 속도보다 우선하며 `null`은 전체 속도 상속입니다. |
 | `persistState` | `true` | `false`는 명령 변경을 세션 안에서만 유지합니다. |
 | `notifyOnModelSwitch` | `true` | 모델 변경으로 적용 여부가 바뀌면 알립니다. |
 | `supportedModels` | 아래 기본 목록 | 정확한 `provider/id` 문자열로 Fast 허용 목록을 대체합니다. `[]`은 Fast 지원을 끄지만 Ultrafast 조건은 바꾸지 않습니다. |
 | `desiredActive`, `active`, `fast.enabled` | 없음 | 이전 불리언 설정. 같은 계층에서는 `serviceTier` → `desiredActive` → `active` → `fast.enabled` 순서로 우선합니다. |
 
-계층별로 해석한 뒤 병합하므로 프로젝트의 이전 불리언도 전역 `serviceTier`를 덮어쓸 수 있습니다. 저장은 `serviceTier`·`desiredActive`·`active`를 갱신하며 다른 필드는 보존합니다. 모델 변경은 원하는 등급을 유지하고 적용 여부를 다시 계산합니다.
+전체 속도는 계층별로 해석한 뒤 병합하므로 프로젝트의 이전 불리언도 전역 `serviceTier`를 덮어쓸 수 있습니다. 모델별 설정은 ID별로 병합하며 같은 모델은 프로젝트 값이 우선합니다. 전역 파일의 모델별 설정도 프로젝트의 전체 속도보다 우선합니다. 프로젝트에 해당 모델을 `null`로 저장하면 전역 모델별 설정을 가리고 전체 속도를 상속합니다.
+
+전체 속도 변경은 `serviceTier`·`desiredActive`·`active`를, 모델별 변경은 대상 ID만 갱신하며 다른 필드는 보존합니다. 전역 설정의 모델을 상속으로 되돌리면 해당 항목을 삭제합니다. 저장 실패 시 이전 선택을 복원합니다. 모델 변경은 파일을 저장하지 않고 요청 속도와 적용 여부만 다시 계산합니다.
 
 직접 편집한 뒤 `/reload`를 실행합니다. 잘못됐거나 읽을 수 없는 설정은 오류를 알리고 기본값을 사용하며 변경은 세션에만 적용합니다. 명령 저장에 실패하면 이전 등급으로 되돌립니다.
 
@@ -100,23 +120,26 @@ Ultrafast는 `gpt-6-astra` 또는 `gpt-6.1-sol`에서 다음 경로로 요청합
 | `openai`·`openai-responses` | Pi에 설정된 API 키 또는 ChatGPT OAuth 인증 | `https://api.openai.com/v1` |
 | `openai-codex`·`openai-codex-responses` | 설정된 OAuth 인증 | `https://chatgpt.com/backend-api`. `/codex`·`/codex/responses`를 붙인 주소도 허용합니다. |
 
-HTTPS 기본 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다. 경로 끝의 `/`는 허용합니다. Codex 경로의 활성 상태는 확장이 요청을 보낼 수 있다는 뜻이며, 해당 계정의 서버 지원을 확인한 결과는 아닙니다. 모델·계정의 실제 지원 여부는 서버 응답으로 확인해야 합니다.
+HTTPS 기본 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다. 경로 끝의 `/`는 허용합니다. Codex 경로의 활성 상태는 확장이 요청을 준비할 수 있다는 뜻입니다. 해당 계정의 지원 여부나 실제 처리 등급을 Codex 응답 등급 하나로 확정하지 않습니다.
 
 | 선택 | 주입하는 `service_tier` |
 | --- | --- |
 | 명시적 선택이 없는 초기 Standard | 필드를 추가하지 않음 |
-| 위 설정 예시를 포함해 직접 고르거나 저장한 Standard | Fast 지원 모델에 `"default"` |
+| 직접 고르거나 저장한 전체·모델별 Standard | 속도 조절이 가능한 모델에 `"default"` |
 | Fast | Fast 지원 모델에 `"priority"` |
 | Ultrafast | 조건을 통과하면 `"ultrafast"` |
 | 미지원 모델의 가속 선택 | 필드를 추가하지 않고 선택만 유지 |
 
 훅은 요청이 객체이며 `payload.model`이 현재 모델 ID와 일치할 때만 복사본을 반환합니다. 다른 모델의 보조 요청은 바꾸지 않습니다. 미지원 요청은 유지하며 엔드포인트·모델을 바꾸거나 백엔드의 실제 등급을 검증하지 않습니다.
 
+[Sol 속도 등급 PoC](https://github.com/buYoung/pi-codex-auto-review/blob/master/docs/testing/ultrafast-sol.ko.md)는 Pi 공급자가 만드는 최종 HTTP 본문과 정상 응답을 확인하고 요청 등급·서버 원문 등급·TPS를 따로 기록합니다. 응답 등급 차이만으로 실패하지 않으며, 이 결과가 실제 처리 등급이나 과금을 보장하지는 않습니다.
+
 ## 선택한 등급이 적용되지 않을 때
 
 | 증상 | 확인할 내용 |
 | --- | --- |
 | 선택은 유지하지만 비활성 | 현재 `provider/id`와 `supportedModels` 재정의를 확인합니다. 저장 선택이 호환 여부는 아닙니다. |
+| 전체 속도를 바꿔도 현재 모델의 속도가 유지됨 | 모델별 설정이 우선합니다. 해당 모델에서 `R` 또는 `model <provider/id> inherit`으로 전체 속도를 상속합니다. |
 | Ultrafast 선택 거부 | 위 조건을 모두 확인합니다. 이전 등급을 유지하며 Fast로 대신 선택하지 않습니다. |
 | 프롬프트 후에도 주입 없음 | 현재 모델과 공급자 요청의 일치하는 `model` 필드를 확인합니다. 다른 모델 요청·호환되지 않는 요청은 유지합니다. |
 | 설정 로드·저장 오류 | 표시된 설정 경로를 확인합니다. 로드 오류는 기본값과 세션 변경만 사용하고, 명령 저장 실패는 이전 등급으로 되돌립니다. |
