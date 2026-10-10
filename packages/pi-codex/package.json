@@ -39,10 +39,10 @@
         "postpack": "node ../../scripts/package-shared-files.mjs remove"
     },
     "dependencies": {
-        "@buyong/pi-codex-auto-review": "0.3.2",
-        "@buyong/pi-codex-computer-use": "0.1.1",
-        "@buyong/pi-codex-fast-mode": "0.1.1",
-        "@buyong/pi-codex-image-gen": "0.2.2"
+        "@buyong/pi-codex-auto-review": "0.4.0",
+        "@buyong/pi-codex-computer-use": "0.1.2",
+        "@buyong/pi-codex-fast-mode": "0.2.0",
+        "@buyong/pi-codex-image-gen": "0.2.3"
     },
     "bundleDependencies": [
         "@buyong/pi-codex-auto-review",
