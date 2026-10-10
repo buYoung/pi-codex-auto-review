@@ -65,7 +65,7 @@ export interface PrerequisiteOptions {
     setupTimeoutMs?: number;
 }
 
-const MINIMUM_PI_VERSION = "0.86.1";
+const MINIMUM_PI_VERSION = "1.0.0";
 const CHROME_NATIVE_HOST_NAME = "com.openai.codexextension";
 const OAI_PACKAGES = ["cua-repl", "cua", "sky", "browser-desktop"];
 const OUTPUT_TAIL_LIMIT = 1_500;

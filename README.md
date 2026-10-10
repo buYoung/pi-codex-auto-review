@@ -13,7 +13,7 @@ The quick start below installs automatic review only. To install it together wit
 | Component | What you need |
 | --- | --- |
 | Node.js | 22.19 or later |
-| Pi | 0.99.1 or 1.0.0 for the documented automatic-review workflow. The guarded CLI and SDK reject other host versions despite the broader manifest peer range. |
+| Pi | 1.0.0 or 1.1.0 for the documented automatic-review workflow. The guarded CLI and SDK reject other host versions despite the broader manifest peer range. |
 | Model access | A configured Pi provider and conversation model. Automatic review uses this model unless you select a separate reviewer. |
 
 The rule engine is JavaScript compiled from TypeScript: no Rust compiler or platform-specific rule binary is needed. Pi's own native dependencies are separate. Automatic review makes additional model calls and may consume provider usage.

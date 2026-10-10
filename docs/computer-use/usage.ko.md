@@ -6,7 +6,7 @@ Codex Desktop에 설치된 런타임을 준비하고 Pi가 노출할 기능을 �
 
 ## 시작 전 준비
 
-- Node.js 22.19 이상과 Pi 0.99.1 이상을 사용합니다. 기록된 실제 세션은 Pi 0.99.1이며 이후 호스트의 호환성을 뜻하지는 않습니다.
+- Node.js 22.19 이상과 Pi 1.0.0 이상을 사용합니다. 기록된 실제 세션은 Pi 0.99.1이며 이후 호스트의 호환성을 뜻하지는 않습니다.
 - Codex Desktop을 설치하고 Codex 접근이 가능한 계정으로 로그인합니다. Computer Use 플러그인을 한 번 활성화해 런타임 설정을 준비합니다. Codex CLI만으로는 부족합니다.
 - macOS의 네이티브 앱 작업에는 `Codex Computer Use.app`의 손쉬운 사용·화면 기록 권한을 허용합니다.
 - Browser Use에는 실행 중인 Google Chrome, 활성 ChatGPT Chrome 확장과 Desktop의 Chrome/Browser 플러그인·네이티브 메시징 호스트가 필요합니다.

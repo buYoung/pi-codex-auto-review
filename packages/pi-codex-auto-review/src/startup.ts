@@ -29,7 +29,7 @@ export async function assertSupportedPi(): Promise<string> {
                 await readFile(join(path, "package.json"), "utf8"),
             );
             if (pkg.name === "@earendil-works/pi-coding-agent") {
-                if (!["0.99.1", "1.0.0"].includes(pkg.version))
+                if (!["1.0.0", "1.1.0"].includes(pkg.version))
                     throw new GuardError(
                         "UNSUPPORTED_PI",
                         "Pi APIs are not qualified for this version",

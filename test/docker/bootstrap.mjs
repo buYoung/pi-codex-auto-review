@@ -54,10 +54,7 @@ globalThis.fetch = async (...args) => {
 try {
     preflight = await executionPreflight();
     assert.equal(identity.packages["pi-ollama-cloud"], "0.12.2");
-    assert.equal(
-        identity.packages["@earendil-works/pi-coding-agent"],
-        "0.99.1",
-    );
+    assert.equal(identity.packages["@earendil-works/pi-coding-agent"], "1.1.0");
     const fixture = await cloudFixture({ isLive: false, modelId: model });
     try {
         const result = await fixture.runtime.session.executeBash(

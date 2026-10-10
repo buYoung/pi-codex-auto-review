@@ -6,7 +6,7 @@ Set up Codex Desktop's installed runtime, choose the surfaces Pi may expose, and
 
 ## Before starting
 
-- Use Node.js 22.19 or later and Pi 0.99.1 or later. Recorded live sessions used Pi 0.99.1; later host compatibility is not implied by that record.
+- Use Node.js 22.19 or later and Pi 1.0.0 or later. Recorded live sessions used Pi 0.99.1; later host compatibility is not implied by that record.
 - Install Codex Desktop, sign in with a Codex-capable account, and enable its Computer Use plugin once to prepare the runtime configuration. Codex CLI alone is insufficient.
 - For native app work on macOS, grant Accessibility and Screen Recording to `Codex Computer Use.app`.
 - For Browser Use, run Google Chrome with the ChatGPT Chrome extension enabled and Desktop's Chrome/Browser plugin/native messaging host installed.

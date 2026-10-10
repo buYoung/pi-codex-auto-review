@@ -45,14 +45,14 @@
         "@buyong/redact": "0.1.2"
     },
     "peerDependencies": {
-        "@earendil-works/pi-ai": ">=0.86.1",
-        "@earendil-works/pi-coding-agent": ">=0.86.1",
-        "@earendil-works/pi-tui": ">=0.86.1"
+        "@earendil-works/pi-ai": ">=1.0.0",
+        "@earendil-works/pi-coding-agent": ">=1.0.0",
+        "@earendil-works/pi-tui": ">=1.0.0"
     },
     "devDependencies": {
-        "@earendil-works/pi-ai": "0.99.1",
-        "@earendil-works/pi-coding-agent": "0.99.1",
-        "@earendil-works/pi-tui": "0.99.1",
+        "@earendil-works/pi-ai": "1.1.0",
+        "@earendil-works/pi-coding-agent": "1.1.0",
+        "@earendil-works/pi-tui": "1.1.0",
         "@sinclair/typebox": "0.34.52",
         "@types/node": "24.0.0",
         "typescript": "6.0.3"
