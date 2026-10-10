@@ -92,7 +92,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
         if (tier === "ultrafast" && !fastController.supportsUltrafast(ctx)) {
             report(
                 ctx,
-                "Ultrafast requires openai/gpt-6-astra with the openai-responses API, API-key authentication without OAuth, and an HTTPS /v1 endpoint at api.openai.com or us.api.openai.com.",
+                "Ultrafast requires openai/gpt-6-astra or openai/gpt-6.1-sol with the openai-responses API, API-key authentication without OAuth, and an HTTPS /v1 endpoint at api.openai.com or us.api.openai.com (eu.api.openai.com is also supported for gpt-6.1-sol).",
                 "warning",
             );
             return;

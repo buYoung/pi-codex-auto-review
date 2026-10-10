@@ -95,9 +95,11 @@ Reply with READY only. Do not use tools.
 
 Ultrafast에는 다음 조건이 모두 필요합니다.
 
-- `openai-responses` API를 사용하는 `openai/gpt-6-astra`
+- `openai-responses` API를 사용하는 `openai/gpt-6-astra` 또는 `openai/gpt-6.1-sol`
 - OAuth가 아닌 설정된 인증
-- `api.openai.com` 또는 `us.api.openai.com`의 HTTPS `/v1`·`/v1/` 엔드포인트. 기본 HTTPS 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다.
+- `api.openai.com` 또는 `us.api.openai.com`의 HTTPS `/v1`·`/v1/` 엔드포인트. `gpt-6.1-sol`은 `eu.api.openai.com`도 지원합니다. 기본 HTTPS 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다.
+
+Ultrafast는 이 확장에서 OpenAI API 키 인증으로 사용합니다. `openai-codex`와 OAuth로 사용하는 `openai`는 Ultrafast 지원 대상에 포함하지 않습니다.
 
 | 선택 | 주입하는 `service_tier` |
 | --- | --- |

@@ -95,9 +95,11 @@ This is the extension's **default local Fast allowlist**, not a promise that you
 
 Ultrafast requires all of these:
 
-- `openai/gpt-6-astra` using the `openai-responses` API.
+- `openai/gpt-6-astra` or `openai/gpt-6.1-sol` using the `openai-responses` API.
 - Configured authentication without OAuth.
-- An HTTPS `/v1` or `/v1/` endpoint at `api.openai.com` or `us.api.openai.com`, using the default HTTPS port or 443, without URL credentials, query, or fragment.
+- An HTTPS `/v1` or `/v1/` endpoint at `api.openai.com` or `us.api.openai.com`. `gpt-6.1-sol` also supports `eu.api.openai.com`. Use the default HTTPS port or 443, without URL credentials, query, or fragment.
+
+Ultrafast in this extension uses OpenAI API-key authentication. `openai-codex` and OAuth-authenticated `openai` models are outside its Ultrafast support.
 
 | Selection | Injected `service_tier` |
 | --- | --- |

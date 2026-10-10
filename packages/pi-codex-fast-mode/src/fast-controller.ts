@@ -76,7 +76,7 @@ export class FastController {
         const model = ctx.model;
         if (
             model?.provider !== "openai" ||
-            model.id !== "gpt-6-astra" ||
+            (model.id !== "gpt-6-astra" && model.id !== "gpt-6.1-sol") ||
             model.api !== "openai-responses" ||
             ctx.modelRegistry.isUsingOAuth(model) ||
             !ctx.modelRegistry.hasConfiguredAuth(model)
@@ -87,7 +87,9 @@ export class FastController {
             return (
                 url.protocol === "https:" &&
                 (url.hostname === "api.openai.com" ||
-                    url.hostname === "us.api.openai.com") &&
+                    url.hostname === "us.api.openai.com" ||
+                    (model.id === "gpt-6.1-sol" &&
+                        url.hostname === "eu.api.openai.com")) &&
                 (url.port === "" || url.port === "443") &&
                 /^\/v1\/?$/.test(url.pathname) &&
                 !url.username &&
