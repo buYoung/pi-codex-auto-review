@@ -53,6 +53,7 @@ export interface CommandRule {
     readonly decision: "allow" | "ask" | "deny";
 }
 export interface GuardSettings {
+    readonly isEnabled: boolean;
     readonly mode: "read-only" | "workspace-write";
     readonly commandRules: readonly CommandRule[];
     readonly allowedDomains: readonly string[];
@@ -87,6 +88,7 @@ export type GuardSettingsInput = Partial<Omit<GuardSettings, "redaction">> & {
     readonly redaction?: RedactionConfig;
 };
 export const DEFAULT_SETTINGS: GuardSettings = immutable({
+    isEnabled: true,
     mode: "workspace-write",
     commandRules: [],
     allowedDomains: [],
@@ -124,6 +126,8 @@ export function validateSettings(value: unknown): GuardSettings {
         if (!Object.hasOwn(DEFAULT_SETTINGS, key))
             throw new GuardError("INVALID_SETTINGS", `Unknown setting: ${key}`);
     const settings = { ...DEFAULT_SETTINGS, ...raw } as GuardSettings;
+    if (typeof settings.isEnabled !== "boolean")
+        throw new GuardError("INVALID_SETTINGS", "Invalid isEnabled");
     if (!["read-only", "workspace-write"].includes(settings.mode))
         throw new GuardError("INVALID_SETTINGS", "Unknown mode");
     for (const key of [

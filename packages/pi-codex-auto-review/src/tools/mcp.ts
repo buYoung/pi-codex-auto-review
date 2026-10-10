@@ -82,6 +82,7 @@ function guardedTransport(
     catalog: Map<string, CatalogEntry>,
     policies: McpToolPolicies,
     configDigest: string,
+    isGuardEnabled: () => boolean,
 ): Transport {
     const pending = new Map<
         string | number,
@@ -222,6 +223,7 @@ function guardedTransport(
                         const params = record(raw.params);
                         const invocation = externalInvocations.getStore();
                         if (raw.method === "tools/call") {
+                            if (!isGuardEnabled()) return target.send(message);
                             if (
                                 !invocation ||
                                 invocation.identity.server !== server ||
@@ -276,7 +278,8 @@ function guardedTransport(
                             "method" in raw &&
                             raw.method === "elicitation/create" &&
                             "id" in raw &&
-                            raw.id !== undefined
+                            raw.id !== undefined &&
+                            isGuardEnabled()
                         ) {
                             void elicit(raw).catch(() => {});
                             return;
@@ -371,6 +374,7 @@ export async function createGuardedMcpExtension(
                 source: entry.source,
                 config: JSON.parse(JSON.stringify(entry.config)),
             }),
+            () => controller().options.settings.isEnabled,
         );
     };
     const mcpFactory = createMcpExtension({

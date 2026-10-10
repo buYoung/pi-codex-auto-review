@@ -236,6 +236,8 @@ export async function createGuardedRuntime(options: GuardedRuntimeOptions) {
             const executeBash = session.executeBash.bind(session);
             session.executeBash = async (command, onChunk, options) => {
                 const controller = guard.assertReady();
+                if (!controller.options.settings.isEnabled)
+                    return executeBash(command, onChunk, options);
                 const handled = options?.operations
                     ? { operations: options.operations }
                     : await session.extensionRunner.emitUserBash({

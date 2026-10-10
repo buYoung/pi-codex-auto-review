@@ -53,13 +53,16 @@ Use bash to run exactly node --version and report the result. Do not install any
 
 ## 승인 방식과 설정
 
-`/approve`는 승인이 필요한 호출을 누가 검토할지 바꿉니다. 일반 읽기나 작업 공간 쓰기까지 모두 확인하도록 만들지는 않습니다.
+`/approve`는 승인 방식과 확장 전체의 켜기·끄기를 설정합니다. 일반 읽기나 작업 공간 쓰기까지 모두 확인하도록 만들지는 않습니다.
 
 | 선택 | 검토 방식 | 저장 여부 |
 | --- | --- | --- |
 | **Approve for me** | 모델 자동 검토. 기본값입니다. | 저장 |
 | **Ask for approval** | 사용자 확인 | 저장 |
 | **Full Access** | 확인 후 승인·경로·명령·네트워크 제한을 건너뜁니다. 보호 경로와 거부 규칙도 포함합니다. | 저장하지 않음. Pi 종료나 다른 승인 방식 선택까지 적용 |
+| **Auto Review Off** | 자동 검토·승인 확인·정책 제한을 끄고 Pi의 원래 도구로 실행합니다. | 저장 |
+
+`/approve off`로 확장 전체를 끄고, `/approve on`으로 이전 승인 방식과 검토 모델을 유지한 채 다시 켭니다. `/approve status`는 현재 상태를 표시합니다. 켜기·끄기는 즉시 적용하고 다음 실행에도 유지합니다. 승인 방식을 메뉴에서 선택하면 확장이 다시 켜집니다.
 
 설정은 `<agentDir>/guard/settings.json` 또는 CLI·SDK에서 선택한 정책 파일에 저장합니다. `agentDir`은 보통 `~/.pi/agent`이며 `PI_CODING_AGENT_DIR`을 따릅니다. 선택창을 취소하면 기존 설정을 유지합니다. 명령·선택창·승인 창의 고정 문구는 영어입니다.
 
@@ -67,7 +70,7 @@ Use bash to run exactly node --version and report the result. Do not install any
 
 ## 승인 경계
 
-**Full Access가 꺼져 있을 때** 기본 정책은 일반 범위, 검토 가능한 작업과 절대 거부를 구분합니다.
+**확장이 켜져 있고 Full Access가 꺼져 있을 때** 기본 정책은 일반 범위, 검토 가능한 작업과 절대 거부를 구분합니다.
 
 | 대상 | 동작 |
 | --- | --- |

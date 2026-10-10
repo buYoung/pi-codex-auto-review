@@ -171,6 +171,13 @@ export function createGuardExtension(options: GuardOptions = {}) {
                 context.sessionManager.getSessionId(),
                 context.sessionManager,
             );
+            if (context.hasUI)
+                context.ui.setStatus(
+                    "auto-review",
+                    guard.options.settings.isEnabled
+                        ? undefined
+                        : "Auto-review: Off",
+                );
         });
         pi.on("session_tree", (_event, context) => {
             guard.reset(
@@ -250,6 +257,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
         });
         pi.on("user_bash", (event, context) => {
             guard.assertReady();
+            if (!guard.options.settings.isEnabled) return;
             return {
                 operations: guard.userBashOperations(context, event.command),
             };

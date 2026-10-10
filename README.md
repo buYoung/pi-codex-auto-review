@@ -53,13 +53,16 @@ Use `/approve-model` to choose a reviewer without changing the conversation mode
 
 ## Approval modes and settings
 
-`/approve` changes who reviews calls that need approval. It does not make every ordinary read or workspace write require a prompt.
+`/approve` selects an approval mode or turns the whole extension on or off. It does not make every ordinary read or workspace write require a prompt.
 
 | Choice | Review behavior | Persistence |
 | --- | --- | --- |
 | **Approve for me** | Automatic model review; the default | Saved |
 | **Ask for approval** | User confirmation | Saved |
 | **Full Access** | After confirmation, skips approval and path, command, and network restrictions—including protected-path and deny-rule checks | Never saved; until Pi exits or another approval mode is chosen |
+| **Auto Review Off** | Disables automatic review, approval prompts, and policy restrictions; uses Pi's original tools | Saved |
+
+Use `/approve off` to turn the whole extension off, `/approve on` to restore the previous approval mode and review model, and `/approve status` to show its current state. On/off changes apply immediately and persist across sessions. Choosing an approval mode in the picker also turns the extension back on.
 
 Settings are saved to `<agentDir>/guard/settings.json`, or the policy file selected through the CLI/SDK. `agentDir` normally is `~/.pi/agent` and honors `PI_CODING_AGENT_DIR`. Cancelling a picker preserves the existing settings. Fixed command, picker, and approval-dialog text is in English.
 
@@ -67,7 +70,7 @@ The [usage guide](docs/usage.md#choose-an-approval-method-and-review-model) cove
 
 ## Approval boundaries
 
-With **Full Access off**, the default policy distinguishes ordinary scope, reviewable operations, and absolute denials:
+With **the extension on and Full Access off**, the default policy distinguishes ordinary scope, reviewable operations, and absolute denials:
 
 | Target | Behavior |
 | --- | --- |

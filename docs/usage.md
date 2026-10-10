@@ -32,9 +32,26 @@ Run `/approve` in a TUI session, or in RPC with a client that answers Pi UI requ
 | **Approve for me** | Uses automatic model review for calls requiring approval; the default |
 | **Ask for approval** | Uses user review for those calls; ordinary policy-allowed calls still run directly |
 | **Full Access** | After confirmation, skips approval and all path, command, and network restrictions |
+| **Auto Review Off** | Turns the whole extension off and uses Pi's original tools; persists across sessions |
 | **Review cache expiry** | Selects a read-only automatic-approval lifetime from 1–12 hours; defaults to 3 hours |
 
-The first two choices persist. **Full Access is never saved** and lasts until Pi exits or you choose another approval mode. It also bypasses otherwise absolute path and command denials. Cancelling the confirmation returns to the picker without enabling it. Policy enforcement, approval reuse, and MCP review described below assume Full Access is off.
+The first two choices persist. **Full Access is never saved** and lasts until Pi exits or you choose another approval mode. It also bypasses otherwise absolute path and command denials. Cancelling the confirmation returns to the picker without enabling it. Policy enforcement, approval reuse, and MCP review described below assume the extension is on and Full Access is off.
+
+### Turn the whole extension off or back on
+
+Run these commands in TUI or RPC with a connected UI:
+
+| Command | Result |
+| --- | --- |
+| `/approve off` | Disables automatic review, approval prompts, and protected-path, command, and network policy checks |
+| `/approve on` | Restores the previous approval mode, review model, and policy settings; clears session Full Access |
+| `/approve status` | Shows whether the extension is on or off and the active approval mode |
+
+You can also select **Auto Review Off** in `/approve`. While off, local tools, direct shell calls, and MCP tools use Pi's original execution paths, without the extension's fallback shell timeout. Pi's project trust decisions and external servers' own authentication and permissions still apply.
+
+On/off changes save as `isEnabled` and apply to the current session and future runs. Approval mode and review model settings are retained. Choosing **Approve for me**, **Ask for approval**, or confirmed **Full Access** in `/approve` turns the extension back on. Changing only the cache or review model leaves it off.
+
+### Configure the review cache and model
 
 Set the cache lifetime through **Review cache expiry** in `/approve`, or through `/approve cache`. The selection persists; cancelling preserves the current value.
 
@@ -156,7 +173,7 @@ try {
 | `isProjectTrusted` | Optional trust choice for the initial project |
 | `model` or `modelSelection` | A model object or `{ provider, id }`; cannot be used together |
 | `trustedExtensionPaths` | Extension entry paths, resolved from the initial `cwd`. Protects the containing directories, including sibling imports. |
-| `profile` | Custom permission profile, including `readOnlyPaths`. Required guard control/rule-file and extension-code protection still applies. |
+| `profile` | Custom permission profile, including `readOnlyPaths`. Required guard control/rule-file and extension-code protection applies while the extension is on and Full Access is off. |
 | `mcp` | MCP extension options; `false` disables the guarded MCP adapter |
 | `mcpToolPolicies` | `approvalMode` overrides keyed by `server/tool` |
 | `modelRuntime`, `settingsManager`, `sessionManager` | Optional Pi services and session storage supplied by the embedding application |
@@ -185,10 +202,11 @@ This example keeps default approval behavior and adds two command rules:
 
 ### Approval and scope settings
 
-All scope and denial rules below assume **Full Access is off**.
+All scope and denial rules below assume **the extension is on and Full Access is off**.
 
 | Field | Default | Behavior |
 | --- | --- | --- |
+| `isEnabled` | `true` | `false` disables all extension review, approval, and policy checks. `/approve on` and `off` apply immediately; manual file edits require a reload or restart. |
 | `mode` | `"workspace-write"` | Ordinary workspace/temporary writes are allowed. `"read-only"` sends writes through review; an approved write can still run. |
 | `approvalPolicy` | `"on-request"` | Allows review when needed. `"never"` blocks calls that need approval, but does not block policy-allowed calls. Category settings are described below. |
 | `approvalsReviewer` | `"auto_review"` | `"user"` requests user review |
@@ -353,7 +371,7 @@ The same rules apply to `node_repl/js`. Additional approval requests must match 
 ## Execution limits
 
 - Paths are normalized literally; they are not converted into OS permission patterns.
-- Direct protected paths and protected paths in interpretable commands are denied before review, unless Full Access is enabled.
+- Direct protected paths and protected paths in interpretable commands are denied before review while the extension is on and Full Access is off.
 - Startup and execution do not scan every directory tree or hard-link alias.
 - Indirect access inside approved interpreters and destination changes during execution are not isolated. There is no network proxy or OS sandbox.
 - Trusting an extension protects its containing code directory from model writes, not every dependency it might import elsewhere.

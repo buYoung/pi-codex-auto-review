@@ -23,13 +23,17 @@ import { reviewOnlyModels } from "./review/models.js";
 import type { GuardController } from "./tools/controller.js";
 
 type ReviewModel = GuardSettings["reviewModel"];
-type ApprovalMode = GuardSettings["approvalsReviewer"] | "full_access";
+type ApprovalMode =
+    | GuardSettings["approvalsReviewer"]
+    | "full_access"
+    | "disabled";
 const CURRENT_MODEL = "current";
 const CACHE_EXPIRY = "cache_expiry";
 const modeNames = {
     auto_review: "Approve for me",
     user: "Ask for approval",
     full_access: "Full Access",
+    disabled: "Auto Review Off",
 } as const;
 // Match the public Codex permission picker: https://learn.chatgpt.com/docs/security-administration
 const approvalModes: SelectItem[] = [
@@ -49,6 +53,12 @@ const approvalModes: SelectItem[] = [
         label: modeNames.full_access,
         description:
             "Use with caution: Pi can edit files outside this workspace and access the internet without approval",
+    },
+    {
+        value: "disabled",
+        label: modeNames.disabled,
+        description:
+            "Turn off all approval and policy checks; use Pi's original tool execution. Saved across sessions.",
     },
 ];
 // Codex TUI open_full_access_confirmation(), naming Pi instead of Codex.
@@ -337,7 +347,10 @@ export function registerApprovalCommands(
         patch: Partial<
             Pick<
                 GuardSettings,
-                "reviewModel" | "approvalsReviewer" | "reviewCacheTtlHours"
+                | "isEnabled"
+                | "reviewModel"
+                | "approvalsReviewer"
+                | "reviewCacheTtlHours"
             >
         >,
         context: ExtensionCommandContext,
@@ -347,7 +360,23 @@ export function registerApprovalCommands(
             context.cwd,
             (settings) => store.save(settings),
         );
-        context.ui.setStatus("auto-review", undefined);
+        context.ui.setStatus(
+            "auto-review",
+            guard.options.settings.isEnabled ? undefined : "Auto-review: Off",
+        );
+    };
+    const setEnabled = async (
+        isEnabled: boolean,
+        context: ExtensionCommandContext,
+    ) => {
+        await apply({ isEnabled }, context);
+        guard.setFullAccess(false);
+        context.ui.notify(
+            isEnabled
+                ? `Auto-review: On — Approval mode: ${modeNames[guard.options.settings.approvalsReviewer]}`
+                : "Auto-review: Off — Approval and policy checks are disabled.",
+            "info",
+        );
     };
     const configureCacheExpiry = async (context: ExtensionCommandContext) => {
         const hours = await chooseCacheTtlHours(
@@ -363,26 +392,42 @@ export function registerApprovalCommands(
     };
     pi.registerCommand("approve", {
         description:
-            "Choose an approval mode or cache expiry, or use /approve retry to review a denied action again once.",
+            "Choose an approval mode or cache expiry; use /approve on, off, status, or retry.",
         handler: async (args, context) => {
             requireUI(context);
             await context.waitForIdle();
-            if (args.trim() === "retry") {
+            const command = args.trim();
+            if (command === "on" || command === "off") {
+                await setEnabled(command === "on", context);
+                return;
+            }
+            if (command === "status") {
+                context.ui.notify(
+                    guard.options.settings.isEnabled
+                        ? `Auto-review: On — Approval mode: ${modeNames[guard.isFullAccess ? "full_access" : guard.options.settings.approvalsReviewer]}`
+                        : "Auto-review: Off — Approval and policy checks are disabled.",
+                    "info",
+                );
+                return;
+            }
+            if (command === "retry") {
                 await retryDeniedAction(pi, guard, context);
                 return;
             }
-            if (args.trim() === "cache") {
+            if (command === "cache") {
                 await configureCacheExpiry(context);
                 return;
             }
-            if (args.trim())
+            if (command)
                 throw new GuardError(
                     "INVALID_APPROVAL_COMMAND",
-                    "Use /approve to choose a mode, /approve cache to set cache expiry, or /approve retry to review a denied action again.",
+                    "Use /approve to choose a mode, /approve on or off to enable or disable all checks, /approve status, /approve cache, or /approve retry.",
                 );
-            const current: ApprovalMode = guard.isFullAccess
-                ? "full_access"
-                : guard.options.settings.approvalsReviewer;
+            const current: ApprovalMode = !guard.options.settings.isEnabled
+                ? "disabled"
+                : guard.isFullAccess
+                  ? "full_access"
+                  : guard.options.settings.approvalsReviewer;
             const items = approvalMenuItems(
                 guard.options.settings.reviewCacheTtlHours,
             );
@@ -417,12 +462,17 @@ export function registerApprovalCommands(
                     await configureCacheExpiry(context);
                     return;
                 }
+                if (choice === "disabled") {
+                    await setEnabled(false, context);
+                    return;
+                }
                 if (choice === "full_access") {
                     const confirmed = await context.ui.select(
                         FULL_ACCESS_CONFIRMATION,
                         fullAccessChoices,
                     );
                     if (confirmed !== fullAccessChoices[0]) continue;
+                    await apply({ isEnabled: true }, context);
                     guard.setFullAccess(true);
                     context.ui.setStatus("auto-review", undefined);
                     context.ui.notify(
@@ -438,7 +488,10 @@ export function registerApprovalCommands(
                           ? "user"
                           : undefined;
                 if (!reviewer) return;
-                await apply({ approvalsReviewer: reviewer }, context);
+                await apply(
+                    { isEnabled: true, approvalsReviewer: reviewer },
+                    context,
+                );
                 guard.setFullAccess(false);
                 context.ui.notify(
                     `Approval mode: ${modeNames[reviewer]}`,

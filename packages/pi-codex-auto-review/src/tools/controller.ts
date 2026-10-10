@@ -5,6 +5,7 @@ import {
     type BashOperations,
     type BashToolOptions,
     createBashToolDefinition,
+    createLocalBashOperations,
     type ExtensionContext,
     type ReadToolOptions,
     type ToolCallEvent,
@@ -495,6 +496,15 @@ export class GuardController {
                 context,
             ) => {
                 this.assertReady();
+                if (!this.options.settings.isEnabled)
+                    return execute.call(
+                        definition,
+                        toolCallId,
+                        params,
+                        callerSignal,
+                        onUpdate,
+                        context,
+                    );
                 const lifetime = new AbortController();
                 const signal = AbortSignal.any([
                     lifetime.signal,
@@ -827,6 +837,14 @@ export class GuardController {
             parameters,
             execute: async (toolCallId, params, signal, onUpdate, context) => {
                 this.assertReady();
+                if (!this.options.settings.isEnabled)
+                    return definition.execute(
+                        toolCallId,
+                        params,
+                        signal,
+                        onUpdate,
+                        context,
+                    );
                 const cwd = await canonicalPath(context.cwd, context.cwd);
                 if (tool === "bash") {
                     const input = params as Record<string, Json>;
@@ -991,6 +1009,10 @@ export class GuardController {
         context: ExtensionContext,
         trustedCommand?: string,
     ): BashOperations {
+        if (!this.options.settings.isEnabled)
+            return createLocalBashOperations({
+                shellPath: this.options.shellPath,
+            });
         const operations: BashOperations = {
             exec: async (command, cwd, options) => {
                 const resolvedCwd = await canonicalPath(cwd, cwd);
