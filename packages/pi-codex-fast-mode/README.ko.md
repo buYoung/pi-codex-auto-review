@@ -93,13 +93,14 @@ Reply with READY only. Do not use tools.
 | `openai` | `gpt-5.4`, `gpt-5.5`, `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-luna` |
 | `openai-codex` | 위 모델들과 `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` |
 
-Ultrafast에는 다음 조건이 모두 필요합니다.
+Ultrafast는 `gpt-6-astra` 또는 `gpt-6.1-sol`에서 다음 경로로 요청합니다.
 
-- `openai-responses` API를 사용하는 `openai/gpt-6-astra` 또는 `openai/gpt-6.1-sol`
-- OAuth가 아닌 설정된 인증
-- `api.openai.com` 또는 `us.api.openai.com`의 HTTPS `/v1`·`/v1/` 엔드포인트. `gpt-6.1-sol`은 `eu.api.openai.com`도 지원합니다. 기본 HTTPS 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다.
+| 공급자·API | 인증 | 기본 엔드포인트 |
+| --- | --- | --- |
+| `openai`·`openai-responses` | Pi에 설정된 API 키 또는 ChatGPT OAuth 인증 | `https://api.openai.com/v1` |
+| `openai-codex`·`openai-codex-responses` | 설정된 OAuth 인증 | `https://chatgpt.com/backend-api`. `/codex`·`/codex/responses`를 붙인 주소도 허용합니다. |
 
-Ultrafast는 이 확장에서 OpenAI API 키 인증으로 사용합니다. `openai-codex`와 OAuth로 사용하는 `openai`는 Ultrafast 지원 대상에 포함하지 않습니다.
+HTTPS 기본 포트나 443을 사용하고 URL 자격 증명·쿼리·프래그먼트가 없어야 합니다. 경로 끝의 `/`는 허용합니다. Codex 경로의 활성 상태는 확장이 요청을 보낼 수 있다는 뜻이며, 해당 계정의 서버 지원을 확인한 결과는 아닙니다. 모델·계정의 실제 지원 여부는 서버 응답으로 확인해야 합니다.
 
 | 선택 | 주입하는 `service_tier` |
 | --- | --- |

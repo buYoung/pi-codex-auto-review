@@ -93,13 +93,14 @@ This is the extension's **default local Fast allowlist**, not a promise that you
 | `openai` | `gpt-5.4`, `gpt-5.5`, `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-luna` |
 | `openai-codex` | All of the above plus `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` |
 
-Ultrafast requires all of these:
+Ultrafast can be requested for `gpt-6-astra` or `gpt-6.1-sol` through these routes:
 
-- `openai/gpt-6-astra` or `openai/gpt-6.1-sol` using the `openai-responses` API.
-- Configured authentication without OAuth.
-- An HTTPS `/v1` or `/v1/` endpoint at `api.openai.com` or `us.api.openai.com`. `gpt-6.1-sol` also supports `eu.api.openai.com`. Use the default HTTPS port or 443, without URL credentials, query, or fragment.
+| Provider and API | Authentication | Default endpoint |
+| --- | --- | --- |
+| `openai` and `openai-responses` | API-key or ChatGPT OAuth authentication configured in Pi | `https://api.openai.com/v1` |
+| `openai-codex` and `openai-codex-responses` | Configured OAuth authentication | `https://chatgpt.com/backend-api`, optionally ending in `/codex` or `/codex/responses`. |
 
-Ultrafast in this extension uses OpenAI API-key authentication. `openai-codex` and OAuth-authenticated `openai` models are outside its Ultrafast support.
+Use the default HTTPS port or 443, without URL credentials, query, or fragment. A trailing `/` is accepted. Activation on the Codex route means the extension can prepare the request; it does not establish server support for the account. Check the server response to verify availability for the model and account.
 
 | Selection | Injected `service_tier` |
 | --- | --- |

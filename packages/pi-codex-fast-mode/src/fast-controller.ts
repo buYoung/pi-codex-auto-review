@@ -75,27 +75,42 @@ export class FastController {
     supportsUltrafast(ctx: FastContext): boolean {
         const model = ctx.model;
         if (
-            model?.provider !== "openai" ||
+            !model ||
             (model.id !== "gpt-6-astra" && model.id !== "gpt-6.1-sol") ||
-            model.api !== "openai-responses" ||
-            ctx.modelRegistry.isUsingOAuth(model) ||
             !ctx.modelRegistry.hasConfiguredAuth(model)
         )
             return false;
         try {
             const url = new URL(model.baseUrl);
+            if (
+                url.protocol !== "https:" ||
+                (url.port !== "" && url.port !== "443") ||
+                url.username ||
+                url.password ||
+                url.search ||
+                url.hash
+            )
+                return false;
+            const isUsingOAuth = ctx.modelRegistry.isUsingOAuth(model);
+            if (
+                model.provider === "openai-codex" &&
+                model.api === "openai-codex-responses"
+            )
+                return (
+                    isUsingOAuth &&
+                    url.hostname === "chatgpt.com" &&
+                    /^\/backend-api(?:\/codex(?:\/responses)?)?\/?$/.test(
+                        url.pathname,
+                    )
+                );
             return (
-                url.protocol === "https:" &&
+                model.provider === "openai" &&
+                model.api === "openai-responses" &&
                 (url.hostname === "api.openai.com" ||
                     url.hostname === "us.api.openai.com" ||
                     (model.id === "gpt-6.1-sol" &&
                         url.hostname === "eu.api.openai.com")) &&
-                (url.port === "" || url.port === "443") &&
-                /^\/v1\/?$/.test(url.pathname) &&
-                !url.username &&
-                !url.password &&
-                !url.search &&
-                !url.hash
+                /^\/v1\/?$/.test(url.pathname)
             );
         } catch {
             return false;
