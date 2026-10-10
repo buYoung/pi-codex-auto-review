@@ -32,8 +32,11 @@ TUI 세션이나 Pi UI 요청에 응답하는 RPC 클라이언트에서 `/approv
 | **Approve for me** | 승인이 필요한 호출을 모델이 자동 검토합니다. 기본값입니다. |
 | **Ask for approval** | 같은 호출을 사용자가 검토합니다. 정책이 허용한 일반 호출은 바로 실행합니다. |
 | **Full Access** | 확인 후 승인과 모든 경로·명령·네트워크 제한을 건너뜁니다. |
+| **Review cache expiry** | 읽기 자동 승인 캐시의 만료 시간을 1~12시간 중 선택합니다. 기본값은 3시간입니다. |
 
 앞의 두 선택은 저장합니다. **Full Access는 저장하지 않으며**, Pi를 종료하거나 다른 승인 방식을 선택할 때까지 적용합니다. 평소 절대 거부하는 경로·명령 제한도 우회합니다. 확인을 취소하면 활성화하지 않고 선택창으로 돌아갑니다. 아래의 정책 적용·승인 재사용·MCP 검토 설명은 Full Access가 꺼진 상태를 전제로 합니다.
+
+캐시 만료 시간은 `/approve`의 **Review cache expiry** 또는 `/approve cache`에서 설정합니다. 선택은 저장되며 취소하면 기존 값을 유지합니다.
 
 `/approve-model`은 Pi의 현재 `/scoped-models` 범위에서 사용 가능한 모델과 Codex의 승인 검토 모델 `codex-auto-review`를 검색합니다. 검토 모델을 선택해도 주 대화 모델은 바뀌지 않습니다. **Use current Pi model**은 `reviewModel: null`을 설정합니다.
 
@@ -223,6 +226,7 @@ SDK는 승인 UI 없이 시작합니다. 자동 검토는 호출을 승인할 �
 | `reviewMaxRounds` | `4` | 조사를 포함한 검토 모델 호출 라운드. 1~16의 정수입니다. |
 | `reviewMaxOutputTokens` | `2048` | 검토자 출력 한도. 1~16384의 정수입니다. |
 | `reviewContextChars` | `60000` | 검토 문맥 문자 예산. 1~500000의 정수입니다. |
+| `reviewCacheTtlHours` | `3` | 읽기 자동 승인 캐시의 유효 시간. 1~12시간의 정수이며 `/approve`에서도 설정합니다. |
 | `projectDocMaxBytes` | `32768` | 프로젝트 지침 합산 바이트 한도. 0~1000000의 정수입니다. |
 | `projectDocFallbackFilenames` | `[]` | `AGENTS.override.md`·`AGENTS.md` 다음에 확인할 지침 파일명 |
 | `projectRootMarkers` | `null` | `.git`을 루트 표시로 사용합니다. 목록으로 교체할 수 있고, `[]`은 상위 탐색을 끕니다. |
@@ -267,6 +271,19 @@ TUI·RPC 승인 창에서는 **Allow once**, **Allow for this session**, **Save 
 - 스킬 지문에는 `SKILL.md`가 있는 디렉터리의 파일을 포함합니다. `<script>` 또는 `<interpreter> <script>` 단일 명령만 해당하며, 심볼릭 링크가 있는 스킬은 캐시하지 않습니다.
 - 자동 승인과 **Save as an allow rule**은 `<agentDir>/guard/package-approvals.json`에 저장합니다. **Allow for this session**은 세션에만 적용하고 **Allow once**는 재사용하지 않습니다.
 - 내용이 바뀌면 다시 검토합니다. 추가 경로·도메인, 권한 상승, 규칙의 확인 요구, 엄격한 MCP 검토와 필수 사용자 입력은 항상 새 판단을 요구합니다.
+
+### 읽기 자동 검토 캐시
+
+읽기 작업의 구조화된 자동 승인 결과는 `<agentDir>/pi-codex-auto-review.sqlite`에 저장합니다. 기본 위치는 `~/.pi/agent/pi-codex-auto-review.sqlite`이며 `PI_CODING_AGENT_DIR`이나 명시한 `agentDir`을 따릅니다. 같은 Pi 자원 디렉터리를 사용하는 세션과 프로세스가 공유합니다.
+
+- Pi의 `read`·`grep`·`find`·`ls` 도구와 단일 리터럴 셸 읽기 명령이 대상입니다. 셸 명령은 `cat`, `head`, `tail`, `wc`, `rg`, `grep`, `find`, `ls`, `stat`, `pwd`를 확인합니다. `git status`, `git ls-files`, `git rev-parse`도 포함합니다. `git diff`·`log`·`show`는 `--no-ext-diff`와 `--no-textconv`가 있어야 합니다.
+- 파이프, 복합 명령, 리다이렉션, 명령 치환, 인터프리터, 쓰기·네트워크 요청은 제외합니다. `find -exec/-delete`나 `rg --pre/--hostname-bin`처럼 실행·쓰기 동작을 추가하는 옵션도 제외합니다.
+- 작업 입력·디렉터리·출처·권한·정책·검토 문맥·모델이 일치해야 재사용합니다. 세션과 호출의 임시 식별자만 비교에서 제외하고 승인 결과는 현재 호출에 다시 연결합니다.
+- 거부·오류·취소·사용자 승인 결과, 명시적인 재검토와 파일 조사를 거친 자동 승인은 저장하지 않습니다. 정책의 절대 거부와 실행 전 재확인은 계속 적용합니다.
+- 만료 시간은 승인 시점부터 계산하며 적중으로 연장하지 않습니다. 설정 변경 후에는 새 정책에 대한 검토와 새 만료 시간을 사용합니다. 만료 항목은 재사용하지 않고 새 승인 저장 시 정리하며 최대 10,000개를 보관합니다.
+- 원문 명령·인수·본문 대신 해시 키와 가린 승인 평가·시간을 저장합니다. DB와 저널 파일은 가드 보호 경로에 포함합니다. DB를 읽거나 저장할 수 없으면 캐시를 건너뛰고 새 검토를 진행합니다.
+
+이 캐시는 승인 판정만 재사용합니다. 파일 조회 결과와 명령 출력은 매번 실제 도구가 생성합니다. 별도의 MCP·스킬 패키지 승인과는 적용 범위가 다릅니다.
 
 ### 거부·오류·재시도
 

@@ -26,6 +26,7 @@ import {
     type PackageApprovalStore,
 } from "./package-approvals.js";
 import type { GuardSettings } from "./policy/index.js";
+import { ReviewApprovalCache } from "./review/cache.js";
 import { ReviewLifecycle } from "./review/lifecycle.js";
 import {
     type ReviewExecutionContext,
@@ -105,6 +106,7 @@ export interface Admission {
 }
 export class ApprovalManager {
     readonly lifecycle = new ReviewLifecycle();
+    private readonly reviewCache: ReviewApprovalCache;
     private grants: Grant[] = [];
     private tail: Promise<unknown> = Promise.resolve();
     private epoch = new AbortController();
@@ -119,11 +121,15 @@ export class ApprovalManager {
             approvalPolicy?: ApprovalPolicy;
             approvalsReviewer?: "auto_review" | "user";
             packageApprovals?: PackageApprovalStore;
+            reviewCache?: ReviewApprovalCache;
         },
-    ) {}
+    ) {
+        this.reviewCache = options.reviewCache ?? new ReviewApprovalCache();
+    }
     async initialize(): Promise<void> {
         this.grants = (await this.options.persistence?.load()) ?? [];
         await this.options.packageApprovals?.load();
+        this.reviewCache.initialize();
     }
     /** Caching is an optimization: a failed save never changes the admission result. */
     private async rememberPackage(
@@ -328,10 +334,13 @@ export class ApprovalManager {
                       context: reviewContext,
                       settings: context.settings,
                       executionContext: context.executionContext,
+                      cache: retry ? undefined : this.reviewCache,
                   });
         context.onReviewResult?.(review.result);
         if (signal.aborted)
             return { ...deny("Call cancelled"), review: review.result };
+        if ("isCached" in review && review.isCached)
+            await this.options.audit.record(action, "review-cache", "reused");
         const recorded = this.lifecycle.record(
             action,
             contextId,
@@ -477,5 +486,9 @@ export class ApprovalManager {
     async settle(): Promise<void> {
         await this.tail;
         await this.options.audit.flush();
+    }
+    async close(): Promise<void> {
+        await this.settle();
+        this.reviewCache.close();
     }
 }

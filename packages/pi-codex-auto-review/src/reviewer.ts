@@ -13,8 +13,13 @@ import {
     type ReviewAssessment,
     type ReviewContext,
     type ReviewResult,
+    ruleDigest,
 } from "./contracts.js";
 import { DEFAULT_SETTINGS, type GuardSettings } from "./policy/index.js";
+import {
+    type ReviewApprovalCache,
+    reviewCacheContext,
+} from "./review/cache.js";
 import { safeEvidence } from "./review/context.js";
 import {
     INVESTIGATION_TOOLS,
@@ -22,6 +27,7 @@ import {
 } from "./review/investigation.js";
 import { findReviewModel, reviewReasoning } from "./review/models.js";
 import { reviewPolicy } from "./review/policy.js";
+import { isReadOnlyReview } from "./review/read-only.js";
 import {
     isRequestStructure,
     redactReviewData,
@@ -38,8 +44,11 @@ export interface ReviewReply {
     readonly reason: string;
     readonly result?: ReviewResult;
     readonly isLegacy?: boolean;
+    readonly isCached?: boolean;
 }
 export interface ReviewProvider {
+    /** Stable identities opt custom providers into reuse across processes. */
+    readonly cacheIdentity?: string;
     complete(
         request: ReviewRequest,
         options: { signal: AbortSignal; timeoutMs: number },
@@ -58,6 +67,7 @@ type ProviderContext = Parameters<
     ExtensionContext["modelRegistry"]["streamSimple"]
 >[1];
 export class PiReviewProvider implements ReviewProvider {
+    private readonly investigatedRequests = new WeakSet<ReviewRequest>();
     constructor(
         private readonly context: Pick<
             ExtensionContext,
@@ -66,10 +76,7 @@ export class PiReviewProvider implements ReviewProvider {
         private readonly settings: GuardSettings = DEFAULT_SETTINGS,
         private readonly investigation?: ReviewInvestigation,
     ) {}
-    async complete(
-        request: ReviewRequest,
-        options: { signal: AbortSignal; timeoutMs: number },
-    ): Promise<unknown> {
+    private get model() {
         const override = this.settings.reviewModel;
         const model = override
             ? findReviewModel(
@@ -85,13 +92,40 @@ export class PiReviewProvider implements ReviewProvider {
                     ? "Configured review model is unavailable"
                     : "No current Pi model is available for review",
             );
+        return model;
+    }
+    get cacheIdentity(): string {
+        const model = this.model;
+        return digest(
+            JSON.parse(
+                JSON.stringify({
+                    model,
+                    reasoning:
+                        reviewReasoning(
+                            model,
+                            this.settings.reviewModel
+                                ? undefined
+                                : this.context.thinkingLevel,
+                        ) ?? null,
+                }),
+            ),
+        );
+    }
+    canCache(request: ReviewRequest): boolean {
+        return !this.investigatedRequests.has(request);
+    }
+    async complete(
+        request: ReviewRequest,
+        options: { signal: AbortSignal; timeoutMs: number },
+    ): Promise<unknown> {
+        const model = this.model;
         const maxTokens = Math.min(
             this.settings.reviewMaxOutputTokens,
             model.maxTokens ?? this.settings.reviewMaxOutputTokens,
         );
         const reasoning = reviewReasoning(
             model,
-            override ? undefined : this.context.thinkingLevel,
+            this.settings.reviewModel ? undefined : this.context.thinkingLevel,
         );
         const context: ProviderContext = {
             systemPrompt: request.systemPrompt,
@@ -162,6 +196,7 @@ export class PiReviewProvider implements ReviewProvider {
                     "REVIEW_INVESTIGATION",
                     "Unsupported investigation or review round limit exceeded",
                 );
+            this.investigatedRequests.add(request);
             // Keep visible tool calls, never returned private reasoning, in the bounded follow-up.
             context.messages.push({
                 ...response,
@@ -311,6 +346,7 @@ export async function reviewAction(options: {
     context?: ReviewContext;
     settings?: GuardSettings;
     executionContext?: ReviewExecutionContext;
+    cache?: ReviewApprovalCache;
 }): Promise<ReviewReply> {
     const { action, policyDecision } = options;
     if (
@@ -415,6 +451,31 @@ export async function reviewAction(options: {
                 "REVIEW_CONTEXT_OVERFLOW",
                 "Exact request exceeds review context capacity",
             );
+        let cacheKey: string | undefined;
+        if (options.cache && isReadOnlyReview(action, policyDecision)) {
+            const { actionDigest: ignoredActionDigest, ...decisionFields } =
+                policyDecision;
+            cacheKey = options.cache.key(
+                options.provider.cacheIdentity ?? options.provider,
+                {
+                    action: ruleDigest(action),
+                    context: reviewCacheContext(context),
+                    policyDecision: decisionFields,
+                    policyDigest: policy.digest,
+                    trustedAuthorization: options.trustedAuthorization,
+                    executionContext: options.executionContext ?? null,
+                    settings: options.settings ?? DEFAULT_SETTINGS,
+                },
+            );
+            const assessment = options.cache.get(cacheKey);
+            if (assessment)
+                return {
+                    decision: "allow",
+                    reason: assessment.rationale,
+                    isCached: true,
+                    result: { ...binding, status: "approved", assessment },
+                };
+        }
         const value = await withSignal(
             options.provider.complete(request, {
                 signal: deadline.signal,
@@ -477,6 +538,21 @@ export async function reviewAction(options: {
             status: assessment.outcome === "allow" ? "approved" : "denied",
             assessment,
         };
+        if (
+            cacheKey &&
+            assessment.outcome === "allow" &&
+            (!(options.provider instanceof PiReviewProvider) ||
+                options.provider.canCache(request))
+        ) {
+            const rationale = safeEvidence(assessment.rationale, redactor);
+            if (typeof rationale === "string")
+                options.cache?.remember(
+                    cacheKey,
+                    { ...assessment, rationale },
+                    options.settings?.reviewCacheTtlHours ??
+                        DEFAULT_SETTINGS.reviewCacheTtlHours,
+                );
+        }
         return {
             decision: assessment.outcome,
             reason: assessment.rationale,

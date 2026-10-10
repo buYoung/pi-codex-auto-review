@@ -269,8 +269,8 @@ export class GuardController {
         this.approvals.reset();
         this.externalTools.clear();
         await this.options.executor.close();
-        await this.approvals.settle();
         await this.settingsUpdates;
+        await this.approvals.close();
     }
     private ui(
         context: ExtensionContext,

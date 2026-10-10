@@ -21,6 +21,7 @@ import type { PermissionProfile } from "./contracts.js";
 import { createProfile } from "./contracts.js";
 import { PackageApprovalStore } from "./package-approvals.js";
 import { defaultProfile, type GuardSettingsInput } from "./policy/index.js";
+import { ReviewApprovalCache } from "./review/cache.js";
 import {
     AUTHORIZATION_ENTRY,
     REVIEW_CONTEXT_ENTRY,
@@ -60,6 +61,10 @@ export function createGuardExtension(options: GuardOptions = {}) {
             process.env.PI_CODING_AGENT_DIR ??
             join(homedir(), ".pi", "agent");
         const controlDir = join(agentDir, "guard");
+        const reviewCachePath = resolve(
+            agentDir,
+            "pi-codex-auto-review.sqlite",
+        );
         const settingsPath = options.settingsPath
             ? resolve(options.settingsPath)
             : join(controlDir, "settings.json");
@@ -73,7 +78,14 @@ export function createGuardExtension(options: GuardOptions = {}) {
         const baseline = await defaultProfile(
             cwd,
             settings,
-            [controlDir, settingsPath],
+            [
+                controlDir,
+                settingsPath,
+                reviewCachePath,
+                `${reviewCachePath}-journal`,
+                `${reviewCachePath}-wal`,
+                `${reviewCachePath}-shm`,
+            ],
             options.trustedExtensionPaths,
         );
         const profile = options.profile
@@ -115,6 +127,7 @@ export function createGuardExtension(options: GuardOptions = {}) {
             packageApprovals: new PackageApprovalStore(
                 join(controlDir, "package-approvals.json"),
             ),
+            reviewCache: new ReviewApprovalCache(reviewCachePath),
         });
         controller = new GuardController({
             profile,

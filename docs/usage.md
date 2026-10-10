@@ -32,8 +32,11 @@ Run `/approve` in a TUI session, or in RPC with a client that answers Pi UI requ
 | **Approve for me** | Uses automatic model review for calls requiring approval; the default |
 | **Ask for approval** | Uses user review for those calls; ordinary policy-allowed calls still run directly |
 | **Full Access** | After confirmation, skips approval and all path, command, and network restrictions |
+| **Review cache expiry** | Selects a read-only automatic-approval lifetime from 1–12 hours; defaults to 3 hours |
 
 The first two choices persist. **Full Access is never saved** and lasts until Pi exits or you choose another approval mode. It also bypasses otherwise absolute path and command denials. Cancelling the confirmation returns to the picker without enabling it. Policy enforcement, approval reuse, and MCP review described below assume Full Access is off.
+
+Set the cache lifetime through **Review cache expiry** in `/approve`, or through `/approve cache`. The selection persists; cancelling preserves the current value.
 
 Run `/approve-model` to search available models in Pi's current `/scoped-models` scope, plus Codex's approval review model `codex-auto-review`. Selecting a reviewer does not change the main conversation model. **Use current Pi model** sets `reviewModel: null`.
 
@@ -223,6 +226,7 @@ All scope and denial rules below assume **Full Access is off**.
 | `reviewMaxRounds` | `4` | Reviewer model rounds, including investigation; integer from 1 to 16 |
 | `reviewMaxOutputTokens` | `2048` | Reviewer output limit; integer from 1 to 16384 |
 | `reviewContextChars` | `60000` | Review-context character budget; integer from 1 to 500000 |
+| `reviewCacheTtlHours` | `3` | Read-only automatic-approval lifetime in hours; integer from 1 to 12, also configurable through `/approve` |
 | `projectDocMaxBytes` | `32768` | Combined project-instruction byte budget; integer from 0 to 1000000 |
 | `projectDocFallbackFilenames` | `[]` | Instruction filenames tried after `AGENTS.override.md` and `AGENTS.md` |
 | `projectRootMarkers` | `null` | Uses `.git` as the root marker. A list replaces it; `[]` disables parent traversal. |
@@ -267,6 +271,19 @@ Eligible MCP tools and skill scripts can reuse a separate package approval:
 - Skill fingerprints include files in the directory containing `SKILL.md`. Only a single `<script>` or `<interpreter> <script>` command qualifies; symbolic-link-containing skills are not cached.
 - Automatic approvals and **Save as an allow rule** persist in `<agentDir>/guard/package-approvals.json`. **Allow for this session** is session-only; **Allow once** is not reused.
 - Changed content is reviewed again. Additional paths/domains, escalation, rule prompts, strict MCP review, and required user input always require a fresh decision.
+
+### Read-only automatic-review cache
+
+Structured automatic approvals of reads are stored in `<agentDir>/pi-codex-auto-review.sqlite`. The default location is `~/.pi/agent/pi-codex-auto-review.sqlite`; `PI_CODING_AGENT_DIR` or an explicit `agentDir` takes precedence. Sessions and processes using the same Pi resource directory share the database.
+
+- Eligible actions are Pi's `read`, `grep`, `find`, and `ls` tools and single literal shell reads. Checked commands are `cat`, `head`, `tail`, `wc`, `rg`, `grep`, `find`, `ls`, `stat`, and `pwd`, plus `git status`, `git ls-files`, and `git rev-parse`. `git diff`, `log`, and `show` require both `--no-ext-diff` and `--no-textconv`.
+- Pipes, compound commands, redirections, command substitution, interpreters, writes, and network requests are excluded. Options adding execution or writes, such as `find -exec/-delete` and `rg --pre/--hostname-bin`, are also excluded.
+- Reuse binds to the exact input, directory, source, permissions, policy, review context, and model. Only transient session and invocation identifiers are normalized; the assessment is rebound to the current invocation.
+- Denials, failures, cancellation, user approvals, explicit fresh reviews, and automatic approvals that used file investigation are not stored. Absolute denials and pre-execution policy checks still apply.
+- Expiry starts when approval is recorded and is not extended by hits. Settings changes require review under the new policy and use the new lifetime. Expired entries are not reused and are cleaned up on new approvals; storage is bounded to 10,000 entries.
+- The database stores hashed keys, masked assessments, and timestamps rather than raw commands, arguments, or document contents. Database and journal files are guard-protected paths. Database read/write errors skip caching and fall back to a fresh review.
+
+Only the approval assessment is reused. File contents and command output are produced by the actual tool each time. This cache has a different scope from the separate MCP/skill package approvals.
 
 ### Denials, errors, and retries
 

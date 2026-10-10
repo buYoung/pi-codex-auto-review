@@ -71,6 +71,7 @@ export interface GuardSettings {
     readonly reviewMaxRounds: number;
     readonly reviewMaxOutputTokens: number;
     readonly reviewContextChars: number;
+    readonly reviewCacheTtlHours: number;
     readonly ruleFiles: readonly string[];
     readonly writableRoots: readonly string[];
     readonly excludeSlashTmp: boolean;
@@ -100,6 +101,7 @@ export const DEFAULT_SETTINGS: GuardSettings = immutable({
     reviewMaxRounds: 4,
     reviewMaxOutputTokens: 2048,
     reviewContextChars: 60000,
+    reviewCacheTtlHours: 3,
     ruleFiles: [],
     writableRoots: [],
     excludeSlashTmp: false,
@@ -187,6 +189,7 @@ export function validateSettings(value: unknown): GuardSettings {
         ["reviewMaxRounds", 16],
         ["reviewMaxOutputTokens", 16384],
         ["reviewContextChars", 500000],
+        ["reviewCacheTtlHours", 12],
     ] as const)
         if (
             !Number.isInteger(settings[key]) ||

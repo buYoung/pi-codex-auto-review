@@ -25,6 +25,7 @@ import type { GuardController } from "./tools/controller.js";
 type ReviewModel = GuardSettings["reviewModel"];
 type ApprovalMode = GuardSettings["approvalsReviewer"] | "full_access";
 const CURRENT_MODEL = "current";
+const CACHE_EXPIRY = "cache_expiry";
 const modeNames = {
     auto_review: "Approve for me",
     user: "Ask for approval",
@@ -58,10 +59,22 @@ const fullAccessChoices = [
     "Cancel — Go back without enabling full access",
 ];
 
+function approvalMenuItems(cacheTtlHours: number): SelectItem[] {
+    return [
+        ...approvalModes,
+        {
+            value: CACHE_EXPIRY,
+            label: "Review cache expiry",
+            description: `${cacheTtlHours} hours — Reuse approved reads across Pi sessions`,
+        },
+    ];
+}
+
 class ApprovalModePicker extends Container {
     private readonly list: SelectList;
     constructor(
         current: ApprovalMode,
+        cacheTtlHours: number,
         finish: (value: string | undefined) => void,
     ) {
         super();
@@ -69,14 +82,12 @@ class ApprovalModePicker extends Container {
             new Text(`Approval mode — Current: ${modeNames[current]}`, 0, 0),
         );
         this.addChild(new Spacer(1));
-        this.list = new SelectList(
-            approvalModes,
-            approvalModes.length,
-            getSelectListTheme(),
-            { maxPrimaryColumnWidth: 22 },
-        );
+        const items = approvalMenuItems(cacheTtlHours);
+        this.list = new SelectList(items, items.length, getSelectListTheme(), {
+            maxPrimaryColumnWidth: 22,
+        });
         this.list.setSelectedIndex(
-            approvalModes.findIndex((item) => item.value === current),
+            items.findIndex((item) => item.value === current),
         );
         this.list.onSelect = (item) => finish(item.value);
         this.list.onCancel = () => finish(undefined);
@@ -96,6 +107,23 @@ class ApprovalModePicker extends Container {
     handleInput(data: string): void {
         this.list.handleInput(data);
     }
+}
+
+async function chooseCacheTtlHours(
+    context: ExtensionCommandContext,
+    currentHours: number,
+): Promise<number | undefined> {
+    const choices = Array.from(
+        { length: 12 },
+        (_, i) =>
+            `${i + 1} ${i === 0 ? "hour" : "hours"}${i + 1 === currentHours ? " — Current" : ""}`,
+    );
+    const selected = await context.ui.select(
+        `Review cache expiry — Current: ${currentHours} hours`,
+        choices,
+    );
+    const index = choices.indexOf(selected ?? "");
+    return index < 0 ? undefined : index + 1;
 }
 
 const modelIdentity = (model: { provider: string; id: string }) =>
@@ -307,7 +335,10 @@ export function registerApprovalCommands(
     };
     const apply = async (
         patch: Partial<
-            Pick<GuardSettings, "reviewModel" | "approvalsReviewer">
+            Pick<
+                GuardSettings,
+                "reviewModel" | "approvalsReviewer" | "reviewCacheTtlHours"
+            >
         >,
         context: ExtensionCommandContext,
     ) => {
@@ -318,9 +349,21 @@ export function registerApprovalCommands(
         );
         context.ui.setStatus("auto-review", undefined);
     };
+    const configureCacheExpiry = async (context: ExtensionCommandContext) => {
+        const hours = await chooseCacheTtlHours(
+            context,
+            guard.options.settings.reviewCacheTtlHours,
+        );
+        if (hours === undefined) return;
+        await apply({ reviewCacheTtlHours: hours }, context);
+        context.ui.notify(
+            `Approval review cache expiry: ${hours} hours`,
+            "info",
+        );
+    };
     pi.registerCommand("approve", {
         description:
-            "Choose an approval mode, or use /approve retry to review a denied action again once.",
+            "Choose an approval mode or cache expiry, or use /approve retry to review a denied action again once.",
         handler: async (args, context) => {
             requireUI(context);
             await context.waitForIdle();
@@ -328,15 +371,22 @@ export function registerApprovalCommands(
                 await retryDeniedAction(pi, guard, context);
                 return;
             }
+            if (args.trim() === "cache") {
+                await configureCacheExpiry(context);
+                return;
+            }
             if (args.trim())
                 throw new GuardError(
                     "INVALID_APPROVAL_COMMAND",
-                    "Use /approve to choose a mode or /approve retry to review a denied action again.",
+                    "Use /approve to choose a mode, /approve cache to set cache expiry, or /approve retry to review a denied action again.",
                 );
             const current: ApprovalMode = guard.isFullAccess
                 ? "full_access"
                 : guard.options.settings.approvalsReviewer;
-            const choices = approvalModes.map(
+            const items = approvalMenuItems(
+                guard.options.settings.reviewCacheTtlHours,
+            );
+            const choices = items.map(
                 (item) => `${item.label} — ${item.description}`,
             );
             // Like Codex, cancelling the Full Access confirmation returns to the picker.
@@ -350,15 +400,23 @@ export function registerApprovalCommands(
                               )
                               .then(
                                   (selected) =>
-                                      approvalModes[
-                                          choices.indexOf(selected ?? "")
-                                      ]?.value,
+                                      items[choices.indexOf(selected ?? "")]
+                                          ?.value,
                               )
                         : await context.ui.custom<string | undefined>(
                               (_tui, _theme, _keys, done) =>
-                                  new ApprovalModePicker(current, done),
+                                  new ApprovalModePicker(
+                                      current,
+                                      guard.options.settings
+                                          .reviewCacheTtlHours,
+                                      done,
+                                  ),
                           );
                 if (choice === undefined) return;
+                if (choice === CACHE_EXPIRY) {
+                    await configureCacheExpiry(context);
+                    return;
+                }
                 if (choice === "full_access") {
                     const confirmed = await context.ui.select(
                         FULL_ACCESS_CONFIRMATION,
