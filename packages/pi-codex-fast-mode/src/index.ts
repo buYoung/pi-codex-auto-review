@@ -19,6 +19,7 @@ const SERVICE_TIER = "priority";
 const COMMAND_NAME = "codex-fast";
 const STATUS_KEY = "codex-fast-mode";
 const SETTINGS_DIRECTORY = "codex-fast-mode";
+const MODEL_FAMILY_ORDER = ["astra", "sol", "luna"];
 const COMMAND_USAGE =
     "Usage: /codex-fast [status|on|off], /codex-fast speed <standard|fast|ultrafast>, /codex-fast <fast|ultrafast> <on|off>, or /codex-fast model <provider/id> <standard|fast|ultrafast|inherit>";
 
@@ -44,6 +45,31 @@ function completions(values: readonly string[], prefix: string) {
         .filter((value) => value.startsWith(prefix.trim()))
         .map((value) => ({ value, label: value }));
     return matches.length ? matches : null;
+}
+
+function compareModelSettings(
+    a: ModelSpeedSetting,
+    b: ModelSpeedSetting,
+): number {
+    const pattern = /^gpt-(\d+(?:\.\d+)*)-(astra|sol|luna)(?:-|$)/;
+    const aMatch = a.model.slice(a.model.indexOf("/") + 1).match(pattern);
+    const bMatch = b.model.slice(b.model.indexOf("/") + 1).match(pattern);
+    const aRank = aMatch
+        ? MODEL_FAMILY_ORDER.indexOf(aMatch[2])
+        : MODEL_FAMILY_ORDER.length;
+    const bRank = bMatch
+        ? MODEL_FAMILY_ORDER.indexOf(bMatch[2])
+        : MODEL_FAMILY_ORDER.length;
+    if (aRank !== bRank) return aRank - bRank;
+    if (aMatch && bMatch) {
+        const aVersion = aMatch[1].split(".").map(Number);
+        const bVersion = bMatch[1].split(".").map(Number);
+        for (let i = 0; i < Math.max(aVersion.length, bVersion.length); i++) {
+            const difference = (bVersion[i] ?? 0) - (aVersion[i] ?? 0);
+            if (difference) return difference;
+        }
+    }
+    return a.model.localeCompare(b.model);
 }
 
 export default function codexFastModeExtension(pi: ExtensionAPI): void {
@@ -228,11 +254,7 @@ export default function codexFastModeExtension(pi: ExtensionAPI): void {
                     availableTiers,
                 });
         }
-        modelSettings.sort(
-            (a, b) =>
-                Number(b.isCurrentModel) - Number(a.isCurrentModel) ||
-                (scopedModels.length ? 0 : a.model.localeCompare(b.model)),
-        );
+        modelSettings.sort(compareModelSettings);
         await showFastSettings(ctx, {
             models: modelSettings,
             getGlobalTier: () => fastController.desiredTier,
