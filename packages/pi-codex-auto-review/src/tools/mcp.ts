@@ -140,7 +140,8 @@ function guardedTransport(
             catalog.set(`${server}\0${tool.name}`, {
                 identity,
                 label: `${server}/${tool.name}`,
-                namespace: `mcp__${server}`,
+                // Match Pi's mcpNamespace; retain the original server name in identity and policy keys.
+                namespace: `mcp__${server.replace(/-/g, "_")}`,
             });
         }
     };
